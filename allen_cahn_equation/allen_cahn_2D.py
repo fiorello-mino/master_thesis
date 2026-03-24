@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Imposto i parametri dell'equazione
+# ============================================================
+#                    PARAMETRI SIMULAZIONE
+# ============================================================
+
 beta = 10
 T = 3600
 L = 1
@@ -11,29 +14,51 @@ dy = L / (N - 1)
 delta = dx
 epsilon = 5 * delta
 dt = 0.2 * delta**2 / (beta * epsilon)
-# per la seconda simulazione T = 7200, epsilon = 3*delta, dt = 0.1 * (...)
 
-# Imposto la condizione iniziale: valori random tra 0 e 1
+# Nota per seconda simulazione: T=7200, epsilon=3*delta, dt=0.1*(...)
+
+
+# -----------------------------------------------------
+#           CONDIZIONE INIZIALE
+# -----------------------------------------------------
+
+phi = np.random.rand(N, N)
+phi_new = np.empty_like(phi)
+phi_initial = np.copy(phi)
 phi = np.random.rand(N, N)
 phi_new = np.empty_like(phi)
 phi_initial = np.copy(phi)
 
-# Energia del sistema
-energy = np.zeros(T)
+
+# -----------------------------------------------------
+#           QUANTITÀ FISICHE
+# -----------------------------------------------------
+
+energy = np.zeros(T)  # Evoluzione energia nel tempo
 
 
-# Snapshots per plot
+# -----------------------------------------------------
+#           CONFIGURAZIONE PLOT
+# -----------------------------------------------------
+
 snapshots = {}
-steps = [0, T//3, 2*T//3, T-1]
+steps = [0, T//3, 2*T//3, T-1]  # Momenti chiave per snapshot
 
-# Integro l'equazione di Allen-Cahn
+
+# ============================================================
+#                 INTEGRAZIONE ALLEN-CAHN
+# ============================================================
+
 for n in range(T):
     
+    # Salva snapshots selezionati
     if n in steps:
         snapshots[n] = np.copy(phi)
     
+    # Calcola energia libera
     energy[n] = (2.0 * 18.0 / epsilon) * np.sum(phi**2 * (1 - phi**2))
     
+    # Laplaciano discreto
     laplacian = (
             
         np.roll(phi, 1, axis=0) 
@@ -44,14 +69,20 @@ for n in range(T):
         
     ) / delta**2
     
+    # Derivata del otenziale double well
     w_prime = (36.0 / epsilon) * phi * (1 + 2 * phi**2 - 3 * phi)
     
+    # Step esplicito
     phi_new = phi + dt * beta * (epsilon * laplacian - w_prime)
     
-    phi, phi_new = phi_new, phi # swap tra phi e phi_new in modo che phi al passo n+1 sia phi_new
+    # Swap tra phi e phi_new in modo che phi al passo n+1 sia phi_new
+    phi, phi_new = phi_new, phi
 
 
-# Plot sistema
+# -----------------------------------------------------
+#           PLOT CAMPI
+# -----------------------------------------------------
+
 fig, axes = plt.subplots(2, 2, figsize=(10, 8))
 
 for ax, n in zip(axes.ravel(), steps):
@@ -65,7 +96,11 @@ for ax, n in zip(axes.ravel(), steps):
 plt.tight_layout()
 plt.show()
 
-#Plot energia
+
+# -----------------------------------------------------
+#           EVOLUZIONE ENERGIA
+# -----------------------------------------------------
+
 n_steps = np.arange(len(energy))
 t = n_steps * dt
 plt.figure(figsize=(6,4))
