@@ -1,0 +1,43 @@
+# --- File e cartelle Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual env
+venv/
+.env/
+.venv/
+
+# --- Notebook Jupyter ---
+.ipynb_checkpoints/
+
+# --- File temporanei / editor ---
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Output di simulazioni / grafici ---
+output/
+results/
+figures/
+#plots/
+#*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.csv
+*.dat
+*.npy
+*.npz
+
+# --- Log vari ---
+*.log
+logs/
+
+# --- Cartella phase-field ---
+phase_field/
