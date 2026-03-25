@@ -63,7 +63,7 @@ for n in range(T):
         - 4 * phi
     ) / delta**2
 
-    # Derivata del otenziale double well
+    # Derivata del potenziale double well
     w_prime = (36.0 / epsilon) * phi * (1 + 2 * phi**2 - 3 * phi)
 
     # Step esplicito

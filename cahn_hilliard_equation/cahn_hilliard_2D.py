@@ -40,7 +40,7 @@ phi_initial = np.copy(phi)
 # -----------------------------------------------------
 
 energy = np.zeros(T)  # Evoluzione energia nel tempo
-phi_integral = np.zeros(T)  # Integrale di phi su tutto il dominio
+mass = np.zeros(T)  # Integrale di phi su tutto il dominio
 
 # -----------------------------------------------------
 #           CONFIGURAZIONE PLOT
@@ -63,7 +63,7 @@ for n in range(T):
     energy[n] = (2.0 * 18.0 / epsilon) * np.sum(phi**2 * (1 - phi**2))
 
     # Calcola integrale di phi
-    phi_integral[n] = np.sum(phi)
+    mass[n] = np.sum(phi)
 
     # -----------------------------------------------------
     #            CALCOLO DI MU
@@ -141,10 +141,10 @@ plt.show()
 #           CONSERVAZIONE DELL'INTEGRALE DI PHI
 # -----------------------------------------------------
 
-n_steps = np.arange(len(phi_integral))
+n_steps = np.arange(len(mass))
 t = n_steps * dt
 plt.figure(figsize=(6, 4))
-plt.plot(t, phi_integral, "-o", markersize=1)
+plt.plot(t, mass, "-o", markersize=1)
 plt.xlabel("t")
 plt.ylabel(r"Integral of $\phi$")
 plt.title(r"Mass conservation")
