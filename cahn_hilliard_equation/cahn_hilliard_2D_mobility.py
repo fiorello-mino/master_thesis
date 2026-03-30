@@ -6,15 +6,14 @@ import matplotlib.pyplot as plt
 # ============================================================
 
 M0 = 5e-5
-T = 10000000
+T = 3000000
 L = 1
 N = 64
 dx = L / (N - 1)
 dy = L / (N - 1)
 delta = dx
-epsilon = 2 * delta
-dt =  1e-9
-#dt = dx**4 / (35 * M0)
+epsilon = 8 * delta
+dt =  1e-4
 
 
 # -----------------------------------------------------
@@ -41,6 +40,47 @@ snapshots = {}
 steps = [0, T // 3, 2 * T // 3, T - 1]  # Momenti chiave per snapshot
 
 
+# -----------------------------------------------------
+#           FUNZIONI
+# -----------------------------------------------------
+
+
+# Gradiente 
+def gradient (phi, dx, dy):
+    grad_x = ( np.roll(phi, -1, axis=1) - np.roll(phi, +1, axis=1) ) / (2*dx)
+    grad_y = ( np.roll(phi, -1, axis=0) - np.roll(phi, +1, axis=0) ) / (2*dy)
+    return grad_x, grad_y
+
+
+# Divergenza
+def divergence (grad_x, grad_y, dx, dy):
+    div_x = ( np.roll(grad_x, -1, axis=1) - np.roll(grad_x, 1, axis=1) ) / (2*dx)
+    div_y = ( np.roll(grad_y, -1, axis=0) - np.roll(grad_y, 1, axis=0) ) / (2*dy)
+    return div_x + div_y
+
+
+# Laplaciano
+def laplacian (phi, dx):
+    laplacian_phi = (
+        np.roll(phi, 1, axis=0)
+        + np.roll(phi, -1, axis=0)
+        + np.roll(phi, 1, axis=1)
+        + np.roll(phi, -1, axis=1)
+        - 4 * phi
+    ) / dx**2
+    return laplacian_phi
+
+
+def w_prime (phi):
+    return (36.0 / epsilon) * phi * (1 + 2 * phi**2 - 3 * phi)
+
+
+def mobility (phi):
+    return (36.0 / epsilon) * M0 * phi**2 * (1 - phi)**2 + 1e-6
+
+
+
+
 # ============================================================
 #                INTEGRAZIONE CAHN-HILLIARD
 # ============================================================
@@ -57,36 +97,29 @@ for n in range(T):
     #            CALCOLO DI MU
     # -----------------------------------------------------
 
-    # Laplaciano discreto di phi
-    laplacian_phi = (
-        np.roll(phi, 1, axis=0)
-        + np.roll(phi, -1, axis=0)
-        + np.roll(phi, 1, axis=1)
-        + np.roll(phi, -1, axis=1)
-        - 4 * phi
-    ) / delta**2
+    # Laplaciano di phi
+    lapl_phi = laplacian(phi, dx)
 
     # Derivata del potenziale double well
-    w_prime = (36.0 / epsilon) * phi * (1 + 2 * phi**2 - 3 * phi)
+    w_prime_phi = w_prime(phi)
 
     # Calcolo di mu
-    mu = -epsilon * laplacian_phi + w_prime
+    mu = -epsilon * lapl_phi + w_prime_phi
 
     # -----------------------------------------------------
     #           STEP ESPLICITO PER PHI
     # -----------------------------------------------------
 
     # Mobilità M scalare
-    M = (36.0 / epsilon) * M0 * phi**2 * (1 - phi)**2
+    M = mobility(phi)
 
     # Gradiente di mu
-    grad_mu_y, grad_mu_x = np.gradient(mu, dy, dx)
-    
+    grad_mu_x, grad_mu_y = gradient (mu, dx, dy)
     # Divergenza di M grad mu
-    div = np.gradient(M * grad_mu_x, dx, axis = 1) + np.gradient(M * grad_mu_y, dy, axis = 0)
+    div_J = divergence(M*grad_mu_x, M*grad_mu_y, dx, dy)
     
     # Step esplicito
-    phi_new = phi + dt * div
+    phi_new = phi + dt * div_J
 
     # Swap tra phi e phi_new in modo che phi al passo n+1 sia phi_new
     phi, phi_new = phi_new, phi
