@@ -9,8 +9,8 @@ import time
 # ============================================================
 
 @njit
-def evolve_cahn_hilliard(phi_init, N_steps, dt, dx, dy, epsilon, M0, snap_steps, snap_array, mass_array):
-    
+def evolve_cahn_hilliard(phi_init, N_steps, dt, dx, dy, epsilon, M0, snap_steps, snap_array, mass_array, energy_array):
+
     N0, N1 = phi_init.shape
     phi = np.copy(phi_init)
     
@@ -38,7 +38,7 @@ def evolve_cahn_hilliard(phi_init, N_steps, dt, dx, dy, epsilon, M0, snap_steps,
         # Calcolo della massa
         mass_array[n] = np.sum(phi)*dx*dy
         
-        
+        energy_array[n] = 0.0
         # -----------------------------------------------------
         #            CALCOLO DI MU
         # -----------------------------------------------------
@@ -59,10 +59,18 @@ def evolve_cahn_hilliard(phi_init, N_steps, dt, dx, dy, epsilon, M0, snap_steps,
                     - 4 * phi[i, j] 
                 ) / dx**2
                 
-                # derivata di w(phi)
+                # calcolo mu
                 w_prime[i, j] = (36.0 / epsilon) * phi[i, j] * (1 + 2 * phi[i, j]**2 - 3 * phi[i, j])
                 
                 mu[i, j] = - epsilon * lapl_phi[i, j] + w_prime[i, j]
+                
+                # calcolo energia
+                grad_phi_x = (phi[i, j_right] - phi[i, j_left]) / (2.0 * dx)
+                grad_phi_y = (phi[i_up, j] - phi[i_down, j])   / (2.0 * dy)
+                grad2 = grad_phi_x**2 + grad_phi_y**2
+                w = (18.0 / epsilon) * phi[i,j]**2 * (1 - phi[i,j])**2
+                
+                energy_array[n] += (0.5 * epsilon * grad2 + w) * dx * dy
 
 
         # -----------------------------------------------------
@@ -114,13 +122,12 @@ def evolve_cahn_hilliard(phi_init, N_steps, dt, dx, dy, epsilon, M0, snap_steps,
 # ============================================================
 
 M0 = 5e-5
-N_steps = 3000000
+N_steps = 400000
 L = 1
 N = 64
 dx = L / (N - 1)
 dy = L / (N - 1)
-delta = dx
-epsilon = 5 * delta
+epsilon = 5 * dx
 dt =  1e-4
 
 
@@ -128,8 +135,38 @@ dt =  1e-4
 #           CONDIZIONE INIZIALE
 # -----------------------------------------------------
 
-# Profilo random
-phi_initial = np.random.rand(N, N)
+# 1. Profilo random
+# -----------------------------------------------------
+# phi_initial = np.random.rand(N, N)
+
+
+
+# 2. Profilo rettangolo
+# -----------------------------------------------------
+# phi_initial = np.zeros((N, N))
+
+# # dimensioni del rettangolo
+# h = 16   # altezza in celle (direzione i / riga)
+# w = 32   # larghezza in celle (direzione j / colonna)
+
+# # coordinate del rettangolo centrato
+# i0 = (N - h) // 2      # riga iniziale
+# i1 = i0 + h            # riga finale (esclusa)
+# j0 = (N - w) // 2      # colonna iniziale
+# j1 = j0 + w            # colonna finale (esclusa)
+
+# phi_initial[i0:i1, j0:j1] = 1.0
+
+
+
+# 3. Profilo coseno
+# -----------------------------------------------------
+x = np.linspace(0, 1, N)
+y = np.linspace(0, 1, N)
+X, Y = np.meshgrid(x, y)
+cos = (1.0 / 15) * (np.cos((2 * np.pi) * X)) + 0.5
+phi_initial = (Y < cos).astype(float)
+mode = np.cos(2 * np.pi * x)
 
 
 # -----------------------------------------------------
@@ -151,8 +188,29 @@ snap_array = np.zeros((len(snap_steps), N, N))
 # -----------------------------------------------------
 t0 = time.perf_counter()
 
-evolve_cahn_hilliard(phi_initial, N_steps, dt, dx, dy, epsilon, M0, snap_steps, snap_array, mass_array)
+dts = [5e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4]
+colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5']
 
+for dt, c in zip(dts, colors):
+    
+    phi0 = phi_initial.copy()
+    energy_array = np.zeros(N_steps)
+    
+    # evolve con questo dt e questo energy_array
+    evolve_cahn_hilliard(phi0, N_steps, dt, dx, dy, epsilon, M0, snap_steps, snap_array, mass_array, energy_array)
+
+    t = np.arange(N_steps) * dt
+    plt.plot(t, energy_array, color=c, label=f'dt={dt:g}')
+
+    # print(dt, energy_array[0], energy_array[10], energy_array[100])
+    
+plt.xlabel('t')
+plt.ylabel('E(t)')
+plt.title('Energia libera vs tempo per diversi dt')
+plt.legend()
+plt.xlim(0.0, 2.0)
+plt.tight_layout()
+plt.show()
 t1 = time.perf_counter()
 print(f"Tempo esecuzione: {t1 - t0:.2f} s")
 
@@ -161,27 +219,42 @@ print(f"Tempo esecuzione: {t1 - t0:.2f} s")
 #           PLOT CAMPI
 # -----------------------------------------------------
 
-fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-for k, step in enumerate(snap_steps):
-    ax = axes.flat[k]
-    im = ax.imshow(snap_array[k], origin="lower", extent=[0, L, 0, L], cmap="coolwarm")
-    ax.set_title(rf'$\phi(t={step*dt:.2f})$')
-    ax.set_xlabel('x'); ax.set_ylabel('y')
-    plt.colorbar(im, ax=ax)
-plt.tight_layout()
-plt.show()
+# fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+# for k, step in enumerate(snap_steps):
+#     ax = axes.flat[k]
+#     im = ax.imshow(snap_array[k], origin="lower", extent=[0, L, 0, L], cmap="coolwarm")
+#     ax.set_title(rf'$\phi(t={step*dt:.2f})$')
+#     ax.set_xlabel('x'); ax.set_ylabel('y')
+#     plt.colorbar(im, ax=ax)
+# plt.tight_layout()
+# plt.show()
 
 
 # -----------------------------------------------------
 #           CONSERVAZIONE DELL'INTEGRALE DI PHI
 # -----------------------------------------------------
 
-n_steps = np.arange(len(mass_array))
-t = n_steps * dt
-plt.figure(figsize=(6, 4))
-plt.plot(t[:10000], mass_array[:10000])
-plt.xlabel("t")
-plt.ylabel(r"Integral of $\phi$")
-plt.title(r"Mass conservation")
-plt.tight_layout()
-plt.show()
+# n_steps = np.arange(len(mass_array))
+# t = n_steps * dt
+# plt.figure(figsize=(6, 4))
+# plt.plot(t[:10000], mass_array[:10000])
+# plt.xlabel("t")
+# plt.ylabel(r"Integral of $\phi$")
+# plt.title(r"Mass conservation")
+# plt.tight_layout()
+# plt.show()
+
+
+# -----------------------------------------------------
+#           PLOT ENERGIA
+# -----------------------------------------------------
+
+# n_steps = np.arange(len(energy_array))
+# t = n_steps * dt
+# plt.figure(figsize=(6, 4))
+# plt.plot(t, energy_array)
+# plt.xlabel("t")
+# plt.ylabel(r"E(t)")
+# plt.title(r"Energy vs time")
+# plt.tight_layout()
+# plt.show()
