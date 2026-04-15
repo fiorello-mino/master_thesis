@@ -44,17 +44,24 @@ for i in range(n_snap):
     energies[i] = total_free_energy(phi = phi, epsilon = 5 * 1/64, dx = dx)
 
 
-plt.figure(figsize=(6, 4))
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
-plt.plot(times, amps, "o-", lw=1, ms=2, color="tab:blue")
-plt.xlabel("Tempo")
-plt.ylabel("Ampiezza geometrica")
-plt.title("Decadimento dell'ampiezza (livello ϕ = 0.5)")
+ax1 = axes[0]
+ax2 = axes[1]
 
-plt.grid(True, which="both", alpha=0.3)
+ax1.plot(times, amps, "o-", lw=1, ms=2, color="tab:blue")
+ax1.set_xlabel("Tempo")
+ax1.set_ylabel("Ampiezza geometrica")
+ax1.set_title("Ampiezza")
+ax1.grid(True, alpha=0.3)
 
-# opzionale: semilog se ti aspetti decadimento esponenziale
-# plt.semilogy(times, amps, "o-", lw=1, ms=2, color="tab:blue")
+ax2.plot(times, energies, "o-", lw=1, ms=2, color="tab:red")
+ax2.set_xlabel("Tempo")
+ax2.set_ylabel("Energia")
+ax2.set_title("Energia libera")
+ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
 plt.show()
+
+# plt.semilogy(times, amps, "o-", lw=1, ms=2, color="tab:blue")
