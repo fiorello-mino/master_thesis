@@ -37,21 +37,5 @@ phi_final = evolve_ch_const_mob_with_snapshots(
     out_dir        = "snapshots",
 )
 
-# # Plot
-# fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-
-# # Iniziale
-# im0 = axes[0].imshow(phi_initial, cmap='viridis', origin='lower')
-# axes[0].set_title('φ iniziale')
-# plt.colorbar(im0, ax=axes[0])
-
-# # Finale
-# im1 = axes[1].imshow(phi_final, cmap='viridis', origin='lower')
-# axes[1].set_title(f'φ finale ({n_steps} passi)')
-# plt.colorbar(im1, ax=axes[1])
-
-# plt.tight_layout()
-# plt.show()
-
 t1 = time.perf_counter()
 print(f"Tempo esecuzione: {t1 - t0:.2f} s")
