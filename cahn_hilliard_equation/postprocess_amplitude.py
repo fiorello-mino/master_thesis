@@ -67,4 +67,4 @@ ax2.set_title("Energia libera")
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.show()
+plt.savefig("plot_cahn_hilliard.png", dpi=300, bbox_inches="tight")
