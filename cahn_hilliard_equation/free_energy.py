@@ -68,8 +68,7 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     Calcola l'energia libera totale del sistema
     """
     ny, nx = phi.shape
-    factor = 18.0 / epsilon
-    eps2 = 0.5 * epsilon * epsilon
+    eps2 = 0.5 * epsilon
     dx2 = dx * dx
     
     w = w_field(phi, epsilon)               
@@ -78,8 +77,26 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     total_E = 0.0
     for i in range(ny):
         for j in range(nx):
-            grad2 = gx[i, j]*gx[i, j] + gy[i, j]*gy[i, j]
+            grad2 = gx[i, j] * gx[i, j] + gy[i, j] * gy[i, j]
             f_ij = w[i, j] + eps2 * grad2
             total_E += f_ij
 
     return total_E * dx2
+
+
+@njit
+def M_field(phi: np.ndarray, M0: float, epsilon: float) -> np.ndarray:
+    """
+    Calcola il campo scalare di mobilità
+    """
+    ny, nx = phi.shape
+    M = np.empty_like(phi)
+    factor = M0 * 36.0 / epsilon
+    
+    for i in range(ny):
+        for j in range(nx):
+            phi_ij = phi[i, j]
+            one_minus = 1 - phi_ij
+            M[i,j] =  factor * phi_ij*phi_ij * one_minus*one_minus + 1e-6
+    
+    return M

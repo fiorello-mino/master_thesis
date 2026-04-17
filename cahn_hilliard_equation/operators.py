@@ -8,7 +8,7 @@ from typing import Tuple
 def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float) -> np.ndarray:
     """
     Calcola il laplaciano 2D su grigilia uniforme con BC di Neumann lungo y
-    e periodicità in x
+    e periodicità in x usando schema a croce a 4 punti.
     """
     ny, nx = phi.shape
     lapl = np.empty_like(phi)
@@ -39,7 +39,7 @@ def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float) -> np.ndarray:
 def grad_2D_neumann_along_y(phi: np.ndarray, dx:float) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calcola il gradiente del campo scalare 2D su griglia uniforme con BC di Neumann lungo y
-    e periodicità in x
+    e periodicità in x usando schema delle differenze centrate.
     """
     
     ny, nx = phi.shape
@@ -70,3 +70,36 @@ def grad_2D_neumann_along_y(phi: np.ndarray, dx:float) -> Tuple[np.ndarray, np.n
             grad_y[i,j] = (phi[i_up, j]      - phi[i_down, j])  / dx2
     
     return grad_x, grad_y
+
+
+@njit
+def divergence_2D_neumann_along_y(v_x: np.ndarray, v_y: np.ndarray, dx: float) -> np.ndarray:
+    """
+    Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con BC di Neumann lungo y usando
+    schema delle differenze centrate su griglia uniforme.
+    """
+    
+    ny, nx = v_x.shape
+    div = np.empty_like(v_x)
+    dx2 = 2*dx
+    
+    # Bordi y=0 e y=ny-1 (tutte le j)
+    for j in range(nx):
+        j_right =  (j+1) % nx
+        j_left  =  (j-1) % nx
+        div[0, j]     =   (v_x[0, j_right]    - v_x[0, j_left])     / dx2
+        div[ny-1, j]  =   (v_x[ny-1, j_right] - v_x[ny-1, j_left])  / dx2
+        
+    #Punti interni
+    for i in range(1, ny-1):
+        i_up = i-1
+        i_down = i+1
+        
+        for j in range(nx):
+            j_right =  (j+1) % nx
+            j_left  =  (j-1) % nx
+            
+            div[i,j] = (v_x[i, j_right] - v_x[i, j_left] + v_y[i_up, j] - v_y[i_down, j]) / dx2
+            
+    return div
+            

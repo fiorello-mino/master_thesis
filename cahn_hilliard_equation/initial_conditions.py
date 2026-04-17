@@ -27,7 +27,7 @@ def cosine_step_profile(N: int) -> np.ndarray:
     
     x = np.linspace(0, 1, N)
     y = np.linspace(0, 1, N)
-    X, Y = np.meshgrid(x, y, indexing="ij")
+    X, Y = np.meshgrid(x, y)
 
     cos = (1.0 / 15.0) * np.cos(2.0 * np.pi * X) + 0.5
     phi = (Y < cos)
@@ -42,7 +42,7 @@ def smooth_cosine_interface(N: int, dx: float, epsilon: float) -> np.ndarray:
     X, Y = np.meshgrid(x, y)
 
     y0 = y[N // 2]   # punto effettivo della griglia
-    a = 1.0 / 50.0
+    a = 1.0 / 100.0
     q = 2.0 * np.pi
 
     d = Y - (y0 + a * np.cos(q * X))

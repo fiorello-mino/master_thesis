@@ -5,15 +5,15 @@ import numpy as np
 from matplotlib import pyplot as plt
 from free_energy import total_free_energy, w_field
 from operators import grad_2D_neumann_along_y
+import params as p
 
 
 times, snapshots = load_snapshots("snapshots")
 n_snap, ny, nx = snapshots.shape
 
 
-dx = 1/64
-x = (np.arange(nx) + 0.5) * dx
-y = (np.arange(ny) + 0.5) * dx
+x = (np.arange(p.N) + 0.5) * p.dx
+y = (np.arange(p.N) + 0.5) * p.dx
 X, Y = np.meshgrid(x, y)
 
 level = 0.5
@@ -41,15 +41,20 @@ for i in range(n_snap):
     y_max = all_points[:, 1].max()
 
     amps[i] = 0.5 * (y_max - y_min)
-    energies[i] = total_free_energy(phi = phi, epsilon = 5 * 1/64, dx = dx)
+    energies[i] = total_free_energy(phi = phi, epsilon = p.epsilon, dx = p.dx)
 
 
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+
+# Curva esponenziale teorica
+theory = 1/100 * np.exp(-((2*np.pi)**4) * p.M0 * np.array(times))
 
 ax1 = axes[0]
 ax2 = axes[1]
 
 ax1.plot(times, amps, "o-", lw=1, ms=2, color="tab:blue")
+ax1.plot(times, theory, "--", lw=1, color="orange", label=r"$\frac{1}{50} e^{-(2\pi)^4 t}$")
 ax1.set_xlabel("Tempo")
 ax1.set_ylabel("Ampiezza geometrica")
 ax1.set_title("Ampiezza")
@@ -63,5 +68,3 @@ ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
 plt.show()
-
-# plt.semilogy(times, amps, "o-", lw=1, ms=2, color="tab:blue")
