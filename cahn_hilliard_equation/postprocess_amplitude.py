@@ -1,6 +1,6 @@
 # postprocess_amplitude.py
 
-from utils import load_snapshots
+from utils import load_snapshots, make_ch_gif
 import numpy as np
 from matplotlib import pyplot as plt
 from free_energy import total_free_energy, w_field
@@ -68,4 +68,6 @@ ax2.set_title("Energia libera")
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("plot_cosine_amp.png", dpi=300, bbox_inches="tight")
+#plt.savefig("plot_cosine_amp.png", dpi=300, bbox_inches="tight")
+
+make_ch_gif()   
