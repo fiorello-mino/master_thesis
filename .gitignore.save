@@ -22,10 +22,14 @@ Thumbs.db
 
 # --- Output di simulazioni / grafici ---
 output/
+results/
 figures/
 snapshots/
+#plots/
+#*.png
 *.jpg
 *.jpeg
+#*.gif
 *.mp4
 *.csv
 *.dat
