@@ -24,6 +24,7 @@ Thumbs.db
 output/
 results/
 figures/
+snapshots/
 #plots/
 #*.png
 *.jpg
