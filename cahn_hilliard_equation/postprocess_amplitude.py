@@ -53,12 +53,13 @@ theory = 1/100 * np.exp(-((2*np.pi)**4) * p.M0 * np.array(times))
 ax1 = axes[0]
 ax2 = axes[1]
 
-ax1.plot(times, amps, "o-", lw=1, ms=2, color="tab:blue")
-ax1.plot(times, theory, "--", lw=1, color="orange", label=r"$\frac{1}{50} e^{-(2\pi)^4 t}$")
+ax1.plot(times, amps, "o-", lw=1, ms=2, color="tab:blue", label="Ampiezza numerica")
+ax1.plot(times, theory, "--", lw=1, color="orange", label=r"Ampiezza teorica: $\frac{1}{50} e^{-(2\pi)^4 t}$")
 ax1.set_xlabel("Tempo")
 ax1.set_ylabel("Ampiezza geometrica")
 ax1.set_title("Ampiezza")
 ax1.grid(True, alpha=0.3)
+ax1.legend()
 
 ax2.plot(times, energies, "o-", lw=1, ms=2, color="tab:red")
 ax2.set_xlabel("Tempo")
@@ -67,4 +68,4 @@ ax2.set_title("Energia libera")
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("plot_cahn_hilliard.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot_cosine_amp.png", dpi=300, bbox_inches="tight")
