@@ -71,7 +71,7 @@ plt.tight_layout()
 #plt.savefig("plot_cosine_amp.png", dpi=300, bbox_inches="tight")
 
 make_ch_gif(
-    snapshots_dir="snapshots",
+    snap_dir="snapshots",
     output_dir="results",
     output_name="cosine.gif"
 )   
