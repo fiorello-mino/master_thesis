@@ -50,12 +50,18 @@ def load_snapshots(snap_dir="snapshots"):
 def make_ch_gif(
     snap_dir="snapshots",
     output_gif="cahn_hilliard.gif",
+    output_dir="results"
     fps=10,
     cmap="RdBu_r"
 ):
     """
     Legge tutti gli snapshots e crea una gif di evoluzione del sistema.
     """
+    
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_gif = os.path.join(output_dir, output_name)
+    
     files = sorted(
         f for f in os.listdir(snap_dir)
         if f.endswith(".npy") and f != "times.npy"
