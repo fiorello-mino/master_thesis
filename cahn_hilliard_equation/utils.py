@@ -50,7 +50,7 @@ def load_snapshots(snap_dir="snapshots"):
 def make_ch_gif(
     snap_dir="snapshots",
     output_gif="cahn_hilliard.gif",
-    output_dir="results"
+    output_dir="results",
     fps=10,
     cmap="RdBu_r"
 ):
