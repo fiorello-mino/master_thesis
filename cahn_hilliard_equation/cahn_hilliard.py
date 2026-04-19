@@ -5,7 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import shutil
-from free_energy import w_field, dw_dphi, mu_field, M_field
+from free_energy import w_field, dw_dphi, mu_field, mu_field_g_phi, M_field
 from operators import lapl_2D_neumann_along_y, grad_2D_neumann_along_y, divergence_2D_neumann_along_y
 
 
@@ -81,7 +81,7 @@ def evolve_cahn_hilliard_surf_mobility(
         # Calcolo mu
         lapl_phi[:] = lapl_2D_neumann_along_y(phi, dx)
         w_prime[:] = dw_dphi(phi, epsilon)
-        mu[:] = mu_field(lapl_2D_neumann_along_y(phi, dx), dw_dphi(phi, epsilon), epsilon)
+        mu[:] = mu_field_g_phi(lapl_2D_neumann_along_y(phi, dx), dw_dphi(phi, epsilon), phi, epsilon)
         
         # Step esplicito per phi
         grad_mu_x[:], grad_mu_y[:] = grad_2D_neumann_along_y(mu, dx)

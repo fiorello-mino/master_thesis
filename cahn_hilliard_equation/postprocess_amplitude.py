@@ -68,10 +68,10 @@ ax2.set_title("Energia libera")
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-#plt.savefig("plot_cosine_amp.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot_cosine_amp2.png", dpi=300, bbox_inches="tight")
 
 make_ch_gif(
     snap_dir="snapshots",
     output_dir="results",
-    output_name="cosine.gif"
+    output_name="cosine_prova.gif"
 )   

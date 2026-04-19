@@ -53,6 +53,23 @@ def mu_field(lapl_phi: np.ndarray, dw_dphi: np.ndarray, epsilon: float) -> np.nd
     
     return mu
 
+@njit
+def mu_field_g_phi(lapl_phi: np.ndarray, dw_dphi: np.ndarray, phi: np.ndarray, epsilon: float) -> np.ndarray:
+    """
+    Calcola il potenziale chimico con stabilizzazione numerica.
+    """
+    ny, nx = phi.shape
+    mu = np.empty_like(dw_dphi)
+    
+    for i in range(ny):
+        for j in range(nx):
+            phi_ij = np.abs(phi[i,j])
+            one_minus = np.abs(1 - phi[i,j])
+            factor = 6*phi_ij*one_minus 
+            mu[i,j] = factor * (- epsilon * lapl_phi[i,j] + dw_dphi[i,j])
+    
+    return mu
+
 
 @njit
 def total_mass(phi: np.ndarray, dx:float) -> float:
