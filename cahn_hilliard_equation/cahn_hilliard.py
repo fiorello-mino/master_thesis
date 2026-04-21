@@ -5,7 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import shutil
-from free_energy import w_field, dw_dphi, mu_field, mu_field_g_phi, M_field
+from free_energy import w_field, dw_dphi, mu_field, weighted_mu_field, M_field
 from operators import lapl_2D_neumann_along_y, grad_2D_neumann_along_y, divergence_2D_neumann_along_y
 
 
@@ -36,12 +36,12 @@ def evolve_cahn_hilliard_const_mobility(
     for step in range(n_steps):
         
         # Calcolo mu
-        lapl_phi[:] = lapl_2D_neumann_along_y(phi, dx)
-        w_prime[:] = dw_dphi(phi, epsilon)
-        mu[:] = mu_field(lapl_phi, w_prime, epsilon)
+        lapl_2D_neumann_along_y(phi, dx, lapl_phi)
+        dw_dphi(phi, epsilon, w_prime)
+        mu_field(lapl_phi, w_prime, epsilon, mu)
         
         # Step esplicito per phi
-        lapl_mu[:] = lapl_2D_neumann_along_y(mu, dx)
+        lapl_2D_neumann_along_y(mu, dx, lapl_mu)
         phi[:] += M * dt * lapl_mu
     
     return phi
@@ -65,10 +65,9 @@ def evolve_cahn_hilliard_surf_mobility(
     
     # Allocazioni
     phi = np.copy(phi_init)
-    phi_new = np.empty_like(phi_init)
     lapl_phi = np.empty_like(phi_init)
     w_prime = np.empty_like(phi_init)
-    mu = np.empty_like(phi_init)
+    mu_weighted = np.empty_like(phi_init)
     grad_mu_x = np.empty_like(phi)
     grad_mu_y = np.empty_like(phi)
     mobility = np.empty_like(phi)
@@ -78,17 +77,17 @@ def evolve_cahn_hilliard_surf_mobility(
     
     for step in range(n_steps):
         
-        # Calcolo mu
-        lapl_phi[:] = lapl_2D_neumann_along_y(phi, dx)
-        w_prime[:] = dw_dphi(phi, epsilon)
-        mu[:] = mu_field_g_phi(lapl_2D_neumann_along_y(phi, dx), dw_dphi(phi, epsilon), phi, epsilon)
+        # Calcolo mu pesato g(phi) * mu
+        lapl_2D_neumann_along_y(phi, dx, lapl_phi)
+        dw_dphi(phi, epsilon, w_prime)
+        weighted_mu_field(lapl_phi, w_prime, phi, epsilon, mu_weighted)
         
         # Step esplicito per phi
-        grad_mu_x[:], grad_mu_y[:] = grad_2D_neumann_along_y(mu, dx)
-        mobility[:] = M_field(phi, M0, epsilon)
+        grad_2D_neumann_along_y(mu_weighted, dx, grad_mu_x, grad_mu_y)
+        M_field(phi, M0, epsilon, mobility)
         J_x[:] = mobility * grad_mu_x
         J_y[:] = mobility * grad_mu_y
-        div_J[:] = divergence_2D_neumann_along_y(J_x, J_y, dx) 
+        divergence_2D_neumann_along_y(J_x, J_y, dx, div_J) 
         phi[:] += dt * div_J    
     
     return phi

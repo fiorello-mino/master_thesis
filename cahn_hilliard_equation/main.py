@@ -25,22 +25,6 @@ t0 = time.perf_counter()
 phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
 
 
-# -----------------------------------------------------
-#       Evoluzione con salvataggio snapshots
-# -----------------------------------------------------
-# phi_final = evolve_ch_const_mob_with_snapshots(
-#     phi_init       = phi_initial, 
-#     dt             = 1e-9, 
-#     n_steps        = n_steps,
-#     steps_per_save = 100_000, 
-#     epsilon        = epsilon,
-#     M              = 1.0, 
-#     dx             = dx,
-#     out_dir        = "snapshots",
-#     live_plot = True,
-#     cmap = "RdBu_r"
-# )
-
 phi_final = evolve_ch_surf_mob_with_snapshots(
     phi_init       = phi_initial, 
     dt             = p.dt, 

@@ -54,7 +54,7 @@ ax1 = axes[0]
 ax2 = axes[1]
 
 ax1.plot(times, amps, "o-", lw=1, ms=2, color="tab:blue", label="Ampiezza numerica")
-ax1.plot(times, theory, "--", lw=1, color="orange", label=r"Ampiezza teorica: $\frac{1}{50} e^{-(2\pi)^4 t}$")
+ax1.plot(times, theory, "--", lw=1, color="orange", label=r"Ampiezza teorica: $\frac{1}{100} e^{-(2\pi)^4 t}$")
 ax1.set_xlabel("Tempo")
 ax1.set_ylabel("Ampiezza geometrica")
 ax1.set_title("Ampiezza")
@@ -68,7 +68,7 @@ ax2.set_title("Energia libera")
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig("plot_cosine_amp2.png", dpi=300, bbox_inches="tight")
+plt.savefig("plot_cosine_amp4.png", dpi=300, bbox_inches="tight")
 
 make_ch_gif(
     snap_dir="snapshots",

@@ -2,16 +2,14 @@
 
 import numpy as np
 from numba import njit
-from typing import Tuple
 
 @njit
-def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float) -> np.ndarray:
+def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray):
     """
     Calcola il laplaciano 2D su grigilia uniforme con BC di Neumann lungo y
     e periodicità in x usando schema a croce a 4 punti.
     """
     ny, nx = phi.shape
-    lapl = np.empty_like(phi)
     dx2 = dx * dx
     
     # Bordi y=0 e y=ny-1 (tutti j)
@@ -31,20 +29,16 @@ def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float) -> np.ndarray:
             j_right = (j + 1) % nx
             j_left = (j - 1) % nx
             lapl[i, j] = (phi[i, j_right] + phi[i, j_left] + phi[i_up, j] + phi[i_down, j] - 4*phi[i, j]) / dx2
-    
-    return lapl
 
 
 @njit
-def grad_2D_neumann_along_y(phi: np.ndarray, dx:float) -> Tuple[np.ndarray, np.ndarray]:
+def grad_2D_neumann_along_y(phi: np.ndarray, dx:float, grad_x: np.ndarray, grad_y: np.ndarray):
     """
     Calcola il gradiente del campo scalare 2D su griglia uniforme con BC di Neumann lungo y
     e periodicità in x usando schema delle differenze centrate.
     """
     
     ny, nx = phi.shape
-    grad_x = np.empty_like(phi)
-    grad_y = np.empty_like(phi)
     dx2 = 2*dx
     
     # Bordi y=0 e y=ny-1 (tutti j)
@@ -68,19 +62,16 @@ def grad_2D_neumann_along_y(phi: np.ndarray, dx:float) -> Tuple[np.ndarray, np.n
             
             grad_x[i,j] = (phi[i, j_right]   - phi[i, j_left])   / dx2
             grad_y[i,j] = (phi[i_up, j]      - phi[i_down, j])  / dx2
-    
-    return grad_x, grad_y
 
 
 @njit
-def divergence_2D_neumann_along_y(v_x: np.ndarray, v_y: np.ndarray, dx: float) -> np.ndarray:
+def divergence_2D_neumann_along_y(v_x: np.ndarray, v_y: np.ndarray, dx: float, div: np.ndarray):
     """
     Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con BC di Neumann lungo y usando
     schema delle differenze centrate su griglia uniforme.
     """
     
     ny, nx = v_x.shape
-    div = np.empty_like(v_x)
     dx2 = 2*dx
     
     # Bordi y=0 e y=ny-1 (tutte le j)
@@ -100,6 +91,4 @@ def divergence_2D_neumann_along_y(v_x: np.ndarray, v_y: np.ndarray, dx: float) -
             j_left  =  (j-1) % nx
             
             div[i,j] = (v_x[i, j_right] - v_x[i, j_left] + v_y[i_up, j] - v_y[i_down, j]) / dx2
-            
-    return div
             
