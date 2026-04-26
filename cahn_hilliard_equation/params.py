@@ -3,8 +3,8 @@
 N = 128
 dx = 1.0 / N
 
-dt = 1e-6
-n_steps = 100_000_000
+dt = 1e-7
+n_steps = 1_000_000_000
 steps_per_save = 1_000_000
 
 epsilon = 10 * dx
