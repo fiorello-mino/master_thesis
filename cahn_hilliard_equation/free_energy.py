@@ -5,7 +5,7 @@ from numba import njit
 from operators import grad_2D_neumann_along_y
 
 
-@njit
+@njit(fastmath=True)
 def w_field(phi: np.ndarray, epsilon: float, w: np.ndarray):
     """
     Calcola il potenziale doppia buca
@@ -19,7 +19,7 @@ def w_field(phi: np.ndarray, epsilon: float, w: np.ndarray):
             w[i, j] = factor * phi_ij * phi_ij * (1 - phi_ij) * (1 - phi_ij)
 
     
-@njit
+@njit(fastmath=True)
 def dw_dphi(phi: np.ndarray, epsilon: float, w_prime:np.ndarray):
     """
     Calcola la derivata del potenziale doppia buca
@@ -30,10 +30,11 @@ def dw_dphi(phi: np.ndarray, epsilon: float, w_prime:np.ndarray):
     for i in range(ny):
         for j in range(nx):
             phi_ij = phi[i,j]
-            w_prime[i,j] = factor * phi_ij * (1 + 2 * phi_ij * phi_ij - 3 * phi_ij)
+            phi2 = phi_ij * phi_ij
+            w_prime[i,j] = factor * phi_ij * (1.0 + 2.0 * phi2 - 3.0 * phi_ij)
 
 
-@njit
+@njit(fastmath=True)
 def mu_field(lapl_phi: np.ndarray, dw_dphi: np.ndarray, epsilon: float, mu: np.ndarray):
     """
     Calcola il potenziale chimico
@@ -45,7 +46,7 @@ def mu_field(lapl_phi: np.ndarray, dw_dphi: np.ndarray, epsilon: float, mu: np.n
             mu[i,j] = - epsilon * lapl_phi[i,j] + dw_dphi[i,j]
 
 
-@njit
+@njit(fastmath=True)
 def weighted_mu_field(
     lapl_phi: np.ndarray, 
     dw_dphi: np.ndarray, 
@@ -58,24 +59,21 @@ def weighted_mu_field(
     e g(phi) = 6*abs(phi)*abs(1-phi)
     """
     ny, nx = phi.shape
+    eps_neg = -epsilon
     
     for i in range(ny):
         for j in range(nx):
-            mu = -epsilon * lapl_phi[i, j] + dw_dphi[i, j]
-            g = 6.0 * abs(phi[i, j]) * abs(1.0 - phi[i, j])
-            mu_field[i, j] = g * mu
+            phi_ij = phi[i, j]
+            g_inv = 1.0 / (6.0 * abs(phi_ij) * abs(1.0 - phi_ij) + 1e-6)
+            mu_field[i, j] = (eps_neg * lapl_phi[i, j] + dw_dphi[i, j]) * g_inv
 
 
-@njit
-def total_mass(phi: np.ndarray, dx: float) -> float:
-    total = 0.0
-    for i in range(phi.shape[0]):
-        for j in range(phi.shape[1]):
-            total += phi[i,j]
-    return total * dx * dx
+@njit(fastmath=True)
+def total_mass(phi, dx):
+    return np.sum(phi) * dx * dx
 
 
-@njit
+@njit(fastmath=True)
 def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     ny, nx = phi.shape
     eps2 = 0.5 * epsilon
@@ -85,9 +83,14 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     w_local = np.empty_like(phi)
     gx = np.empty_like(phi)
     gy = np.empty_like(phi)
+    j_left = np.empty(nx, dtype=np.int64)
+    j_right = np.empty(nx, dtype=np.int64)
+    for j in range(nx):
+        j_left[j] = (j - 1) % nx
+        j_right[j] = (j + 1) % nx
     
     w_field(phi, epsilon, w_local)
-    grad_2D_neumann_along_y(phi, dx, gx, gy)  # Assumendo fix della funzione grad
+    grad_2D_neumann_along_y(phi, dx, gx, gy, j_left, j_right)  # Assumendo fix della funzione grad
     
     total_E = 0.0
     for i in range(ny):
@@ -99,7 +102,7 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     return total_E * dx2
 
 
-@njit
+@njit(fastmath=True)
 def M_field(phi: np.ndarray, M0: float, epsilon: float, M: np.ndarray):
     """
     Calcola il campo scalare di mobilità
@@ -110,5 +113,5 @@ def M_field(phi: np.ndarray, M0: float, epsilon: float, M: np.ndarray):
     for i in range(ny):
         for j in range(nx):
             phi_ij = phi[i, j]
-            one_minus = 1 - phi_ij
+            one_minus = 1.0 - phi_ij
             M[i,j] =  factor * phi_ij*phi_ij * one_minus*one_minus + 1e-6

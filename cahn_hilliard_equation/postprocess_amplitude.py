@@ -73,5 +73,5 @@ plt.savefig("plot_cosine_amp_128_g_phi.png", dpi=300, bbox_inches="tight")
 make_ch_gif(
     snap_dir="snapshots",
     output_dir="results",
-    output_name="cosine_prova.gif"
+    output_name="random_init.gif"
 )   

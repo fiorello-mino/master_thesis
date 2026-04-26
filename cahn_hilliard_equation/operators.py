@@ -3,92 +3,77 @@
 import numpy as np
 from numba import njit
 
-@njit
-def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray):
+@njit(fastmath=True)
+def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, j_left: np.ndarray, j_right: np.ndarray):
     """
     Calcola il laplaciano 2D su grigilia uniforme con BC di Neumann lungo y
     e periodicità in x usando schema a croce a 4 punti.
     """
     ny, nx = phi.shape
-    dx2 = dx * dx
+    dx2_inv = 1.0 / (dx * dx)
     
-    # Bordi y=0 e y=ny-1 (tutti j)
-    for j in range(nx):
-        j_right = (j + 1) % nx
-        j_left = (j - 1) % nx
-        
-        lapl[0, j]    = (phi[0, j_right]     + phi[0, j_left]     + 2*phi[1, j]     - 4*phi[0, j])     / dx2
-        lapl[ny-1, j] = (phi[ny-1, j_right]  + phi[ny-1, j_left]  + 2*phi[ny-2, j]  - 4*phi[ny-1, j])  / dx2
-    
-    # Punti interni y=1..ny-2
-    for i in range(1, ny-1):
-        i_up = i - 1
-        i_down = i + 1
-        
+    for i in range(ny):
         for j in range(nx):
-            j_right = (j + 1) % nx
-            j_left = (j - 1) % nx
-            lapl[i, j] = (phi[i, j_right] + phi[i, j_left] + phi[i_up, j] + phi[i_down, j] - 4*phi[i, j]) / dx2
+            jl = j_left[j]
+            jr = j_right[j]
+            
+            # Bordo superiore
+            if i == 0:
+                lapl[i, j] = (phi[i, jr] + phi[i, jl] + 2*phi[i+1, j] - 4*phi[i, j]) * dx2_inv
+            # Bordo inferiore
+            elif i == ny - 1:
+                lapl[i, j] = (phi[i, jr] + phi[i, jl] + 2*phi[i-1, j] - 4*phi[i, j]) * dx2_inv
+            # Punti interni
+            else:
+                lapl[i, j] = (phi[i, jr] + phi[i, jl] + phi[i-1, j] + phi[i+1, j] - 4*phi[i, j]) * dx2_inv
 
 
-@njit
-def grad_2D_neumann_along_y(phi: np.ndarray, dx:float, grad_x: np.ndarray, grad_y: np.ndarray):
+@njit(fastmath=True)
+def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, j_left: np.ndarray, j_right: np.ndarray):
     """
     Calcola il gradiente del campo scalare 2D su griglia uniforme con BC di Neumann lungo y
     e periodicità in x usando schema delle differenze centrate.
     """
     
     ny, nx = phi.shape
-    dx2 = 2*dx
+    dx2_inv = 1.0 / (2.0 * dx)
     
-    # Bordi y=0 e y=ny-1 (tutti j)
-    for j in range(nx):
-        j_right = (j + 1) % nx
-        j_left = (j - 1) % nx
-        
-        grad_x[0,j]     = (phi[0, j_right]     - phi[0, j_left])    / dx2
-        grad_x[ny-1,j]  = (phi[ny-1, j_right]  - phi[ny-1, j_left]) / dx2
-        grad_y[0,j]     = 0
-        grad_y[ny-1,j]  = 0
-    
-    # Punti interni
-    for i in range(1, ny-1):
-        i_up = i - 1
-        i_down = i + 1
-        
+    for i in range(ny):
         for j in range(nx):
-            j_right = (j + 1) % nx
-            j_left = (j - 1) % nx
+            jl = j_left[j]
+            jr = j_right[j]
             
-            grad_x[i,j] = (phi[i, j_right]   - phi[i, j_left])   / dx2
-            grad_y[i,j] = (phi[i_up, j]      - phi[i_down, j])  / dx2
+            grad_x[i, j] = (phi[i, jr] - phi[i, jl]) * dx2_inv
+            
+            # Bordi superiore e inferiore
+            if i == 0 or i == ny - 1:
+                grad_y[i, j] = 0.0
+            # Punti interni
+            else:
+                grad_y[i, j] = (phi[i-1, j] - phi[i+1, j]) * dx2_inv
 
 
-@njit
-def divergence_2D_neumann_along_y(v_x: np.ndarray, v_y: np.ndarray, dx: float, div: np.ndarray):
+@njit(fastmath=True)
+def divergence_2D_neumann_along_y(v_x, v_y, dx, div, j_left: np.ndarray, j_right: np.ndarray):
     """
     Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con BC di Neumann lungo y usando
     schema delle differenze centrate su griglia uniforme.
     """
     
     ny, nx = v_x.shape
-    dx2 = 2*dx
+    dx2_inv = 1.0 / (2.0 * dx)
     
-    # Bordi y=0 e y=ny-1 (tutte le j)
-    for j in range(nx):
-        j_right =  (j+1) % nx
-        j_left  =  (j-1) % nx
-        div[0, j]     =   (v_x[0, j_right]    - v_x[0, j_left])     / dx2
-        div[ny-1, j]  =   (v_x[ny-1, j_right] - v_x[ny-1, j_left])  / dx2
-        
-    #Punti interni
-    for i in range(1, ny-1):
-        i_up = i-1
-        i_down = i+1
-        
+    for i in range(ny):
         for j in range(nx):
-            j_right =  (j+1) % nx
-            j_left  =  (j-1) % nx
+            jl = j_left[j]
+            jr = j_right[j]
             
-            div[i,j] = (v_x[i, j_right] - v_x[i, j_left] + v_y[i_up, j] - v_y[i_down, j]) / dx2
+            div_x = (v_x[i, jr] - v_x[i, jl]) * dx2_inv
+            
+            # v_y solo per punti interni
+            if i == 0 or i == ny - 1:
+                div[i, j] = div_x
+            else:
+                div_y = (v_y[i-1, j] - v_y[i+1, j]) * dx2_inv
+                div[i, j] = div_x + div_y
             
