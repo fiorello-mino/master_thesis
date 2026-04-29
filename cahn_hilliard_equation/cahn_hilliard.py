@@ -58,6 +58,55 @@ def evolve_cahn_hilliard_surf_mobility(
     dx,
     lapl_phi,
     w_prime,
+    mu,
+    grad_mu_x,
+    grad_mu_y,
+    mobility,
+    J_x,
+    J_y,
+    div_J,
+    j_left,
+    j_right
+):
+    
+    """
+    Evolve il campo iniziale phi_init secondo l’equazione di Cahn-Hilliard
+    con mobilità variabile per n_steps passi temporali di ampiezza dt.
+    """
+    ny, nx = phi.shape
+    
+    for step in range(n_steps):
+        
+        # Calcolo mu pesato g(phi) * mu
+        lapl_2D_neumann_along_y(phi, dx, lapl_phi, j_left, j_right)
+        dw_dphi(phi, epsilon, w_prime)
+        mu_field(lapl_phi, w_prime, epsilon, mu)
+        
+        # Step esplicito per phi
+        grad_2D_neumann_along_y(mu, dx, grad_mu_x, grad_mu_y, j_left, j_right)
+        M_field(phi, M0, epsilon, mobility)
+        
+        for i in range(ny):
+            for j in range(nx):
+                J_x[i, j] = mobility[i, j] * grad_mu_x[i, j]
+                J_y[i, j] = mobility[i, j] * grad_mu_y[i, j]
+        
+        divergence_2D_neumann_along_y(J_x, J_y, dx, div_J, j_left, j_right) 
+        for i in range(ny):
+            for j in range(nx):
+                phi[i, j] += dt * div_J[i, j]   
+
+
+@njit(fastmath=True)
+def evolve_cahn_hilliard_surf_mobility_g_phi(
+    phi,
+    dt,
+    n_steps,
+    epsilon,
+    M0,
+    dx,
+    lapl_phi,
+    w_prime,
     mu_weighted,
     grad_mu_x,
     grad_mu_y,
@@ -96,7 +145,6 @@ def evolve_cahn_hilliard_surf_mobility(
         for i in range(ny):
             for j in range(nx):
                 phi[i, j] += dt * div_J[i, j]   
-
 
 def evolve_ch_const_mob_with_snapshots(
     phi_init: np.ndarray,
@@ -223,7 +271,7 @@ def evolve_ch_surf_mob_with_snapshots(
     # Alla fine di ogni blocco di steps salva phi.npy
     lapl_phi    = np.empty_like(phi)
     w_prime     = np.empty_like(phi)
-    mu_weighted = np.empty_like(phi)
+    mu          = np.empty_like(phi)
     grad_mu_x   = np.empty_like(phi)
     grad_mu_y   = np.empty_like(phi)
     mobility    = np.empty_like(phi)
@@ -244,7 +292,7 @@ def evolve_ch_surf_mob_with_snapshots(
         # evolve modifica phi in-place
         evolve_cahn_hilliard_surf_mobility(
         phi, dt, n_block, epsilon, M0, dx,
-        lapl_phi, w_prime, mu_weighted,
+        lapl_phi, w_prime, mu,
         grad_mu_x, grad_mu_y, mobility,
         J_x, J_y, div_J, j_left, j_right)
         

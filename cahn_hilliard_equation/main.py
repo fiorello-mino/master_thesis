@@ -22,8 +22,8 @@ t0 = time.perf_counter()
 # -----------------------------------------------------
 #               Condizione iniziale
 # -----------------------------------------------------
-phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
-#phi_initial = random_profile(128)
+#phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
+phi_initial = random_profile(p.N)
 
 phi_final = np.empty_like(phi_initial)
 
