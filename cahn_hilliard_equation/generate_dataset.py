@@ -4,8 +4,8 @@ import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import params as p
 
-N_RUNS = 1000
-BASE_DIR = "dataset"
+N_RUNS = 10
+BASE_DIR = "/data/fiorello/dataset"
 MAX_WORKERS = 10
 
 
