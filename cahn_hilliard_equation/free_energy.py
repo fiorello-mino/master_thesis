@@ -114,4 +114,4 @@ def M_field(phi: np.ndarray, M0: float, epsilon: float, M: np.ndarray):
         for j in range(nx):
             phi_ij = phi[i, j]
             one_minus = 1.0 - phi_ij
-            M[i,j] =  factor * phi_ij*phi_ij * one_minus*one_minus + 1e-6
+            M[i,j] =  factor * phi_ij*phi_ij * one_minus*one_minus

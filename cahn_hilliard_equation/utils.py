@@ -82,7 +82,7 @@ def make_ch_gif(
     first = np.load(os.path.join(snap_dir, files[0]))
 
     fig, ax = plt.subplots(figsize=(5, 5))
-    im = ax.imshow(first, cmap=cmap, origin="lower")
+    im = ax.imshow(first, cmap=cmap, origin="lower", vmin = 0, vmax = 1)
     cbar = fig.colorbar(im, ax=ax)
     cbar.set_label("φ")
     

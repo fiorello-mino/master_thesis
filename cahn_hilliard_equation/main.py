@@ -23,7 +23,8 @@ t0 = time.perf_counter()
 #               Condizione iniziale
 # -----------------------------------------------------
 #phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
-phi_initial = random_profile(p.N)
+#phi_initial = random_profile(p.N)
+phi_initial = 0.5 + 0.05 * (np.random.rand(p.N, p.N) - 0.5)
 
 phi_final = np.empty_like(phi_initial)
 
@@ -38,7 +39,7 @@ evolve_ch_surf_mob_with_snapshots(
     dx             = p.dx,
     out_dir        = p.out_dir,
     live_plot      = p.live_plot,
-    cmap           = "RdBu_r",
+    cmap           = "RdBu_r"
 )
 
 t1 = time.perf_counter()

@@ -3,6 +3,32 @@
 import numpy as np
 from numba import njit
 
+
+@njit(fastmath=True)
+def lapl_2D(
+    phi: np.ndarray, 
+    dx: float, 
+    lapl: np.ndarray, 
+    j_left: np.ndarray, 
+    j_right: np.ndarray,
+    i_up: np.ndarray,
+    i_down: np.ndarray
+):
+    """
+    Calcola il laplaciano 2D su grigilia uniforme con PBC in x e y usando schema a croce a 4 punti.
+    """
+    ny, nx = phi.shape
+    dx2_inv = 1.0 / (dx * dx)
+    
+    for i in range(ny):
+        i_u = i_up[i]
+        i_d = i_down[i]
+        for j in range(nx):
+            jl = j_left[j]
+            jr = j_right[j]
+            lapl[i, j] = (phi[i, jr] + phi[i, jl] + phi[i_u, j] + phi[i_d, j] - 4*phi[i, j]) * dx2_inv
+
+
 @njit(fastmath=True)
 def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, j_left: np.ndarray, j_right: np.ndarray):
     """
@@ -29,6 +55,36 @@ def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, j_left
 
 
 @njit(fastmath=True)
+def grad_2D(
+    phi: np.ndarray, 
+    dx: float, 
+    grad_x: np.ndarray, 
+    grad_y: np.ndarray, 
+    j_left: np.ndarray, 
+    j_right: np.ndarray,
+    i_up: np.ndarray,
+    i_down: np.ndarray
+):
+    """
+    Calcola il gradiente del campo scalare 2D su griglia uniforme con PBC in x e y
+    usando schema delle differenze centrate.
+    """
+    
+    ny, nx = phi.shape
+    dx2_inv = 1.0 / (2.0 * dx)
+    
+    for i in range(ny):
+        i_u = i_up[i]
+        i_d = i_down[i]
+        for j in range(nx):
+            jl = j_left[j]
+            jr = j_right[j]
+            
+            grad_x[i, j] = (phi[i, jr] - phi[i, jl]) * dx2_inv
+            grad_y[i, j] = (phi[i_u, j] - phi[i_d, j]) * dx2_inv
+            
+            
+@njit(fastmath=True)
 def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, j_left: np.ndarray, j_right: np.ndarray):
     """
     Calcola il gradiente del campo scalare 2D su griglia uniforme con BC di Neumann lungo y
@@ -53,6 +109,37 @@ def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, j_left: np.ndarray, j_right
                 grad_y[i, j] = (phi[i-1, j] - phi[i+1, j]) * dx2_inv
 
 
+@njit(fastmath=True)
+def div_2D(
+    v_x: np.ndarray, 
+    v_y: np.ndarray, 
+    dx: float, 
+    div: np.ndarray, 
+    j_left: np.ndarray, 
+    j_right: np.ndarray,
+    i_up: np.ndarray,
+    i_down: np.ndarray
+):
+    """
+    Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con PBC in x e y usando
+    schema delle differenze centrate su griglia uniforme.
+    """
+    
+    ny, nx = v_x.shape
+    dx2_inv = 1.0 / (2.0 * dx)
+    
+    for i in range(ny):
+        i_u = i_up[i]
+        i_d = i_down[i]
+        for j in range(nx):
+            jl = j_left[j]
+            jr = j_right[j]
+            
+            div_x = (v_x[i, jr] - v_x[i, jl]) * dx2_inv
+            div_y = (v_y[i_u, j] - v_y[i_d, j]) * dx2_inv
+            div[i, j] = div_x + div_y
+                
+                
 @njit(fastmath=True)
 def divergence_2D_neumann_along_y(v_x, v_y, dx, div, j_left: np.ndarray, j_right: np.ndarray):
     """

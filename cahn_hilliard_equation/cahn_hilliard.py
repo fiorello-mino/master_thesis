@@ -6,7 +6,14 @@ import os
 import matplotlib.pyplot as plt
 import shutil
 from free_energy import w_field, dw_dphi, mu_field, weighted_mu_field, M_field
-from operators import lapl_2D_neumann_along_y, grad_2D_neumann_along_y, divergence_2D_neumann_along_y
+from operators import (
+    lapl_2D,
+    grad_2D,
+    div_2D,
+    lapl_2D_neumann_along_y, 
+    grad_2D_neumann_along_y, 
+    divergence_2D_neumann_along_y
+)
 
 
 @njit
@@ -50,23 +57,25 @@ def evolve_cahn_hilliard_const_mobility(
 
 @njit(fastmath=True)
 def evolve_cahn_hilliard_surf_mobility(
-    phi,
-    dt,
-    n_steps,
-    epsilon,
-    M0,
-    dx,
-    lapl_phi,
-    w_prime,
-    mu,
-    grad_mu_x,
-    grad_mu_y,
-    mobility,
-    J_x,
-    J_y,
-    div_J,
-    j_left,
-    j_right
+    phi: np.ndarray,
+    dt: float,
+    n_steps: int,
+    epsilon: float,
+    M0: float,
+    dx: float,
+    lapl_phi: np.ndarray,
+    w_prime: np.ndarray,
+    mu: np.ndarray,
+    grad_mu_x: np.ndarray,
+    grad_mu_y: np.ndarray,
+    mobility: np.ndarray,
+    J_x: np.ndarray,
+    J_y: np.ndarray,
+    div_J: np.ndarray,
+    j_left: np.ndarray,
+    j_right: np.ndarray,
+    i_up: np.ndarray,
+    i_down: np.ndarray
 ):
     
     """
@@ -77,13 +86,13 @@ def evolve_cahn_hilliard_surf_mobility(
     
     for step in range(n_steps):
         
-        # Calcolo mu pesato g(phi) * mu
-        lapl_2D_neumann_along_y(phi, dx, lapl_phi, j_left, j_right)
+        # Calcolo mu
+        lapl_2D(phi, dx, lapl_phi, j_left, j_right, i_up, i_down)
         dw_dphi(phi, epsilon, w_prime)
         mu_field(lapl_phi, w_prime, epsilon, mu)
         
         # Step esplicito per phi
-        grad_2D_neumann_along_y(mu, dx, grad_mu_x, grad_mu_y, j_left, j_right)
+        grad_2D(mu, dx, grad_mu_x, grad_mu_y, j_left, j_right, i_up, i_down)
         M_field(phi, M0, epsilon, mobility)
         
         for i in range(ny):
@@ -91,7 +100,7 @@ def evolve_cahn_hilliard_surf_mobility(
                 J_x[i, j] = mobility[i, j] * grad_mu_x[i, j]
                 J_y[i, j] = mobility[i, j] * grad_mu_y[i, j]
         
-        divergence_2D_neumann_along_y(J_x, J_y, dx, div_J, j_left, j_right) 
+        div_2D(J_x, J_y, dx, div_J, j_left, j_right, i_up, i_down) 
         for i in range(ny):
             for j in range(nx):
                 phi[i, j] += dt * div_J[i, j]   
@@ -256,7 +265,7 @@ def evolve_ch_surf_mob_with_snapshots(
     if live_plot:
         plt.ion()
         fig, ax = plt.subplots(figsize=(8, 8))
-        im = ax.imshow(phi, cmap=cmap, origin="lower")
+        im = ax.imshow(phi, cmap=cmap, origin="lower", vmin = 0,vmax = 1)
         cbar = plt.colorbar(im, ax=ax)
         title = ax.set_title("step = 0, t = 0.0")
         ax.set_xlabel("x")
@@ -282,9 +291,16 @@ def evolve_ch_surf_mob_with_snapshots(
     ny, nx = phi_init.shape
     j_left = np.empty(nx, dtype=np.int64)
     j_right = np.empty(nx, dtype=np.int64)
+    i_up = np.empty(ny, dtype=np.int64)
+    i_down = np.empty(ny, dtype=np.int64)
+    
     for j in range(nx):
         j_left[j] = (j - 1) % nx
         j_right[j] = (j + 1) % nx
+    
+    for i in range(ny):
+        i_up[i] = (i - 1) % ny
+        i_down[i] = (i + 1) % ny
     
     for block in range(0, n_steps, block_size):
         n_block = min(block_size, n_steps - block)
@@ -294,7 +310,7 @@ def evolve_ch_surf_mob_with_snapshots(
         phi, dt, n_block, epsilon, M0, dx,
         lapl_phi, w_prime, mu,
         grad_mu_x, grad_mu_y, mobility,
-        J_x, J_y, div_J, j_left, j_right)
+        J_x, J_y, div_J, j_left, j_right, i_up, i_down)
         
         step = block + n_block
         idx += 1

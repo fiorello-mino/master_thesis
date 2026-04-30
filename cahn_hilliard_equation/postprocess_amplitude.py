@@ -69,10 +69,10 @@ ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
 #plt.savefig("plot_cosine_amp_64_dt_1e-5.png", dpi=300, bbox_inches="tight")
-plt.show()
+#plt.show()
 
 make_ch_gif(
     snap_dir="snapshots",
-    output_dir="results",
-    output_name="random_init_1.gif"
+    output_dir="gif_prova",
+    output_name="prova_per_dataset.gif"
 )   

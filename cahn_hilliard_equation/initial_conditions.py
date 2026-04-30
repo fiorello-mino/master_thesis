@@ -5,7 +5,8 @@ import numpy as np
 
 def random_profile(N: int) -> np.ndarray:
     
-    return np.random.rand(N, N).astype(np.float64)
+    #return np.random.rand(N, N).astype(np.float64)
+    return 0.5 + 0.05 * (np.random.rand(N, N).astype(np.float64) - 0.5)
 
 
 def rectangle_profile(N: int, h: int = 16, w: int = 32) -> np.ndarray:
