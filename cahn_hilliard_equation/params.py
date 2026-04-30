@@ -10,5 +10,5 @@ steps_per_save = 200_000
 epsilon = 5 * dx
 M0 = 5e-5
 
-out_dir = "snapshots"
-live_plot = True
+#out_dir = "snapshots"
+live_plot = False

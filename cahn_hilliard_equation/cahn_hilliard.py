@@ -330,7 +330,7 @@ def evolve_ch_surf_mob_with_snapshots(
             plt.pause(0.001)
     
     # salva i tempi in un file separato
-    np.save(f"{out_dir}/times.npy", np.array(times, dtype=float))
+    #np.save(f"{out_dir}/times.npy", np.array(times, dtype=float))
     
     if live_plot:
         plt.pause(2)
