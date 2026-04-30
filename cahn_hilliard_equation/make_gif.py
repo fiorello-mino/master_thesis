@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-INPUT_DIR = "/data/fiorello/dataset/0000"
-OUTPUT_GIF = "/home/fiorello/master_thesis/cahn_hilliard_equation/animation_0000.gif"
+INPUT_DIR = "/data/fiorello/dataset/0004"
+OUTPUT_GIF = "/home/fiorello/master_thesis/cahn_hilliard_equation/animation_0004.gif"
 TOTAL_DURATION = 10.0  # secondi
 
 os.makedirs(os.path.dirname(OUTPUT_GIF), exist_ok=True)
