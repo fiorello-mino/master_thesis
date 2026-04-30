@@ -6,7 +6,7 @@ import params as p
 
 N_RUNS = 1000
 BASE_DIR = "dataset"
-MAX_WORKERS = 8
+MAX_WORKERS = 10
 
 
 def save_params_txt(base_dir):
