@@ -7,6 +7,7 @@ Università degli Studi di Milano-Bicocca.
 
 ## Struttura della repo
 
+```text
 master_thesis/
 ├── cahn_hilliard_equation/   # Codice principale della tesi
 │   ├── src/cahn_hilliard/    # Moduli core (operatori, condizioni iniziali, ecc.)
@@ -15,3 +16,4 @@ master_thesis/
 └── preliminary/              # Lavoro propedeutico
     ├── allen_cahn_equation/
     └── heat_equation/
+```
