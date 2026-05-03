@@ -44,8 +44,6 @@ def main():
     # phi_initial = random_profile(p.N)
     phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
 
-    np.save(os.path.join(args.out_dir, "phi_initial.npy"), phi_initial)
-
     phi_final = np.empty_like(phi_initial)
 
     evolve_ch_surf_mob_with_snapshots(
@@ -58,7 +56,7 @@ def main():
         M0=p.M0,
         dx=p.dx,
         out_dir=args.out_dir,
-        live_plot=False,
+        live_plot=p.live_plot,
         cmap="RdBu_r"
     )
 

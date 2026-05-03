@@ -2,7 +2,7 @@
 
 import numpy as np
 from numba import njit
-from operators import grad_2D_neumann_along_y
+from .operators import grad_2D
 
 
 @njit(fastmath=True)
@@ -90,7 +90,7 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
         j_right[j] = (j + 1) % nx
     
     w_field(phi, epsilon, w_local)
-    grad_2D_neumann_along_y(phi, dx, gx, gy, j_left, j_right)  # Assumendo fix della funzione grad
+    grad_2D(phi, dx, gx, gy, j_left, j_right)
     
     total_E = 0.0
     for i in range(ny):
