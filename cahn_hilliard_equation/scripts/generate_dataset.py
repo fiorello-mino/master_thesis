@@ -2,12 +2,11 @@ import os
 import sys
 import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import cahn_hilliad.parameters as p
+import cahn_hilliard.parameters as p
 
 N_RUNS = 1000
-BASE_DIR = "/data/fiorello/dataset"
+BASE_DIR = "results/dataset"
 MAX_WORKERS = 10
-
 
 def save_params_txt(base_dir):
     lines = [
@@ -29,7 +28,6 @@ def save_params_txt(base_dir):
     with open(txt_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
-
 def run_single(i):
     run_dir = os.path.join(BASE_DIR, f"{i:04d}")
     os.makedirs(run_dir, exist_ok=True)
@@ -40,18 +38,20 @@ def run_single(i):
 
     cmd = [
         sys.executable,
-        "main.py",
+        os.path.join("scripts", "main.py"),
         "--seed", str(i),
         "--out_dir", run_dir,
     ]
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "src"
+
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
     if result.returncode == 0:
         return i, "OK", result.stdout.strip()
     else:
         return i, "ERROR", result.stderr.strip()
-
 
 def main():
     os.makedirs(BASE_DIR, exist_ok=True)
@@ -66,13 +66,12 @@ def main():
             run_id, status, message = future.result()
 
             if status == "OK":
-                print(f"[OK]    run {run_id:04d}")
+                print(f"[OK] run {run_id:04d}")
             elif status == "SKIPPED":
-                print(f"[SKIP]  run {run_id:04d}")
+                print(f"[SKIP] run {run_id:04d}")
             else:
                 print(f"[ERROR] run {run_id:04d}")
                 print(message)
-
 
 if __name__ == "__main__":
     main()

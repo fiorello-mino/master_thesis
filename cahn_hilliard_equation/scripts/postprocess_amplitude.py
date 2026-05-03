@@ -1,11 +1,11 @@
 # postprocess_amplitude.py
 
-from utils import load_snapshots, make_ch_gif
 import numpy as np
 from matplotlib import pyplot as plt
-from free_energy import total_free_energy, w_field
-from operators import grad_2D_neumann_along_y
-import params as p
+from cahn_hilliard.utils import load_snapshots, make_ch_gif
+from cahn_hilliard.free_energy import total_free_energy, w_field
+from cahn_hilliard.operators import grad_2D_neumann_along_y
+import cahn_hilliard.parameters as p
 
 
 times, snapshots = load_snapshots("snapshots")

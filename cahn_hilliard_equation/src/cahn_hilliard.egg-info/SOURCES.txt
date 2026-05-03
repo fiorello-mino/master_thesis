@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+src/cahn_hilliard/__init__.py
+src/cahn_hilliard/free_energy.py
+src/cahn_hilliard/initial_conditions.py
+src/cahn_hilliard/operators.py
+src/cahn_hilliard/parameters.py
+src/cahn_hilliard/solver.py
+src/cahn_hilliard/utils.py
+src/cahn_hilliard.egg-info/PKG-INFO
+src/cahn_hilliard.egg-info/SOURCES.txt
+src/cahn_hilliard.egg-info/dependency_links.txt
+src/cahn_hilliard.egg-info/top_level.txt
