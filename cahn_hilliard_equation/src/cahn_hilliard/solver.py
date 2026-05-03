@@ -5,8 +5,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import shutil
-from free_energy import w_field, dw_dphi, mu_field, weighted_mu_field, M_field
-from operators import (
+from .free_energy import w_field, dw_dphi, mu_field, weighted_mu_field, M_field
+from .operators import (
     lapl_2D,
     grad_2D,
     div_2D,
