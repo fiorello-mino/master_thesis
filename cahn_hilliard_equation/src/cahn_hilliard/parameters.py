@@ -1,4 +1,4 @@
-# params.py
+# parameters.py
 
 N = 64
 dx = 1.0 / N

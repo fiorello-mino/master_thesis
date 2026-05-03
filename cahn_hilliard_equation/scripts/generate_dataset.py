@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import params as p
+import cahn_hilliad.parameters as p
 
 N_RUNS = 1000
 BASE_DIR = "/data/fiorello/dataset"

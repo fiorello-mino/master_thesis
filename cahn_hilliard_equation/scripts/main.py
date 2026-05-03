@@ -2,10 +2,10 @@ import os
 import time
 import argparse
 import numpy as np
-import params as p
+import parameters as p
 
 from initial_conditions import smooth_cosine_interface, random_profile
-from cahn_hilliard import (
+from solver import (
     evolve_ch_const_mob_with_snapshots,
     evolve_ch_surf_mob_with_snapshots,
 )

@@ -1,4 +1,4 @@
-# cahn_hilliard.py
+# solver.py
 
 from numba import njit
 import numpy as np
