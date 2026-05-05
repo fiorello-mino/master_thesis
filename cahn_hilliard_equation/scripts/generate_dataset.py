@@ -4,8 +4,8 @@ import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
-N_RUNS = 1000
-BASE_DIR = "results/dataset"
+N_RUNS = 100
+BASE_DIR = "/data/fiorello/dataset_external_test"
 MAX_WORKERS = 10
 
 def save_params_txt(base_dir):
@@ -21,7 +21,7 @@ def save_params_txt(base_dir):
         "initial_condition = 0.5 + 0.05 * (rng.random((N, N)) - 0.5)",
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
-        "run_folders = 0000, 0001, ..., 0999",
+        "run_folders = 0000, 0001, ..., 0099",
     ]
 
     txt_path = os.path.join(base_dir, "params.txt")
@@ -32,7 +32,6 @@ def run_single(i):
     run_dir = os.path.join(BASE_DIR, f"{i:04d}")
     os.makedirs(run_dir, exist_ok=True)
 
-    final_file = os.path.join(run_dir, "phi_final.npy")
     if os.path.exists(final_file):
         return i, "SKIPPED", "Run già completato"
 
