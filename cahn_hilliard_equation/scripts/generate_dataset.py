@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
@@ -22,6 +23,7 @@ def save_params_txt(base_dir):
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
         "run_folders = 0000, 0001, ..., 0099",
+        "seed = random 32-bit integer generated independently for each run",
     ]
 
     txt_path = os.path.join(base_dir, "params.txt")
