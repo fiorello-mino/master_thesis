@@ -24,6 +24,7 @@ Thumbs.db
 output/
 figures/
 snapshots/
+train_logs/
 *.jpg
 *.jpeg
 *.mp4
