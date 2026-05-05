@@ -32,13 +32,13 @@ def run_single(i):
     run_dir = os.path.join(BASE_DIR, f"{i:04d}")
     os.makedirs(run_dir, exist_ok=True)
 
-    if os.path.exists(final_file):
-        return i, "SKIPPED", "Run già completato"
+    # seed casuale tra 32 bit
+    seed = random.randint(0, 2**32 - 1)
 
     cmd = [
         sys.executable,
         os.path.join("scripts", "main.py"),
-        "--seed", str(i),
+        "--seed", str(seed),
         "--out_dir", run_dir,
     ]
 
@@ -48,9 +48,9 @@ def run_single(i):
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
     if result.returncode == 0:
-        return i, "OK", result.stdout.strip()
+        return i, "OK", f"seed={seed}\n" + result.stdout.strip()
     else:
-        return i, "ERROR", result.stderr.strip()
+        return i, "ERROR", f"seed={seed}\n" + result.stderr.strip()
 
 def main():
     os.makedirs(BASE_DIR, exist_ok=True)
