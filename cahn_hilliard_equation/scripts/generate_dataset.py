@@ -6,7 +6,7 @@ import cahn_hilliard.parameters as p
 
 N_RUNS = 100
 BASE_DIR = "/data/fiorello/dataset_external_test"
-MAX_WORKERS = 10
+MAX_WORKERS = 8
 
 def save_params_txt(base_dir):
     lines = [
