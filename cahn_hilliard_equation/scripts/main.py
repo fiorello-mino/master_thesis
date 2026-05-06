@@ -42,7 +42,15 @@ def main():
     # -----------------------------------------------------
     # phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
     # phi_initial = random_profile(p.N)
-    phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
+    # phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
+    
+    phi_initial = np.zeros((p.N, p.N))
+
+    h = 32
+    y0 = (p.N - h) // 2
+    y1 = y0 + h
+
+    phi_initial[y0:y1, :] = 0.5 + 0.05 * (rng.random((h, p.N)) - 0.5)
 
     phi_final = np.empty_like(phi_initial)
 

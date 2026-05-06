@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
 N_RUNS = 20
-BASE_DIR = "/data/fiorello/dataset_external_test_128_random"
+BASE_DIR = "/data/fiorello/dataset_external_test_128_porous"
 MAX_WORKERS = 10
 
 def save_params_txt(base_dir):
@@ -19,7 +19,7 @@ def save_params_txt(base_dir):
         f"epsilon = {p.epsilon}",
         f"M0 = {p.M0}",
         "model = cahn_hilliard_surface_mobility",
-        "initial_condition = 0.5 + 0.05 * (rng.random((N, N)) - 0.5)",
+        "initial_condition = 0.5 + 0.05 * (rng.random((N, N)) - 0.5) dentro una striscia alta 32",
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
         "run_folders = 0000, 0001, ..., 0019",
