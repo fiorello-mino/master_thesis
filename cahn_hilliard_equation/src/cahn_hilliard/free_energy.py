@@ -115,3 +115,64 @@ def M_field(phi: np.ndarray, M0: float, epsilon: float, M: np.ndarray):
             phi_ij = phi[i, j]
             one_minus = 1.0 - phi_ij
             M[i,j] =  factor * phi_ij*phi_ij * one_minus*one_minus
+            
+
+@njit(fastmath=True)
+def w_field_3D(phi: np.ndarray, epsilon: float, w: np.ndarray):
+    """
+    Calcola il potenziale doppia buca su griglia 3D uniforme
+    """
+    nz, ny, nx = phi.shape
+    factor = 18.0 / epsilon
+            
+    for z in range(nz):
+        for y in range(ny):
+            for x in range(nx):
+                phi_zyx = phi[z,y,x]
+                w[z,y,x] = factor * phi_zyx * phi_zyx * (1 - phi_zyx) * (1 - phi_zyx)
+                
+                
+@njit(fastmath=True)
+def dw_dphi_3D(phi: np.ndarray, epsilon: float, w_prime:np.ndarray):
+    """
+    Calcola la derivata del potenziale doppia buca su griglia uniforme 3D
+    """
+    nz, ny, nx = phi.shape
+    factor = 36.0 / epsilon
+            
+    for z in range(nz):
+        for y in range(ny):
+            for x in range(nx):
+                phi_zyx = phi[z,y,x]
+                phi2 = phi_zyx * phi_zyx
+                w_prime[z,y,x] = factor * phi_zyx * (1.0 + 2.0 * phi2 - 3.0 * phi_zyx)
+
+
+@njit(fastmath=True)
+def mu_field_3D(lapl_phi: np.ndarray, dw_dphi: np.ndarray, epsilon: float, mu: np.ndarray):
+    """
+    Calcola il potenziale chimico su griglia uniforme 3D
+    """
+    nz, ny, nx = dw_dphi.shape
+    eps_minus = - epsilon
+            
+    for z in range(nz):
+        for y in range(ny):
+            for x in range(nx):
+                mu[z,y,x] = eps_minus * lapl_phi[z,y,x] + dw_dphi[z,y,x]
+                
+                
+@njit(fastmath=True)
+def M_field_3D(phi: np.ndarray, M0: float, epsilon: float, M: np.ndarray):
+    """
+    Calcola il campo scalare di mobilità su griglia uniforme 3D
+    """
+    nz, ny, nx = phi.shape
+    factor = M0 * 36.0 / epsilon
+            
+    for z in range(nz):
+        for y in range(ny):
+            for x in range(nx):
+                phi_zyx = phi[z,y,x]
+                one_minus = 1.0 - phi_zyx
+                M[z,y,x] = factor * phi_zyx*phi_zyx * one_minus*one_minus
