@@ -165,33 +165,32 @@ def divergence_2D_neumann_along_y(v_x, v_y, dx, div, j_left: np.ndarray, j_right
                 div[x, y] = div_x + div_y
 
 
-@njit(fastmath=True)
-def lapl_3D(
-    phi: np.ndarray, 
-    dx: float, 
-    lapl: np.ndarray 
-):
-    """
-    Calcola il laplaciano 3D su grigilia uniforme con PBC in x, y, z usando schema a croce a 6 punti.
-    """
-    nz, ny, nx = phi.shape
-    dx2_inv = 1.0 / (dx * dx)
+# @njit(fastmath=True)
+# def lapl_3D(
+#     phi: np.ndarray, 
+#     dx: float, 
+#     lapl: np.ndarray 
+# ):
+#     """
+#     Calcola il laplaciano 3D su grigilia uniforme con PBC in x, y, z usando schema a croce a 6 punti.
+#     """
+#     nz, ny, nx = phi.shape
+#     dx2_inv = 1.0 / (dx * dx)
     
-    for z in range(nz):
-        z_up = (z + 1) % nz
-        z_down = (z - 1) % nz
-        for y in range(ny):
-            y_front = (y - 1) % ny
-            y_back = (y + 1) % ny
-            for x in range(nx):
-                x_left = (x - 1) % nx
-                x_right = (x + 1) % nx
+#     for z in range(nz):
+#         z_up = (z + 1) % nz
+#         z_down = (z - 1) % nz
+#         for y in range(ny):
+#             y_front = (y - 1) % ny
+#             y_back = (y + 1) % ny
+#             for x in range(nx):
+#                 x_left = (x - 1) % nx
+#                 x_right = (x + 1) % nx
                 
-                lapl[z, y, x] = (phi[z, y, x_left] + phi[z, y, x_right]
-                                 + phi[z, y_back, x] + phi[z, y_front, x]
-                                 + phi[z_up, y, x] + phi[z_down, y, x]
-                                 - 6*phi[z, y, x]) * dx2_inv
-                                )
+#                 lapl[z, y, x] = (phi[z, y, x_left] + phi[z, y, x_right]
+#                                  + phi[z, y_back, x] + phi[z, y_front, x]
+#                                  + phi[z_up, y, x] + phi[z_down, y, x]
+#                                  - 6*phi[z, y, x]) * dx2_inv)
                                 
                                 
 @njit(fastmath=True)
