@@ -22,7 +22,7 @@ def save_params_txt(base_dir):
         "initial_condition = 0.5 + 0.05 * (rng.random((N, N)) - 0.5)",
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
-        "run_folders = 0000, 0001, ..., 0009",
+        "run_folders = 0000, 0001, ..., 0019",
         "seed = random 32-bit integer generated independently for each run",
     ]
 
