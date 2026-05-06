@@ -39,7 +39,7 @@ def run_single(i):
 
     cmd = [
         sys.executable,
-        "main.py",
+        "/scripts/main.py",
         "--seed", str(seed),
         "--out_dir", run_dir,
     ]
