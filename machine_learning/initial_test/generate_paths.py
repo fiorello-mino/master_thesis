@@ -14,7 +14,7 @@ with open(output_txt, "w") as f:
     for folder_idx in range(n_folders):
         folder = base_dir / f"{folder_idx:04d}"
        # start_index = np.random.randint(1,150)
-        indices = list(range(201))
+        indices = list(range(1,201))
         paths = [str(folder / f"{file_idx:04d}.npy") for file_idx in indices]
         f.write(" ".join(paths) + "\n")
 

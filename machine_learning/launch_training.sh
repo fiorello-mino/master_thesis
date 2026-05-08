@@ -8,12 +8,12 @@ python3 /home/fiorello/CRANE/train.py \
 	--epochs 500 \
 	--nocrop \
 	--bias \
-	--lr 1e-4 \
+	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-4 \
 	--train_set 'training_set.txt' \
 	--valid_set 'validation_set.txt' \
-	--id 'test' \
+	--id 'test_lr_5e-5' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 2 \
