@@ -21,11 +21,12 @@ venv/
 Thumbs.db
 
 # --- Output di simulazioni / grafici ---
-test/
+gifs/
+model/
+pngs/
 output/
 figures/
 snapshots/
-train_logs/
 *.jpg
 *.jpeg
 *.mp4
