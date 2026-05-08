@@ -21,6 +21,7 @@ venv/
 Thumbs.db
 
 # --- Output di simulazioni / grafici ---
+test/
 gifs/
 model/
 pngs/
