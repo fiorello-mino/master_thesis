@@ -8,12 +8,12 @@ python3 /home/fiorello/CRANE/train.py \
 	--epochs 500 \
 	--nocrop \
 	--bias \
-	--lr 1e-5 \
+	--lr 1e-4 \
 	--batch 3 \
 	--weightd 0e-4 \
-	--train_set 'training_set.txt' \
-	--valid_set 'validation_set.txt' \
-	--id 'test_lr_1e-5' \
+	--train_set 'training_set_100_frame.txt' \
+	--valid_set 'validation_set_100_frame.txt' \
+	--id 'test_lr_1e-4_100_frame' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 2 \
@@ -21,12 +21,12 @@ python3 /home/fiorello/CRANE/train.py \
 	--nproc 4 \
 	--num_params 0 \
 	--subseq_min 1 \
-	--subseq_max 49 \
+	--subseq_max 99 \
 	--ramp \
-	--ramp_length 48 \
+	--ramp_length 98 \
 	--reflection \
 	--noise_reg 0.0125 \
 	--rotation90 \
 	--divergence \
-	--dual \
-	--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_1e-5/model/epoch_73.pt' 
+	--dual 
+	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_1e-5/model/epoch_73.pt' 
