@@ -28,5 +28,5 @@ python3 /home/fiorello/CRANE/train.py \
 	--noise_reg 0.0125 \
 	--rotation90 \
 	--divergence \
-	--dual
-	#--reload_model 'models/epoch_361.pt' 
+	--dual \
+	--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_1e-5/model/epoch_73.pt' 
