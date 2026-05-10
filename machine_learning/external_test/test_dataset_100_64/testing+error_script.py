@@ -32,9 +32,9 @@ NUM_EVO : int = 25000
 
 # <<< SCRIPT VARIABLES <<<
 MODEL_PATH      : str   = '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_5e-5/model/epoch_480.pt' # model
-SEQUENCE_TABLE  : str   = 'test_set_conforme.txt'
-IMG_SIZE        : int   = 64 # resizing dimension of images in dataset
-OUTPUT_FOLDER   : str   = '/home/fiorello/master_thesis/machine_learning/external_test/test_dataset_100_64/test_lr_5e-5'#' # output folder name
+SEQUENCE_TABLE  : str   = '/data/fiorello/external_test_128_random/testing_set.txt'
+IMG_SIZE        : int   = 128 # resizing dimension of images in dataset
+OUTPUT_FOLDER   : str   = '/data/fiorello/external_test_128_random/test_lr_5e-5'#' # output folder name
 CUDA            : bool  = True # cuda control variable
 DELTA_PNG       : int   = 1  # output frequency for png. DO NOT SET TO < 1
 

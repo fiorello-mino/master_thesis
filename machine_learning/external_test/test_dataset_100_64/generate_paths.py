@@ -1,9 +1,9 @@
 from pathlib import Path
 import numpy as np
-base_dir = Path("/data/fiorello/dataset_external_test")
-output_txt = "test_set_conforme.txt"
+base_dir = Path("/data/fiorello/dataset_external_test_128_random")
+output_txt = "/data/fiorello/external_test_128_random/testing_set.txt"
 
-n_folders = 100          # 0000 ... 0999
+n_folders = 20          # 0000 ... 0999
 n_files_total = 201       # 0000.npy ... 0200.npy
 #n_selected = 50           # vogliamo 50 file per cartella
 
