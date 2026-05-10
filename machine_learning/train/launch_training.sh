@@ -11,19 +11,19 @@ python3 /home/fiorello/CRANE/train.py \
 	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-4 \
-	--train_set 'training_set_100_frame.txt' \
-	--valid_set 'validation_set_100_frame.txt' \
-	--id 'test_lr_5e-5_100_frame' \
+	--train_set 'training_set.txt' \
+	--valid_set 'validation_set.txt' \
+	--id 'test_lr_5e-5_h_3' \
 	--logfreq 1 \
 	--kernel_size 5 \
-	--hidden 2 \
+	--hidden 3 \
 	--channels 16 \
 	--nproc 4 \
 	--num_params 0 \
 	--subseq_min 1 \
-	--subseq_max 99 \
+	--subseq_max 49 \
 	--ramp \
-	--ramp_length 98 \
+	--ramp_length 48 \
 	--reflection \
 	--noise_reg 0.0125 \
 	--rotation90 \
