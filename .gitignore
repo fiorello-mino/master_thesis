@@ -21,7 +21,8 @@ venv/
 Thumbs.db
 
 # --- Output di simulazioni / grafici ---
-external_test/
+#external_test/
+test_dataset_100_64/
 test/
 gifs/
 model/

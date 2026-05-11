@@ -1,0 +1,1 @@
+/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_5e-5_100_frame/model/epoch_497.pt
