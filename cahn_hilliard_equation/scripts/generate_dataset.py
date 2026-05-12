@@ -5,8 +5,8 @@ import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
-N_RUNS = 20
-BASE_DIR = "/data/fiorello/dataset_external_test_128_porous"
+N_RUNS = 200
+BASE_DIR = "/data/fiorello/dataset_128"
 MAX_WORKERS = 10
 
 def save_params_txt(base_dir):
