@@ -21,12 +21,12 @@ python3 /home/fiorello/CRANE/train.py \
 	--nproc 4 \
 	--num_params 0 \
 	--subseq_min 1 \
-	--subseq_max 49 \
-	--ramp \
-	--ramp_length 48 \
+	--subseq_max 1 \
 	--reflection \
 	--noise_reg 0.0125 \
 	--rotation90 \
 	--divergence \
-	--dual 
-	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_1e-5/model/epoch_73.pt' 
+	--dual \
+	--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_5e-5_hl_3/model/epoch_487.pt' 
+	#--ramp \
+	#--ramp_length 48 \
