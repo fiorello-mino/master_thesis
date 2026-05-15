@@ -5,8 +5,8 @@ import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
-N_RUNS = 200
-BASE_DIR = "/data/fiorello/dataset_128"
+N_RUNS = 1000
+BASE_DIR = "/data/fiorello/dataset_64_2framerate"
 MAX_WORKERS = 9
 
 def save_params_txt(base_dir):
@@ -22,7 +22,7 @@ def save_params_txt(base_dir):
         "initial_condition = 0.5 + 0.05 * (rng.random((N, N)) - 0.5) dentro una striscia alta 32",
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
-        "run_folders = 0000, 0001, ..., 0019",
+        "run_folders = 0000, 0001, ..., 0999",
         "seed = random 32-bit integer generated independently for each run",
     ]
 
