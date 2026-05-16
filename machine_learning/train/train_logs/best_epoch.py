@@ -16,6 +16,6 @@ def find_best_epoch(filename="test_lr_5e-5_hl_3/valid_loss.txt"):
 
 
 if __name__ == "__main__":
-    epoch, loss = find_best_epoch("test_lr_5e-5_hl_3/valid_loss.txt")
+    epoch, loss = find_best_epoch("lr_5e-5_hl_3_128/valid_loss.txt")
     print(f"Best epoch: {epoch-1}")
     print(f"Minimum validation loss: {loss}")
