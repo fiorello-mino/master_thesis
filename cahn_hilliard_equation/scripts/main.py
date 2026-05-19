@@ -42,7 +42,9 @@ def main():
     # -----------------------------------------------------
     # phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
     # phi_initial = random_profile(p.N)
-    phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
+    # phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
+    mean_value = np.random.uniform(0.1, 0.9)
+    phi_initial = mean_value + 0.05 * (rng.random((p.N, p.N)) - 0.5)
     
     #phi_initial = np.zeros((p.N, p.N))
 
