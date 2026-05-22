@@ -8,7 +8,7 @@ from cahn_hilliard.operators import grad_2D
 import cahn_hilliard.parameters as p
 
 snap_dir_true = Path("/data/fiorello/dataset_random_fraction_phase1/0021")
-snap_dir_pred = Path("/data/fiorello/external_test_random_mean_value/le_5e-5_hl_3_train_from_10/0021/pred_sequence_npy")
+snap_dir_pred = Path("/data/fiorello/external_test_random_mean_value/lr_5e-5_hl_3_train_from_10/0021/pred_sequence_npy")
 
 # Carico npy true
 files_true = []
