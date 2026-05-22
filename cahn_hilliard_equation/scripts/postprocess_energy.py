@@ -38,7 +38,7 @@ for f in files:
 snapshots_pred = np.array(snapshots_pred)
     
     
-n_snap, ny, nx = snapshots.shape
+n_snap, ny, nx = snapshots_true.shape
 times = np.empty(n_snap, dtype=float)
 energies_true = np.empty(n_snap, dtype=float)
 energies_pred = np.empty(n_snap, dtype=float)
