@@ -24,8 +24,8 @@ def evolve_cahn_hilliard_const_mobility(
     epsilon: float, 
     M: float, 
     dx: float,
-    j_left: np.ndarray,
-    j_right: np.ndarray
+    x_left: np.ndarray,
+    x_right: np.ndarray
 ) -> np.ndarray:
     
     """
@@ -44,12 +44,12 @@ def evolve_cahn_hilliard_const_mobility(
     for step in range(n_steps):
         
         # Calcolo mu
-        lapl_2D_neumann_along_y(phi, dx, lapl_phi, j_left, j_right)
+        lapl_2D_neumann_along_y(phi, dx, lapl_phi, x_left, x_right)
         dw_dphi(phi, epsilon, w_prime)
         mu_field(lapl_phi, w_prime, epsilon, mu)
         
         # Step esplicito per phi
-        lapl_2D_neumann_along_y(mu, dx, lapl_mu, j_left, j_right)
+        lapl_2D_neumann_along_y(mu, dx, lapl_mu, x_left, x_right)
         phi[:] += M * dt * lapl_mu
     
     return phi
@@ -71,7 +71,11 @@ def evolve_cahn_hilliard_surf_mobility(
     mobility: np.ndarray,
     J_x: np.ndarray,
     J_y: np.ndarray,
-    div_J: np.ndarray
+    div_J: np.ndarray,
+    x_left: np.ndarray,
+    x_right: np.ndarray,
+    y_up: np.ndarray,
+    y_down: np.ndarray
 ):
     
     """
@@ -83,12 +87,12 @@ def evolve_cahn_hilliard_surf_mobility(
     for step in range(n_steps):
         
         # Calcolo mu
-        lapl_2D(phi, dx, lapl_phi)
+        lapl_2D(phi, dx, lapl_phi, x_left, x_right, y_up, y_down)
         dw_dphi(phi, epsilon, w_prime)
         mu_field(lapl_phi, w_prime, epsilon, mu)
         
         # Step esplicito per phi
-        grad_2D(mu, dx, grad_mu_x, grad_mu_y)
+        grad_2D(mu, dx, grad_mu_x, grad_mu_y, x_left, x_right, y_up, y_down)
         M_field(phi, M0, epsilon, mobility)
         
         for i in range(ny):
@@ -96,7 +100,7 @@ def evolve_cahn_hilliard_surf_mobility(
                 J_x[i, j] = mobility[i, j] * grad_mu_x[i, j]
                 J_y[i, j] = mobility[i, j] * grad_mu_y[i, j]
         
-        div_2D(J_x, J_y, dx, div_J) 
+        div_2D(J_x, J_y, dx, div_J, x_left, x_right, y_up, y_down) 
         for i in range(ny):
             for j in range(nx):
                 phi[i, j] += dt * div_J[i, j]   
@@ -119,8 +123,8 @@ def evolve_cahn_hilliard_surf_mobility_g_phi(
     J_x,
     J_y,
     div_J,
-    j_left,
-    j_right
+    x_left,
+    x_right
 ):
     
     """
@@ -132,13 +136,13 @@ def evolve_cahn_hilliard_surf_mobility_g_phi(
     for step in range(n_steps):
         
         # Calcolo mu pesato g(phi) * mu
-        lapl_2D_neumann_along_y(phi, dx, lapl_phi, j_left, j_right)
+        lapl_2D_neumann_along_y(phi, dx, lapl_phi, x_left, x_right)
         dw_dphi(phi, epsilon, w_prime)
         weighted_mu_field(lapl_phi, w_prime, phi, epsilon, mu_weighted)
         #mu_field(lapl_phi, w_prime, phi, epsilon, mu_weighted)
         
         # Step esplicito per phi
-        grad_2D_neumann_along_y(mu_weighted, dx, grad_mu_x, grad_mu_y, j_left, j_right)
+        grad_2D_neumann_along_y(mu_weighted, dx, grad_mu_x, grad_mu_y, x_left, x_right)
         M_field(phi, M0, epsilon, mobility)
         
         for i in range(ny):
@@ -146,7 +150,7 @@ def evolve_cahn_hilliard_surf_mobility_g_phi(
                 J_x[i, j] = mobility[i, j] * grad_mu_x[i, j]
                 J_y[i, j] = mobility[i, j] * grad_mu_y[i, j]
         
-        divergence_2D_neumann_along_y(J_x, J_y, dx, div_J, j_left, j_right) 
+        divergence_2D_neumann_along_y(J_x, J_y, dx, div_J, x_left, x_right) 
         for i in range(ny):
             for j in range(nx):
                 phi[i, j] += dt * div_J[i, j]   
@@ -199,7 +203,7 @@ def evolve_ch_const_mob_with_snapshots(
     # Alla fine di ogni blocco di steps salva phi.npy
     for block in range(0, n_steps, block_size):
         n_block = min(block_size, n_steps - block)
-        phi = evolve_cahn_hilliard_const_mobility(phi, dt, n_block, epsilon, M, dx, j_left, j_right)
+        phi = evolve_cahn_hilliard_const_mobility(phi, dt, n_block, epsilon, M, dx, x_left, x_right)
         step = block + n_block
         
         idx += 1
@@ -285,6 +289,18 @@ def evolve_ch_surf_mob_with_snapshots(
     div_J       = np.empty_like(phi)
     
     ny, nx = phi_init.shape
+    x_left = np.empty(nx, dtype=np.int64)
+    x_right = np.empty(nx, dtype=np.int64)
+    y_up = np.empty(ny, dtype=np.int64)
+    y_down = np.empty(ny, dtype=np.int64)
+
+    for x in range(nx):
+        x_left[x] = (x - 1) % nx
+        x_right[x] = (x + 1) % nx
+
+    for y in range(ny):
+        y_up[y] = (y + 1) % ny
+        y_down[y] = (y - 1) % ny
     
     for block in range(0, n_steps, block_size):
         n_block = min(block_size, n_steps - block)
@@ -294,7 +310,7 @@ def evolve_ch_surf_mob_with_snapshots(
         phi, dt, n_block, epsilon, M0, dx,
         lapl_phi, w_prime, mu,
         grad_mu_x, grad_mu_y, mobility,
-        J_x, J_y, div_J)
+        J_x, J_y, div_J, x_left, x_right, y_up, y_down)
         
         step = block + n_block
         idx += 1

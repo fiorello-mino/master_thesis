@@ -32,9 +32,18 @@ def save_params_txt(base_dir):
 
 def run_single(i):
     run_dir = os.path.join(BASE_DIR, f"{i:04d}")
+    done_file = os.path.join(run_dir, "0200.npy")
+
+    # se la run è completa, saltala
+    if os.path.exists(done_file):
+        return i, "SKIPPED", f"{done_file} already exists"
+
+    # se la cartella esiste ma 0200.npy manca, ricomincia da zero
+    if os.path.exists(run_dir):
+        shutil.rmtree(run_dir)
+
     os.makedirs(run_dir, exist_ok=True)
 
-    # seed casuale tra 32 bit
     seed = random.randint(0, 2**32 - 1)
 
     cmd = [

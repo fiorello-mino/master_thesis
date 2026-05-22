@@ -6,27 +6,40 @@ from numba import njit
 
 @njit(fastmath=True)
 def lapl_2D(
-    phi: np.ndarray, 
-    dx: float, 
-    lapl: np.ndarray
-):
+    phi: np.ndarray,
+    dx: float,
+    lapl: np.ndarray,
+    x_left: np.ndarray,
+    x_right: np.ndarray,
+    y_up: np.ndarray,
+    y_down: np.ndarray,
+) -> None:
     """
-    Calcola il laplaciano 2D su grigilia uniforme con PBC in y e y usando schema a croce a 4 punti.
+    Calcola il laplaciano 2D su griglia uniforme con PBC in x e y
+    usando stencil a 5 punti.
     """
     ny, nx = phi.shape
     dx2_inv = 1.0 / (dx * dx)
-    
+
     for y in range(ny):
-        y_up = (y+1) % ny
-        y_down = (y-1) % ny
+        yu = y_up[y]
+        yd = y_down[y]
+
         for x in range(nx):
-            x_left = (x-1) % nx
-            x_right = (x+1) % nx
-            lapl[y, x] = (phi[y, x_right] + phi[y, x_left] + phi[y_up, x] + phi[y_down, x] - 4*phi[y, x]) * dx2_inv
+            xl = x_left[x]
+            xr = x_right[x]
+
+            lapl[y, x] = (
+                phi[y, xr]
+                + phi[y, xl]
+                + phi[yu, x]
+                + phi[yd, x]
+                - 4.0 * phi[y, x]
+            ) * dx2_inv
 
 
 @njit(fastmath=True)
-def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, j_left: np.ndarray, j_right: np.ndarray):
+def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, x_left: np.ndarray, x_right: np.ndarray):
     """
     Calcola il laplaciano 2D su grigilia uniforme con BC di Neumann lungo y
     e periodicità in y usando schema a croce a 4 punti.
@@ -36,8 +49,8 @@ def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, j_left
     
     for y in range(ny):
         for y in range(nx):
-            jl = j_left[y]
-            jr = j_right[y]
+            jl = x_left[y]
+            jr = x_right[y]
             
             # Bordo superiore
             if y == 0:
@@ -52,32 +65,36 @@ def lapl_2D_neumann_along_y(phi: np.ndarray, dx: float, lapl: np.ndarray, j_left
 
 @njit(fastmath=True)
 def grad_2D(
-    phi: np.ndarray, 
-    dx: float, 
-    grad_x: np.ndarray, 
-    grad_y: np.ndarray
-):
+    phi: np.ndarray,
+    dx: float,
+    grad_x: np.ndarray,
+    grad_y: np.ndarray,
+    x_left: np.ndarray,
+    x_right: np.ndarray,
+    y_up: np.ndarray,
+    y_down: np.ndarray,
+) -> None:
     """
-    Calcola il gradiente del campo scalare 2D su griglia uniforme con PBC in y e y
-    usando schema delle differenze centrate.
+    Calcola il gradiente del campo scalare 2D su griglia uniforme
+    con PBC in x e y usando differenze centrate.
     """
-    
     ny, nx = phi.shape
-    dx2_inv = 1.0 / (2.0 * dx)
-    
+    inv_2dx = 1.0 / (2.0 * dx)
+
     for y in range(ny):
-        y_up = (y+1) % ny
-        y_down = (y-1) % ny
+        yu = y_up[y]
+        yd = y_down[y]
+
         for x in range(nx):
-            x_left = (x-1) % nx
-            x_right = (x+1) % nx
-            
-            grad_x[y, x] = (phi[y, x_right] - phi[y, x_left]) * dx2_inv
-            grad_y[y, x] = (phi[y_up, x] - phi[y_down, x]) * dx2_inv
+            xl = x_left[x]
+            xr = x_right[x]
+
+            grad_x[y, x] = (phi[y, xr] - phi[y, xl]) * inv_2dx
+            grad_y[y, x] = (phi[yu, x] - phi[yd, x]) * inv_2dx
             
             
 @njit(fastmath=True)
-def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, j_left: np.ndarray, j_right: np.ndarray):
+def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, x_left: np.ndarray, x_right: np.ndarray):
     """
     Calcola il gradiente del campo scalare 2D su griglia uniforme con BC di Neumann lungo y
     e periodicità in y usando schema delle differenze centrate.
@@ -88,8 +105,8 @@ def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, j_left: np.ndarray, j_right
     
     for y in range(ny):
         for y in range(nx):
-            jl = j_left[y]
-            jr = j_right[y]
+            jl = x_left[y]
+            jr = x_right[y]
             
             grad_x[y, y] = (phi[y, jr] - phi[y, jl]) * dx2_inv
             
@@ -103,33 +120,37 @@ def grad_2D_neumann_along_y(phi, dx, grad_x, grad_y, j_left: np.ndarray, j_right
 
 @njit(fastmath=True)
 def div_2D(
-    v_x: np.ndarray, 
-    v_y: np.ndarray, 
-    dx: float, 
-    div: np.ndarray
-):
+    v_x: np.ndarray,
+    v_y: np.ndarray,
+    dx: float,
+    div: np.ndarray,
+    x_left: np.ndarray,
+    x_right: np.ndarray,
+    y_up: np.ndarray,
+    y_down: np.ndarray,
+) -> None:
     """
-    Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con PBC in y e y usando
-    schema delle differenze centrate su griglia uniforme.
+    Calcola la divergenza del campo vettoriale 2D (v_x, v_y)
+    su griglia uniforme con PBC in x e y usando differenze centrate.
     """
-    
     ny, nx = v_x.shape
-    dx2_inv = 1.0 / (2.0 * dx)
-    
+    inv_2dx = 1.0 / (2.0 * dx)
+
     for y in range(ny):
-        y_up = (y+1) % ny
-        y_down = (y-1) % ny
+        yu = y_up[y]
+        yd = y_down[y]
+
         for x in range(nx):
-            x_right = (x+1) % nx
-            x_left = (x-1) % nx
-            
-            div_x = (v_x[y, x_right] - v_x[y, x_left]) * dx2_inv
-            div_y = (v_y[y_up, x] - v_y[y_down, x]) * dx2_inv
+            xl = x_left[x]
+            xr = x_right[x]
+
+            div_x = (v_x[y, xr] - v_x[y, xl]) * inv_2dx
+            div_y = (v_y[yu, x] - v_y[yd, x]) * inv_2dx
             div[y, x] = div_x + div_y
                 
                 
 @njit(fastmath=True)
-def divergence_2D_neumann_along_y(v_x, v_y, dx, div, j_left: np.ndarray, j_right: np.ndarray):
+def divergence_2D_neumann_along_y(v_x, v_y, dx, div, x_left: np.ndarray, x_right: np.ndarray):
     """
     Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con BC di Neumann lungo y usando
     schema delle differenze centrate su griglia uniforme.
@@ -140,8 +161,8 @@ def divergence_2D_neumann_along_y(v_x, v_y, dx, div, j_left: np.ndarray, j_right
     
     for y in range(ny):
         for y in range(nx):
-            jl = j_left[y]
-            jr = j_right[y]
+            jl = x_left[y]
+            jr = x_right[y]
             
             div_x = (v_x[y, jr] - v_x[y, jl]) * dx2_inv
             
