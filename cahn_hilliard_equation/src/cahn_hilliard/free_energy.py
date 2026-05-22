@@ -83,14 +83,9 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     w_local = np.empty_like(phi)
     gx = np.empty_like(phi)
     gy = np.empty_like(phi)
-    j_left = np.empty(nx, dtype=np.int64)
-    j_right = np.empty(nx, dtype=np.int64)
-    for j in range(nx):
-        j_left[j] = (j - 1) % nx
-        j_right[j] = (j + 1) % nx
     
     w_field(phi, epsilon, w_local)
-    grad_2D(phi, dx, gx, gy, j_left, j_right)
+    grad_2D(phi, dx, gx, gy)
     
     total_E = 0.0
     for i in range(ny):
