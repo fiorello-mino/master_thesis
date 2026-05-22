@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE/train.py \
 	--weightd 0e-4 \
 	--train_set 'training_set_64_2_start_from_10.txt' \
 	--valid_set 'validation_set_64_2_start_from_10.txt' \
-	--id 'lr_5e-5_hl_3_2_from_10' \
+	--id 'lr_5e-5_hl_3_2_conservative' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -22,11 +22,11 @@ python3 /home/fiorello/CRANE/train.py \
 	--num_params 0 \
 	--subseq_min 1 \
 	--subseq_max 49 \
-	--ramp \
-	--ramp_length 48 \
 	--reflection \
 	--noise_reg 0.0125 \
 	--rotation90 \
-	--divergence \
-	--dual 
-	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_5e-5_hl_3/model/epoch_487.pt' 
+	--conservative \
+	--dual \
+	--ramp \
+	--ramp_length 48
+	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt'
