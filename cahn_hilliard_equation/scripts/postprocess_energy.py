@@ -7,7 +7,7 @@ from cahn_hilliard.free_energy import total_free_energy, w_field
 from cahn_hilliard.operators import grad_2D
 import cahn_hilliard.parameters as p
 
-snap_dir = Path("0021")
+snap_dir = Path("/home/fiorello/master_thesis/cahn_hilliard_equation/0021")
 
 files = []
 for f in snap_dir.glob("*.npy"):
@@ -39,4 +39,5 @@ plt.ylabel('Free energy')
 plt.title('Free energy vs time')
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+
+plt.savefig('energy_vs_time.png', dpi=300)
