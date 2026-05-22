@@ -11,4 +11,4 @@ epsilon = 5 * dx
 M0 = 5e-5
 
 #out_dir = "snapshots"
-live_plot = True
+live_plot = False
