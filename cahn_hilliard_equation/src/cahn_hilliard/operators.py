@@ -8,11 +8,7 @@ from numba import njit
 def lapl_2D(
     phi: np.ndarray, 
     dx: float, 
-    lapl: np.ndarray, 
-    j_left: np.ndarray, 
-    j_right: np.ndarray,
-    i_up: np.ndarray,
-    i_down: np.ndarray
+    lapl: np.ndarray
 ):
     """
     Calcola il laplaciano 2D su grigilia uniforme con PBC in y e y usando schema a croce a 4 punti.
@@ -21,12 +17,12 @@ def lapl_2D(
     dx2_inv = 1.0 / (dx * dx)
     
     for y in range(ny):
-        i_u = i_up[y]
-        i_d = i_down[y]
-        for y in range(nx):
-            jl = j_left[y]
-            jr = j_right[y]
-            lapl[y, y] = (phi[y, jr] + phi[y, jl] + phi[i_u, y] + phi[i_d, y] - 4*phi[y, y]) * dx2_inv
+        y_up = (y+1) % ny
+        y_down = (y-1) % ny
+        for x in range(nx):
+            x_left = (x-1) % nx
+            x_right = (x+1) % nx
+            lapl[y, x] = (phi[y, x_right] + phi[y, x_left] + phi[y_up, x] + phi[y_down, x] - 4*phi[y, x]) * dx2_inv
 
 
 @njit(fastmath=True)
@@ -70,14 +66,14 @@ def grad_2D(
     dx2_inv = 1.0 / (2.0 * dx)
     
     for y in range(ny):
-        y_u = (y+1) % ny
-        y_d = (y-1) % ny
+        y_up = (y+1) % ny
+        y_down = (y-1) % ny
         for x in range(nx):
-            x_l = (x-1) % nx
-            x_r = (x+1) % nx
+            x_left = (x-1) % nx
+            x_right = (x+1) % nx
             
-            grad_x[y, x] = (phi[y, x_r] - phi[y, x_l]) * dx2_inv
-            grad_y[y, x] = (phi[y_u, x] - phi[y_d, x]) * dx2_inv
+            grad_x[y, x] = (phi[y, x_right] - phi[y, x_left]) * dx2_inv
+            grad_y[y, x] = (phi[y_up, x] - phi[y_down, x]) * dx2_inv
             
             
 @njit(fastmath=True)
@@ -110,11 +106,7 @@ def div_2D(
     v_x: np.ndarray, 
     v_y: np.ndarray, 
     dx: float, 
-    div: np.ndarray, 
-    j_left: np.ndarray, 
-    j_right: np.ndarray,
-    i_up: np.ndarray,
-    i_down: np.ndarray
+    div: np.ndarray
 ):
     """
     Calcola la divergenza di un campo vettoriale 2D (v_x, v_y) con PBC in y e y usando
@@ -125,15 +117,15 @@ def div_2D(
     dx2_inv = 1.0 / (2.0 * dx)
     
     for y in range(ny):
-        i_u = i_up[y]
-        i_d = i_down[y]
-        for y in range(nx):
-            jl = j_left[y]
-            jr = j_right[y]
+        y_up = (y+1) % ny
+        y_down = (y-1) % ny
+        for x in range(nx):
+            x_right = (x+1) % nx
+            x_left = (x-1) % nx
             
-            div_x = (v_x[y, jr] - v_x[y, jl]) * dx2_inv
-            div_y = (v_y[i_u, y] - v_y[i_d, y]) * dx2_inv
-            div[y, y] = div_x + div_y
+            div_x = (v_x[y, x_right] - v_x[y, x_left]) * dx2_inv
+            div_y = (v_y[y_up, x] - v_y[y_down, x]) * dx2_inv
+            div[y, x] = div_x + div_y
                 
                 
 @njit(fastmath=True)

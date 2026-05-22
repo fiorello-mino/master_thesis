@@ -71,11 +71,7 @@ def evolve_cahn_hilliard_surf_mobility(
     mobility: np.ndarray,
     J_x: np.ndarray,
     J_y: np.ndarray,
-    div_J: np.ndarray,
-    j_left: np.ndarray,
-    j_right: np.ndarray,
-    i_up: np.ndarray,
-    i_down: np.ndarray
+    div_J: np.ndarray
 ):
     
     """
@@ -87,12 +83,12 @@ def evolve_cahn_hilliard_surf_mobility(
     for step in range(n_steps):
         
         # Calcolo mu
-        lapl_2D(phi, dx, lapl_phi, j_left, j_right, i_up, i_down)
+        lapl_2D(phi, dx, lapl_phi)
         dw_dphi(phi, epsilon, w_prime)
         mu_field(lapl_phi, w_prime, epsilon, mu)
         
         # Step esplicito per phi
-        grad_2D(mu, dx, grad_mu_x, grad_mu_y, j_left, j_right, i_up, i_down)
+        grad_2D(mu, dx, grad_mu_x, grad_mu_y)
         M_field(phi, M0, epsilon, mobility)
         
         for i in range(ny):
@@ -100,7 +96,7 @@ def evolve_cahn_hilliard_surf_mobility(
                 J_x[i, j] = mobility[i, j] * grad_mu_x[i, j]
                 J_y[i, j] = mobility[i, j] * grad_mu_y[i, j]
         
-        div_2D(J_x, J_y, dx, div_J, j_left, j_right, i_up, i_down) 
+        div_2D(J_x, J_y, dx, div_J) 
         for i in range(ny):
             for j in range(nx):
                 phi[i, j] += dt * div_J[i, j]   
@@ -289,18 +285,6 @@ def evolve_ch_surf_mob_with_snapshots(
     div_J       = np.empty_like(phi)
     
     ny, nx = phi_init.shape
-    j_left = np.empty(nx, dtype=np.int64)
-    j_right = np.empty(nx, dtype=np.int64)
-    i_up = np.empty(ny, dtype=np.int64)
-    i_down = np.empty(ny, dtype=np.int64)
-    
-    for j in range(nx):
-        j_left[j] = (j - 1) % nx
-        j_right[j] = (j + 1) % nx
-    
-    for i in range(ny):
-        i_up[i] = (i - 1) % ny
-        i_down[i] = (i + 1) % ny
     
     for block in range(0, n_steps, block_size):
         n_block = min(block_size, n_steps - block)
@@ -310,7 +294,7 @@ def evolve_ch_surf_mob_with_snapshots(
         phi, dt, n_block, epsilon, M0, dx,
         lapl_phi, w_prime, mu,
         grad_mu_x, grad_mu_y, mobility,
-        J_x, J_y, div_J, j_left, j_right, i_up, i_down)
+        J_x, J_y, div_J)
         
         step = block + n_block
         idx += 1
