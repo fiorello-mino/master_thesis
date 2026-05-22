@@ -11,15 +11,15 @@ snap_dir_true = Path("/data/fiorello/dataset_random_fraction_phase1/0021")
 snap_dir_pred = Path("/data/fiorello/external_test_random_mean_value/le_5e-5_hl_3_train_from_10/0021/pred_sequence_npy")
 
 # Carico npy true
-files = []
+files_true = []
 for f in snap_dir_true.glob("*.npy"):
     if int(f.stem) >= 10:
-        files.append(f)
+        files_true.append(f)
 
-files.sort()
+files_true.sort()
 
 snapshots_true = []
-for f in files:
+for f in files_true:
     snapshots_true.append(np.load(f, allow_pickle=False))
 
 snapshots_true = np.array(snapshots_true)
@@ -32,7 +32,7 @@ for f in snap_dir_pred.glob("*.npy"):
 files_pred.sort()
 
 snapshots_pred = []
-for f in files:
+for f in files_pred:
     snapshots_pred.append(np.load(f, allow_pickle=False))
 
 snapshots_pred = np.array(snapshots_pred)
