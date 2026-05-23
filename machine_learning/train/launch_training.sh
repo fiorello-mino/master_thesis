@@ -11,9 +11,9 @@ python3 /home/fiorello/CRANE/train.py \
 	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-4 \
-	--train_set 'training_set_64_2_start_from_10.txt' \
-	--valid_set 'validation_set_64_2_start_from_10.txt' \
-	--id 'lr_5e-5_hl_3_2_conservative' \
+	--train_set 'training_set_64_2_from_10.txt' \
+	--valid_set 'validation_set_64_2_from_10.txt' \
+	--id 'lr_5e-5_hl_3_2_tr_10' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -25,7 +25,7 @@ python3 /home/fiorello/CRANE/train.py \
 	--reflection \
 	--noise_reg 0.0125 \
 	--rotation90 \
-	--conservative \
+	--divergence \
 	--dual \
 	--ramp \
 	--ramp_length 48
