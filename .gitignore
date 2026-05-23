@@ -33,7 +33,7 @@ snapshots/
 *.jpg
 *.jpeg
 *.mp4
-*.csv
+#*.csv
 *.dat
 *.npy
 *.npz
