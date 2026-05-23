@@ -41,7 +41,7 @@ def main():
     # Condizione iniziale
     # -----------------------------------------------------
     phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
-    
+    #phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
     #phi_initial = np.zeros((p.N, p.N))
 
     #h = 32
