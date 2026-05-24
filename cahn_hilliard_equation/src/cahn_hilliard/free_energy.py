@@ -79,6 +79,10 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     eps2 = 0.5 * epsilon
     dx2 = dx * dx
     
+    x_left = np.empty(nx, dtype=np.int64)
+    x_right = np.empty(nx, dtype=np.int64)
+    y_up = np.empty(ny, dtype=np.int64)
+    y_down = np.empty(ny, dtype=np.int64)
     for x in range(nx):
         x_left[x] = (x - 1) % nx
         x_right[x] = (x + 1) % nx
