@@ -53,7 +53,7 @@ for i in range(n_snap):
     y_max = all_points[:, 1].max()
 
     amps[i] = 0.5 * (y_max - y_min)
-    energies[i] = total_free_energy(phi=phi, epsilon=p.epsilon, dx=p.dx)
+    energies[i] = total_free_energy(phi=phi, epsilon=5.0/64, dx=1.0/128)
 
 data_out = np.column_stack((times, amps, energies))
 np.savetxt(

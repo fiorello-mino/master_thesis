@@ -79,12 +79,21 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     eps2 = 0.5 * epsilon
     dx2 = dx * dx
     
+    for x in range(nx):
+        x_left[x] = (x - 1) % nx
+        x_right[x] = (x + 1) % nx
+
+    for y in range(ny):
+        y_up[y] = (y + 1) % ny
+        y_down[y] = (y - 1) % ny
+    
     # Preallocazioni locali
     w_local = np.empty_like(phi)
     gx = np.empty_like(phi)
     gy = np.empty_like(phi)
     
     w_field(phi, epsilon, w_local)
+    
     grad_2D(phi, dx, gx, gy, x_left, x_right, y_up, y_down)
     
     total_E = 0.0
