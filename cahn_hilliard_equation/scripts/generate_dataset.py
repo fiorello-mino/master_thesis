@@ -2,11 +2,12 @@ import os
 import sys
 import random
 import subprocess
+import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
-N_RUNS = 100
-BASE_DIR = "/data/fiorello/dataset_64_2_ext_test"
+N_RUNS = 300
+BASE_DIR = "/data/fiorello/dataset_64_2_random_fraction_phase1"
 MAX_WORKERS = 6
 
 def save_params_txt(base_dir):
@@ -19,10 +20,10 @@ def save_params_txt(base_dir):
         f"epsilon = {p.epsilon}",
         f"M0 = {p.M0}",
         "model = cahn_hilliard_surface_mobility",
-        "initial_condition = phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)",
+        "initial_condition = phi_initial = random fraction phase 1 from 0.1 to 0.9",
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
-        "run_folders = 0000, 0001, ..., 0099",
+        "run_folders = 0000, 0001, ..., 0299",
         "seed = random 32-bit integer generated independently for each run",
     ]
 

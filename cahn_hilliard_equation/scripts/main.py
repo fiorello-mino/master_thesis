@@ -40,7 +40,7 @@ def main():
     # -----------------------------------------------------
     # Condizione iniziale
     # -----------------------------------------------------
-    phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
+    #phi_initial = 0.5 + 0.05 * (rng.random((p.N, p.N)) - 0.5)
     #phi_initial = smooth_cosine_interface(p.N, p.dx, p.epsilon)
     #phi_initial = np.zeros((p.N, p.N))
 
@@ -53,21 +53,21 @@ def main():
     # -----------------------------------------------------
     # Condizione iniziale: domini random lisci con frazione di fase controllata
     # -----------------------------------------------------
-    # mean_value = rng.uniform(0.1, 0.9)
+    mean_value = rng.uniform(0.1, 0.9)
 
-    # # campo random iniziale
-    # field = rng.random((p.N, p.N))
+    # campo random iniziale
+    field = rng.random((p.N, p.N))
 
     # # soglia scelta in modo da avere circa mean_value di fase alta
-    # threshold = np.quantile(field, 1.0 - mean_value)
-    # mask = field > threshold
+    threshold = np.quantile(field, 1.0 - mean_value)
+    mask = field > threshold
 
-    # # valori delle due fasi, uno sotto e uno sopra 0.5
-    # phi_low = rng.uniform(0.35, 0.45, size=(p.N, p.N))
-    # phi_high = rng.uniform(0.55, 0.65, size=(p.N, p.N))
+    # valori delle due fasi, uno sotto e uno sopra 0.5
+    phi_low = rng.uniform(0.35, 0.45, size=(p.N, p.N))
+    phi_high = rng.uniform(0.55, 0.65, size=(p.N, p.N))
 
-    # phi_initial = np.where(mask, phi_high, phi_low)
-    # phi_initial = np.clip(phi_initial, 0.0, 1.0)
+    phi_initial = np.where(mask, phi_high, phi_low)
+    phi_initial = np.clip(phi_initial, 0.0, 1.0)
 
     phi_final = np.empty_like(phi_initial)
 

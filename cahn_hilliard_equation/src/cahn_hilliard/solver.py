@@ -12,7 +12,7 @@ from .operators import (
     div_2D,
     lapl_2D_neumann_along_y, 
     grad_2D_neumann_along_y, 
-    divergence_2D_neumann_along_y
+    div_2D_neumann_along_y
 )
 
 
@@ -87,12 +87,12 @@ def evolve_cahn_hilliard_surf_mobility(
     for step in range(n_steps):
         
         # Calcolo mu
-        lapl_2D(phi, dx, lapl_phi, x_left, x_right, y_up, y_down)
+        lapl_2D_neumann_along_y(phi, dx, lapl_phi, x_left, x_right)
         dw_dphi(phi, epsilon, w_prime)
         mu_field(lapl_phi, w_prime, epsilon, mu)
         
         # Step esplicito per phi
-        grad_2D(mu, dx, grad_mu_x, grad_mu_y, x_left, x_right, y_up, y_down)
+        grad_2D_neumann_along_y(mu, dx, grad_mu_x, grad_mu_y, x_left, x_right)
         M_field(phi, M0, epsilon, mobility)
         
         for i in range(ny):
@@ -100,7 +100,7 @@ def evolve_cahn_hilliard_surf_mobility(
                 J_x[i, j] = mobility[i, j] * grad_mu_x[i, j]
                 J_y[i, j] = mobility[i, j] * grad_mu_y[i, j]
         
-        div_2D(J_x, J_y, dx, div_J, x_left, x_right, y_up, y_down) 
+        div_2D_neumann_along_y(J_x, J_y, dx, div_J, x_left, x_right) 
         for i in range(ny):
             for j in range(nx):
                 phi[i, j] += dt * div_J[i, j]   
