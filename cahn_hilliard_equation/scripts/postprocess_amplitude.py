@@ -57,7 +57,7 @@ for i in range(n_snap):
 
 data_out = np.column_stack((times, amps, energies))
 np.savetxt(
-    "amplitude_vs_time_explicit.csv",
+    "/home/fiorello/master_thesis/fem/amplitude_vs_time_explicit.csv",
     data_out,
     delimiter=",",
     header="time,amplitude,energy",
