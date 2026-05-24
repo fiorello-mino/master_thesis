@@ -8,7 +8,7 @@ import cahn_hilliard.parameters as p
 
 N_RUNS = 300
 BASE_DIR = "/data/fiorello/dataset_64_2_random_fraction_phase1"
-MAX_WORKERS = 6
+MAX_WORKERS = 8
 
 def save_params_txt(base_dir):
     lines = [
