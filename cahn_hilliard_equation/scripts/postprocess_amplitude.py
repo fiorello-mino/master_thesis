@@ -19,7 +19,7 @@ def load_snapshots_array(snap_dir="/data/fiorello/run_cosine", first=0, last=100
     for k, file in enumerate(files):
         snapshots[k] = np.load(file)
 
-    times = dt * p.steps_per_save * np.arange(first, last + 1) 
+    times = dt * 1_000_000 * np.arange(first, last + 1) 
 
     return times, snapshots
 
