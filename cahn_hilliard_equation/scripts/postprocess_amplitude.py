@@ -51,6 +51,11 @@ for i in range(n_snap):
 
     y_min = all_points[:, 1].min()
     y_max = all_points[:, 1].max()
+    
+    if i == 0:
+        print("y_min =", y_min)
+        print("y_max =", y_max)
+        print("y_max - y_min =", y_max - y_min)
 
     amps[i] = 0.5 * (y_max - y_min)
     energies[i] = total_free_energy(phi=phi, epsilon=5.0/64, dx=1.0/128)
