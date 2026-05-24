@@ -26,8 +26,8 @@ def load_snapshots_array(snap_dir="/data/fiorello/run_cosine", first=0, last=100
 times, snapshots = load_snapshots_array("/data/fiorello/run_cosine", first=0, last=100, dt=p.dt)
 n_snap, ny, nx = snapshots.shape
 
-x = (np.arange(p.N) + 0.5) * p.dx
-y = (np.arange(p.N) + 0.5) * p.dx
+x = (np.arange(nx) + 0.5) * p.dx
+y = (np.arange(ny) + 0.5) * p.dx
 X, Y = np.meshgrid(x, y)
 
 level = 0.5
