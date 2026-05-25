@@ -6,8 +6,8 @@ import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
-N_RUNS = 300
-BASE_DIR = "/data/fiorello/dataset_64_2_random_fraction_phase1"
+N_RUNS = 100
+BASE_DIR = "/data/fiorello/dataset_64_2_random_fraction_phase1_ext_test"
 MAX_WORKERS = 8
 
 def save_params_txt(base_dir):
@@ -23,7 +23,7 @@ def save_params_txt(base_dir):
         "initial_condition = phi_initial = random fraction phase 1 from 0.1 to 0.9",
         f"n_runs = {N_RUNS}",
         f"max_workers = {MAX_WORKERS}",
-        "run_folders = 0000, 0001, ..., 0299",
+        "run_folders = 0000, 0001, ..., 099",
         "seed = random 32-bit integer generated independently for each run",
     ]
 
