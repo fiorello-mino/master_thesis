@@ -457,7 +457,7 @@ def save_png_outputs(
 
     args_true = SimpleNamespace(
         nproc=4,
-        cmap='gray',
+        cmap='RdBu_r',
         paths={'png': str(true_dir)},
         vmin=0.0,
         vmax=1.0,
@@ -471,7 +471,7 @@ def save_png_outputs(
     
     args_pred = SimpleNamespace(
         nproc=4,
-        cmap='gray',
+        cmap='RdBu_r',
         paths={'png': str(pred_dir)},
         vmin=0.0,
         vmax=1.0,
