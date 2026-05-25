@@ -1,13 +1,13 @@
 #!/bin/sh
 
-MODEL_PATH="/home/fiorello/master_thesis/machine_learning/train/train_logs/test_lr_5e-5/model/epoch_480.pt"
-SEQUENCE_TABLE="/data/fiorello/external_test_128_random/testing_set.txt"
-OUTPUT_FOLDER="/data/fiorello/external_test_128_random/test_lr_5e-5"
+LOG_DIR_NAME="lr_5e-5_hl_3_2_fr_10"
+SEQUENCE_TABLE="/data/fiorello/ext_test_64_2/testing_set_from_10.txt"
+OUTPUT_FOLDER="/data/fiorello/ext_test_64_2/lr_5e-5_hl_3_2_fr_10"
 SCRIPT_PATH="./test_script.py"
 
 IMG_SIZE=64
 MIN_SEQ=1
-HIDDEN_UNITS=2
+HIDDEN_UNITS=3
 INPUT_CHANNELS=1
 OUTPUT_CHANNELS=1
 HIDDEN_CHANNELS=16
@@ -24,11 +24,11 @@ NUM_EVO=25000
 OVERWRITE="delete"
 LOG_LEVEL="INFO"
 
-EPSILON=1.0
-DX=1.0
+EPSILON=0.078125
+DX=0.015625
 
 python "$SCRIPT_PATH" \
-  --model-path "$MODEL_PATH" \
+  --log-dir-name "$LOG_DIR_NAME" \
   --sequence-table "$SEQUENCE_TABLE" \
   --output-folder "$OUTPUT_FOLDER" \
   --img-size "$IMG_SIZE" \
