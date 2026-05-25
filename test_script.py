@@ -198,28 +198,6 @@ def parse_args() -> Config:
         num_evo=args.num_evo,
         overwrite=args.overwrite,
     )
-
-
-def best_model_path(log_dir_name):
-    log_dir_path = os.path.join(train_logs_dir, log_dir_name)
-    valid_loss_file = os.path.join(log_dir_path, "valid_loss.txt")
-    
-    min_loss = None
-    best_epoch = None
-
-    with open(valid_loss_file, "r") as f:
-        for epoch, line in enumerate(f, start=1):
-            value = float(line.strip())
-
-            if min_loss is None or value < min_loss:
-                min_loss = value
-                best_epoch = epoch - 1
-    
-    model_path = os.path.join(log_dir_path, "model", f"epoch_{best_epoch}.pt")
-    return model_path
-    
-    
-    
     
     
 def build_transform(img_size: int) -> transforms.Compose:
