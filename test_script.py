@@ -320,8 +320,8 @@ def grad_2D(
             x_left = (x - 1) % nx
             x_right = (x + 1) % nx
 
-            grad_x[y, x] = (phi[y, x_right] - phi[y, x_left]) * inv_2dx
-            grad_y[y, x] = (phi[y_up, x] - phi[y_down, x]) * inv_2dx
+            grad_x[y, x] = (phi[y, x_right] - phi[y, x_left]) * dx2_inv
+            grad_y[y, x] = (phi[y_up, x] - phi[y_down, x]) * dx2_inv
             
             
 @njit(fastmath=True)
