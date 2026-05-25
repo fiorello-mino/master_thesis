@@ -5,6 +5,7 @@ import logging
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+import os
 from sys import path as sys_path
 from types import SimpleNamespace
 from typing import Iterator
@@ -18,12 +19,62 @@ from torchvision import transforms
 # aggiungo il repo CRANE al path
 sys_path.append('/home/fiorello/CRANE/')
 
+train_logs_dir = Path("/home/fiorello/master_thesis/machine_learning/train/train_logs")
+
 from src.classes import ConvGRU
 from src.utils import seq2npy, seq2png_treaded, seq2vtk
 
 
 LOGGER = logging.getLogger(__name__)
 
+
+def best_model_path(log_dir_name: str) -> tuple[Path, int, float]:
+    log_dir_path = train_logs_dir / log_dir_name
+    valid_loss_file = log_dir_path / "valid_loss.txt"
+
+    if not log_dir_path.is_dir():
+        raise FileNotFoundError(f"La cartella di log non esiste: {log_dir_path}")
+
+    if not valid_loss_file.is_file():
+        raise FileNotFoundError(f"File valid_loss.txt non trovato: {valid_loss_file}")
+
+    min_loss = None
+    best_epoch = None
+
+    with valid_loss_file.open("r") as f:
+        for epoch, line in enumerate(f):
+            line = line.strip()
+
+            if not line:
+                continue
+
+            try:
+                value = float(line)
+            except ValueError as e:
+                raise ValueError(
+                    f"Valore non valido in {valid_loss_file} alla riga {epoch + 1}: {line!r}"
+                ) from e
+
+            if min_loss is None or value < min_loss:
+                min_loss = value
+                best_epoch = epoch
+
+    if best_epoch is None:
+        raise ValueError(f"Il file {valid_loss_file} è vuoto o contiene solo righe vuote")
+
+    model_path = log_dir_path / "model" / f"epoch_{best_epoch}.pt"
+
+    if not model_path.is_file():
+        raise FileNotFoundError(f"Il miglior modello atteso non esiste: {model_path}")
+
+    logging.info(
+        "Best model trovato in %s: epoch=%d, valid_loss=%.8e",
+        log_dir_name,
+        best_epoch,
+        min_loss
+    )
+
+    return model_path, best_epoch, min_loss
 
 @dataclass
 class Config:
@@ -67,7 +118,7 @@ def parse_args() -> Config:
     parser = argparse.ArgumentParser(
         description='Run ConvGRU inference on tabulated sequences.'
     )
-    parser.add_argument('--model-path', type=Path, required=True)
+    parser.add_argument('--log-dir-name', type=str, required=True)
     parser.add_argument('--sequence-table', type=Path, required=True)
     parser.add_argument('--output-folder', type=Path, required=True)
     parser.add_argument('--img-size', type=int, default=64)
@@ -116,9 +167,11 @@ def parse_args() -> Config:
         raise ValueError('--delta-png deve essere >= 1')
     if args.min_seq < 1:
         raise ValueError('--min-seq deve essere >= 1')
+    
+    model_path, best_epoch, min_loss = best_model_path(args.log_dir_name)
 
     return Config(
-        model_path=args.model_path,
+        model_path=model_path,
         sequence_table=args.sequence_table,
         output_folder=args.output_folder,
         img_size=args.img_size,
@@ -147,6 +200,28 @@ def parse_args() -> Config:
     )
 
 
+def best_model_path(log_dir_name):
+    log_dir_path = os.path.join(train_logs_dir, log_dir_name)
+    valid_loss_file = os.path.join(log_dir_path, "valid_loss.txt")
+    
+    min_loss = None
+    best_epoch = None
+
+    with open(valid_loss_file, "r") as f:
+        for epoch, line in enumerate(f, start=1):
+            value = float(line.strip())
+
+            if min_loss is None or value < min_loss:
+                min_loss = value
+                best_epoch = epoch - 1
+    
+    model_path = os.path.join(log_dir_path, "model", f"epoch_{best_epoch}.pt")
+    return model_path
+    
+    
+    
+    
+    
 def build_transform(img_size: int) -> transforms.Compose:
     return transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
