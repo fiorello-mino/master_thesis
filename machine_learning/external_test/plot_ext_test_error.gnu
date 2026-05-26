@@ -20,4 +20,7 @@ plot \
      #'ext_test_lr_5e-5_100_frame/dataset_64_random/errors.txt' using ($0):2 with lines lw 1.5 lc rgb "#4DAF4A" title 'lr = 5e-5 100 frames', \
      #'ext_test_lr_5e-5_hl_3/dataset_64_random/errors_validation_set.txt' every ::0::99 using ($0):5 with lines lw 1.5 lc rgb "#E41A1C" title 'valid set'
 
-# rgb "#984EA3"
+# rgb "#984EA3" viola
+# rgb "#E41A1C" rosso
+# rgb "#0072B2" blu
+# rgb "#4DAF4A" verde
