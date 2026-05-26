@@ -1,8 +1,8 @@
 #!/bin/sh
 
-LOG_DIR_NAME="lr_5e-5_hl_3_2_fr_10"
-SEQUENCE_TABLE="/data/fiorello/ext_test_64_2/testing_set_from_10.txt"
-OUTPUT_FOLDER="/data/fiorello/ext_test_64_2/lr_5e-5_hl_3_2_fr_10"
+LOG_DIR_NAME="lr_5e-5_hl_3_2_tr_5"
+SEQUENCE_TABLE="/data/fiorello/ext_test_64_2/testing_set_from_5.txt"
+OUTPUT_FOLDER="/data/fiorello/ext_test_64_2/lr_5e-5_hl_3_2_tr_5"
 SCRIPT_PATH="./test_script.py"
 
 IMG_SIZE=64
