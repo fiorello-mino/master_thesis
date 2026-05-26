@@ -14,8 +14,8 @@ set logscale y
 set key left top
 
 plot \
-     'ext_test_lr_5e-5_hl_3_from_10/dataset_64_random_2/errors.txt' using ($0):5 with lines lw 1.5 lc rgb "#0072B2" title 'from 10', \
-     'ext_test_lr_5e-5_hl_3_from_10/dataset_64_random_2/errors_test_from_10.txt' using ($0):5 with lines lw 1.5 lc rgb "#984EA3" title 'train from frame 10, test from frame 10'
+     'dataset_64_2_ext_test/lr_5e-5_hl_3_2_tr_10/errors.txt' using ($0):5 with lines lw 1.5 lc rgb "#0072B2" title 'from frame 10', \
+     'dataset_64_2_ext_test/lr_5e-5_hl_3_2_tr_5/errors.txt' using ($0):5 with lines lw 1.5 lc rgb "#E41A1C" title 'from frame 5'
      #'ext_test_lr_5e-5_hl_3_2/errors.txt' using ($0):5 with lines lw 1.5 lc rgb "#E41A1C" title 'train from frame 3, test from frame 1'
      #'ext_test_lr_5e-5_100_frame/dataset_64_random/errors.txt' using ($0):2 with lines lw 1.5 lc rgb "#4DAF4A" title 'lr = 5e-5 100 frames', \
      #'ext_test_lr_5e-5_hl_3/dataset_64_random/errors_validation_set.txt' every ::0::99 using ($0):5 with lines lw 1.5 lc rgb "#E41A1C" title 'valid set'
