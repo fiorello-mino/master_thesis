@@ -198,9 +198,6 @@ def build_phi_comb_block(
     eps = 5.0 / 64.0
     half_domain = 0.5
 
-    if abs(base_width - 1.0) > 1e-12:
-        raise ValueError("La base deve essere larga 1.0.")
-
     if tooth_width < 2.0 * eps:
         raise ValueError(
             f"tooth_width={tooth_width} troppo piccolo per eps={eps:.6f}; "
