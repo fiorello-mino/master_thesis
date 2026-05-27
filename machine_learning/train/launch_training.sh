@@ -11,9 +11,9 @@ python3 /home/fiorello/CRANE/train.py \
 	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-4 \
-	--train_set 'training_set_64_2_from_5.txt' \
-	--valid_set 'validation_set_64_2_from_5.txt' \
-	--id 'lr_5e-5_hl_3_2_tr_5' \
+	--train_set 'training_set_64_from_5.txt' \
+	--valid_set 'validation_set_64_from_5.txt' \
+	--id 'lr_5e-5_hl_3_tr_5' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
