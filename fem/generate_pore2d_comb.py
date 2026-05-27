@@ -192,9 +192,9 @@ def build_phi_comb_block(
     tooth_height=0.22,
     pitch=0.24,
     center_x=0.0,
-    stem_width=0.78,
-    stem_height=0.10,
-    stem_center_y=-0.18,
+    base_width=0.78,
+    base_height=0.10,
+    base_center_y=-0.18,
 ):
     eps = 5.0 / 64.0
     half_domain = 0.5
@@ -205,12 +205,12 @@ def build_phi_comb_block(
             f"usa almeno ~{2*eps:.3f}, meglio ~{3*eps:.3f}."
         )
 
-    leftmost = center_x - 0.5 * stem_width
-    rightmost = center_x + 0.5 * stem_width
+    leftmost = center_x - 0.5 * base_width
+    rightmost = center_x + 0.5 * base_width
     if leftmost < -half_domain or rightmost > half_domain:
         raise ValueError("La base del pettine esce dal dominio [-0.5, 0.5].")
 
-    tooth_bottom = stem_center_y + 0.5 * stem_height
+    tooth_bottom = base_center_y + 0.5 * base_height
     tooth_center_y = tooth_bottom + 0.5 * tooth_height
 
     tooth_left = center_x - 0.5 * pitch * (n_teeth - 1) - 0.5 * tooth_width
@@ -222,7 +222,8 @@ def build_phi_comb_block(
     if tooth_top > half_domain:
         raise ValueError("I denti escono sopra y=0.5.")
 
-    names = ["stem"] + [f"tooth{i+1}" for i in range(n_teeth)]
+    n_rectangles = n_teeth + 1
+    names = ["rectangle"] + [f"rectangle{i}" for i in range(1, n_rectangles)]
     start_x = center_x - 0.5 * pitch * (n_teeth - 1)
 
     lines = [
@@ -234,15 +235,16 @@ def build_phi_comb_block(
         "",
         "surf->phi->shape->eps:                          ${surf->eps}",
         "",
-        f"stem->sides length:\t[{fmt(stem_width)},{fmt(stem_height)}]",
-        f"stem->center:\t\t[{fmt(center_x)},{fmt(stem_center_y)}]",
+        f"rectangle->sides length:\t[{fmt(base_width)},{fmt(base_height)}]",
+        f"rectangle->center:\t\t[{fmt(center_x)},{fmt(base_center_y)}]",
         "",
     ]
 
     for i in range(n_teeth):
         cx = start_x + i * pitch
-        lines.append(f"tooth{i+1}->sides length:\t[{fmt(tooth_width)},{fmt(tooth_height)}]")
-        lines.append(f"tooth{i+1}->center:\t\t[{fmt(cx)},{fmt(tooth_center_y)}]")
+        name = f"rectangle{i+1}"
+        lines.append(f"{name}->sides length:\t[{fmt(tooth_width)},{fmt(tooth_height)}]")
+        lines.append(f"{name}->center:\t\t[{fmt(cx)},{fmt(tooth_center_y)}]")
         if i != n_teeth - 1:
             lines.append("")
 
