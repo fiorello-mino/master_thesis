@@ -42,7 +42,7 @@ python "$SCRIPT_PATH" \
   --kernel-size "$KERNEL_SIZE" \
   --padding-mode "$PADDING_MODE" \
   --bias \
-  --divergence \
+  --no-divergence \
   --num-params "$NUM_PARAMS" \
   --num-png "$NUM_PNG" \
   --num-vtk "$NUM_VTK" \
