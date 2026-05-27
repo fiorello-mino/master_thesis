@@ -26,7 +26,7 @@ surf->space->name:\t\t\t\t\t[phi,mu]
 #############################################################################################
 #\tCUSTOM
 surf->stabilizing function for mu:\t\t\t1\t% 1->Yes 0->No
-surf->eps:                                              0.03125
+surf->eps:                                              0.0115
 
 #       BC
 surf->boundary conditions->Periodic BC:\t\t\t  [ -1 ]
@@ -296,7 +296,7 @@ def main():
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--n-inner-teeth", type=int, default=6)
-    parser.add_argument("--tooth-width", type=float, default=0.05)
+    parser.add_argument("--tooth-width", type=float, default=0.03)
     parser.add_argument("--tooth-height", type=float, default=0.6)
     parser.add_argument("--side-width", type=float, default=0.1)
     parser.add_argument("--base-width", type=float, default=1.2)
