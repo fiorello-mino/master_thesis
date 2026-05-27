@@ -192,12 +192,14 @@ def build_phi_comb_block(
     tooth_height=0.22,
     pitch=0.24,
     center_x=0.0,
-    base_width=0.78,
+    base_width=1.0,
     base_height=0.10,
-    base_center_y=-0.18,
 ):
     eps = 5.0 / 64.0
     half_domain = 0.5
+
+    if base_width != 1.0:
+        raise ValueError("Hai chiesto una base larga 1, quindi base_width deve essere 1.0.")
 
     if tooth_width < 2.0 * eps:
         raise ValueError(
@@ -205,22 +207,23 @@ def build_phi_comb_block(
             f"usa almeno ~{2*eps:.3f}, meglio ~{3*eps:.3f}."
         )
 
-    leftmost = center_x - 0.5 * base_width
-    rightmost = center_x + 0.5 * base_width
-    if leftmost < -half_domain or rightmost > half_domain:
-        raise ValueError("La base del pettine esce dal dominio [-0.5, 0.5].")
+    base_center_y = half_domain - 0.5 * base_height
+    tooth_center_y = base_center_y - 0.5 * base_height - 0.5 * tooth_height
 
-    tooth_bottom = base_center_y + 0.5 * base_height
-    tooth_center_y = tooth_bottom + 0.5 * tooth_height
+    base_left = center_x - 0.5 * base_width
+    base_right = center_x + 0.5 * base_width
+
+    if base_left < -half_domain or base_right > half_domain:
+        raise ValueError("La base esce dal dominio [-0.5, 0.5].")
 
     tooth_left = center_x - 0.5 * pitch * (n_teeth - 1) - 0.5 * tooth_width
     tooth_right = center_x + 0.5 * pitch * (n_teeth - 1) + 0.5 * tooth_width
-    tooth_top = tooth_center_y + 0.5 * tooth_height
+    tooth_bottom = tooth_center_y - 0.5 * tooth_height
 
     if tooth_left < -half_domain or tooth_right > half_domain:
-        raise ValueError("I denti escono dal dominio [-0.5, 0.5].")
-    if tooth_top > half_domain:
-        raise ValueError("I denti escono sopra y=0.5.")
+        raise ValueError("I denti escono lateralmente dal dominio [-0.5, 0.5].")
+    if tooth_bottom < -half_domain:
+        raise ValueError("I denti escono sotto y=-0.5.")
 
     n_rectangles = n_teeth + 1
     names = ["rectangle"] + [f"rectangle{i}" for i in range(1, n_rectangles)]
