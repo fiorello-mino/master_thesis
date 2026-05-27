@@ -196,6 +196,9 @@ def build_phi_comb_block(
 ):
     eps = 5.0 / 64.0
     half_domain = 0.5
+    visible_left = -half_domain
+    visible_right = half_domain
+    visible_width = visible_right - visible_left
 
     if n_teeth < 1:
         raise ValueError("n_teeth deve essere almeno 1.")
@@ -206,10 +209,6 @@ def build_phi_comb_block(
             f"usa almeno ~{2*eps:.3f}, meglio ~{3*eps:.3f}."
         )
 
-    visible_left = -half_domain
-    visible_right = half_domain
-    visible_width = visible_right - visible_left
-
     total_teeth_width = n_teeth * tooth_width
     if total_teeth_width >= visible_width:
         raise ValueError(
@@ -219,9 +218,9 @@ def build_phi_comb_block(
 
     gap = (visible_width - total_teeth_width) / (n_teeth + 1)
 
-    base_left = center_x - 0.5 * base_width
     base_center_y = -half_domain - 0.5 * base_height
-    tooth_center_y = -half_domain + 0.5 * tooth_height
+    tooth_bottom = base_center_y + 0.5 * base_height
+    tooth_center_y = tooth_bottom + 0.5 * tooth_height
 
     x_left = visible_left + gap
     centers = [x_left + 0.5 * tooth_width + i * (tooth_width + gap) for i in range(n_teeth)]
@@ -232,8 +231,8 @@ def build_phi_comb_block(
     lines = [
         "surf->phi->shape:                               " + " + ".join(names),
         "",
-        "surf->phi->shape->inner value:                  0",
-        "surf->phi->shape->outer value:                  1",
+        "surf->phi->shape->inner value:                  1",
+        "surf->phi->shape->outer value:                  0",
         "surf->phi->shape->center:\t\t        [ 0. , 0. ]",
         "",
         "surf->phi->shape->eps:                          ${surf->eps}",
@@ -268,7 +267,7 @@ def build_pore2d_text(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con un pettine con base sotto il dominio e denti uniformemente spaziati."
+        description="Genera da zero pore2D.dat con base sotto il dominio e denti verso l'alto."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--teeth", type=int, default=3)
