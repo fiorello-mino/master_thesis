@@ -192,12 +192,12 @@ def build_phi_comb_block(
     tooth_height=0.22,
     center_x=0.0,
     base_width=1.2,
-    base_height=0.20,
+    base_height=0.2,
+    base_center_y=-0.4,
 ):
     eps = 5.0 / 64.0
-    half_domain = 0.5
-    visible_left = -half_domain
-    visible_right = half_domain
+    visible_left = -0.5
+    visible_right = 0.5
     visible_width = visible_right - visible_left
 
     if n_teeth < 1:
@@ -218,9 +218,8 @@ def build_phi_comb_block(
 
     gap = (visible_width - total_teeth_width) / (n_teeth + 1)
 
-    base_center_y = -half_domain - 0.5 * base_height
-    tooth_bottom = base_center_y + 0.5 * base_height
-    tooth_center_y = tooth_bottom + 0.5 * tooth_height
+    base_top = base_center_y + 0.5 * base_height
+    tooth_center_y = base_top + 0.5 * tooth_height
 
     x_left = visible_left + gap
     centers = [x_left + 0.5 * tooth_width + i * (tooth_width + gap) for i in range(n_teeth)]
@@ -261,13 +260,14 @@ def build_pore2d_text(args):
         center_x=args.center_x,
         base_width=args.base_width,
         base_height=args.base_height,
+        base_center_y=args.base_center_y,
     )
     return HEADER + "\n" + phi_block + FOOTER
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con base sotto il dominio e denti verso l'alto."
+        description="Genera da zero pore2D.dat con base visibile in basso e denti verso l'alto."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--teeth", type=int, default=3)
@@ -275,7 +275,8 @@ def main():
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--center-x", type=float, default=0.0)
     parser.add_argument("--base-width", type=float, default=1.2)
-    parser.add_argument("--base-height", type=float, default=0.20)
+    parser.add_argument("--base-height", type=float, default=0.2)
+    parser.add_argument("--base-center-y", type=float, default=-0.4)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
