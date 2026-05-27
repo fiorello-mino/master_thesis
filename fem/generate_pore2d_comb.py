@@ -225,8 +225,8 @@ def build_phi_comb_block(
     lines = [
         "surf->phi->shape:                               " + " + ".join(names),
         "",
-        "surf->phi->shape->inner value:                  0",
-        "surf->phi->shape->outer value:                  1",
+        "surf->phi->shape->inner value:                  1",
+        "surf->phi->shape->outer value:                  0",
         "surf->phi->shape->center:\t\t        [ 0. , 0. ]",
         "",
         "surf->phi->shape->eps:                          ${surf->eps}",
