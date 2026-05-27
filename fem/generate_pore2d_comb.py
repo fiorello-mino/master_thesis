@@ -276,8 +276,8 @@ def main():
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--pitch", type=float, default=0.24)
     parser.add_argument("--center-x", type=float, default=0.0)
-    parser.add_argument("--base-width", type=float, default=1.0)
-    parser.add_argument("--base-height", type=float, default=0.10)
+    parser.add_argument("--base-width", type=float, default=6.0)
+    parser.add_argument("--base-height", type=float, default=0.20)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
