@@ -26,7 +26,7 @@ surf->space->name:\t\t\t\t\t[phi,mu]
 #############################################################################################
 #\tCUSTOM
 surf->stabilizing function for mu:\t\t\t1\t% 1->Yes 0->No
-surf->eps:                                              0.078125
+surf->eps:                                              0.03125
 
 #       BC
 surf->boundary conditions->Periodic BC:\t\t\t  [ -1 ]
@@ -295,8 +295,8 @@ def main():
         description="Genera pore2D.dat con base inferiore, lati verticali e denti interni."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--n-inner-teeth", type=int, default=1)
-    parser.add_argument("--tooth-width", type=float, default=0.16)
+    parser.add_argument("--n-inner-teeth", type=int, default=3)
+    parser.add_argument("--tooth-width", type=float, default=0.08)
     parser.add_argument("--tooth-height", type=float, default=0.6)
     parser.add_argument("--side-width", type=float, default=0.1)
     parser.add_argument("--base-width", type=float, default=1.2)
