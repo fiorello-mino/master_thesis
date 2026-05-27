@@ -191,11 +191,14 @@ def build_phi_comb_block(
     tooth_width=0.18,
     tooth_height=0.22,
     center_x=0.0,
-    base_width=1.0,
-    base_height=0.10,
+    base_width=1.2,
+    base_height=0.20,
 ):
     eps = 5.0 / 64.0
     half_domain = 0.5
+
+    if n_teeth < 1:
+        raise ValueError("n_teeth deve essere almeno 1.")
 
     if tooth_width < 2.0 * eps:
         raise ValueError(
@@ -203,20 +206,24 @@ def build_phi_comb_block(
             f"usa almeno ~{2*eps:.3f}, meglio ~{3*eps:.3f}."
         )
 
-    total_width = base_width
-    total_teeth_width = n_teeth * tooth_width
-    if total_teeth_width >= total_width:
-        raise ValueError("I denti occupano tutta la larghezza disponibile della base.")
+    visible_left = -half_domain
+    visible_right = half_domain
+    visible_width = visible_right - visible_left
 
-    gap = (total_width - total_teeth_width) / (n_teeth + 1)
-    if gap <= 0.0:
-        raise ValueError("Gap non positivo.")
+    total_teeth_width = n_teeth * tooth_width
+    if total_teeth_width >= visible_width:
+        raise ValueError(
+            "I denti occupano tutta la larghezza visibile del dominio; "
+            "riduci tooth_width o n_teeth."
+        )
+
+    gap = (visible_width - total_teeth_width) / (n_teeth + 1)
 
     base_left = center_x - 0.5 * base_width
-    base_center_y = -half_domain + 0.5 * base_height
-    tooth_center_y = base_center_y + 0.5 * base_height + 0.5 * tooth_height
+    base_center_y = -half_domain - 0.5 * base_height
+    tooth_center_y = -half_domain + 0.5 * tooth_height
 
-    x_left = base_left + gap
+    x_left = visible_left + gap
     centers = [x_left + 0.5 * tooth_width + i * (tooth_width + gap) for i in range(n_teeth)]
 
     n_rectangles = n_teeth + 1
@@ -225,8 +232,8 @@ def build_phi_comb_block(
     lines = [
         "surf->phi->shape:                               " + " + ".join(names),
         "",
-        "surf->phi->shape->inner value:                  1",
-        "surf->phi->shape->outer value:                  0",
+        "surf->phi->shape->inner value:                  0",
+        "surf->phi->shape->outer value:                  1",
         "surf->phi->shape->center:\t\t        [ 0. , 0. ]",
         "",
         "surf->phi->shape->eps:                          ${surf->eps}",
@@ -261,15 +268,15 @@ def build_pore2d_text(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con un pettine con base in basso e spaziatura uniforme."
+        description="Genera da zero pore2D.dat con un pettine con base sotto il dominio e denti uniformemente spaziati."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--teeth", type=int, default=5)
+    parser.add_argument("--teeth", type=int, default=3)
     parser.add_argument("--tooth-width", type=float, default=0.18)
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--center-x", type=float, default=0.0)
-    parser.add_argument("--base-width", type=float, default=5.0)
-    parser.add_argument("--base-height", type=float, default=0.55)
+    parser.add_argument("--base-width", type=float, default=1.2)
+    parser.add_argument("--base-height", type=float, default=0.20)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
