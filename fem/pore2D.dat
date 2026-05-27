@@ -53,10 +53,10 @@ surf->growth->anisotropy:                               no %init/cube.dat   % Sp
 #       PHI
 
 surf->phi->mode:                                shape % external file , constant
-surf->phi->external file:          		init/test.arh
-surf->phi->constant:                            1.		 
+surf->phi->external file:				init/test.arh
+surf->phi->constant:                            1.
 
-surf->phi->shape:                               rectangle + rectangle123
+surf->phi->shape:                               rectangle + rectangle1 + rectangle2 + rectangle3
 
 surf->phi->shape->inner value:                  1
 surf->phi->shape->outer value:                  0
@@ -64,14 +64,20 @@ surf->phi->shape->center:		        [ 0. , 0. ]
 
 surf->phi->shape->eps:                          ${surf->eps}
 
-rectangle->sides length:	[0.2,0.6]
-rectangle->center:		[0.,0.]
+rectangle->sides length:	[1.2,0.3]
+rectangle->center:		[0.0,-0.4]
 
-rectangle123->sides length:	[10,0.5]
-rectangle123->center:		[0.,0.5]
+rectangle1->sides length:	[0.1,0.6]
+rectangle1->center:		[-0.5,0.0]
+
+rectangle2->sides length:	[0.1,0.6]
+rectangle2->center:		[0.5,0.0]
+
+rectangle3->sides length:	[0.16,0.6]
+rectangle3->center:		[-1.38777878078e-17,0.0]
 
 #############################################################################################
-surf->phi->signed distance:		                                1          % 1->Yes 0->No
+surf->phi->signed distance:			                                1          % 1->Yes 0->No
 surf->phi->signed distance->tolerance: 				        1.e-4
 surf->phi->signed distance->maximal number of iteration steps: 	        100
 surf->phi->signed distance->Gauss-Seidel iteration: 			1
@@ -81,8 +87,8 @@ surf->phi->signed distance->boundary initialization: 			3
 #	LOCAL REFINEMENT
 surf->phi->refinement:                      		pf     % grad, pf
 surf->phi->refinement->pf->level in outer domain: 	4
-surf->phi->refinement->pf->level on interface: 		15
-surf->phi->refinement->pf->level on points: 		15
+surf->phi->refinement->pf->level on interface: 		12
+surf->phi->refinement->pf->level on points: 		12
 surf->phi->refinement->pf->level in inner domain: 	4
 surf->phi->refinement->pf->initial level:               4
 surf->phi->refinement->pf->min interface value:		0.05    % Default=0.05
@@ -146,9 +152,7 @@ surf->space->marker[0]->MSGamma:     			0.5
 surf->space->marker[0]->MSGammaC:    			0.1
 
 surf->space->marker[1]->strategy:    			0  % 0=none, 1=GR, 2=MS, 3=ES, 4=GERS
-
 surf->space->marker[2]->strategy:    			0  % 0=none, 1=GR, 2=MS, 3=ES, 4=GERS
-
 surf->space->marker[3]->strategy:    			0  % 0=none, 1=GR, 2=MS, 3=ES, 4=GERS
 
 #############################################################################################
@@ -159,9 +163,7 @@ surf->space->estimator[0]->C1:				1.0
 surf->space->estimator[0]->C3:				1.0
 
 surf->space->estimator[1]:				0
-
 surf->space->estimator[2]:				0
-
 surf->space->estimator[3]:				0
 
 #############################################################################################
@@ -177,18 +179,13 @@ surf->adapt->strategy:					0  % 0=explicit, 1=implicit
 surf->adapt->relative energy tolerance:			1.e-5 % 0=explicit, 1=implicit
 surf->adapt->max iteration:				100
 
-
 surf->adapt[0]->tolerance:				0.05
 surf->adapt[0]->time tolerance:				0.05
-
 surf->adapt[1]->tolerance:				0.05
 surf->adapt[1]->time tolerance:				0.05
-
 surf->adapt[2]->tolerance:				0.05
 surf->adapt[2]->time tolerance:				0.05
-
 surf->adapt[3]->tolerance:				0.05
 surf->adapt[3]->time tolerance:				0.05
-
 
 WAIT:							0
