@@ -190,7 +190,6 @@ def build_phi_comb_block(
     n_teeth=3,
     tooth_width=0.18,
     tooth_height=0.22,
-    pitch=0.24,
     center_x=0.0,
     base_width=1.0,
     base_height=0.10,
@@ -204,23 +203,38 @@ def build_phi_comb_block(
             f"usa almeno ~{2*eps:.3f}, meglio ~{3*eps:.3f}."
         )
 
+    total_width = base_width
+    total_teeth_width = n_teeth * tooth_width
+    if total_teeth_width >= total_width:
+        raise ValueError("I denti occupano tutta la larghezza: riduci tooth_width o n_teeth.")
+
+    gap = (total_width - total_teeth_width) / (n_teeth + 1)
+
+    if gap <= 0.0:
+        raise ValueError("Gap non positivo.")
+    if gap < tooth_width:
+        pass
+
     base_center_y = half_domain - 0.5 * base_height
     tooth_center_y = base_center_y - 0.5 * base_height - 0.5 * tooth_height
 
     base_left = center_x - 0.5 * base_width
     base_right = center_x + 0.5 * base_width
 
-    tooth_left = center_x - 0.5 * pitch * (n_teeth - 1) - 0.5 * tooth_width
-    tooth_right = center_x + 0.5 * pitch * (n_teeth - 1) + 0.5 * tooth_width
+    x_left = base_left + gap
+    centers = [x_left + 0.5 * tooth_width + i * (tooth_width + gap) for i in range(n_teeth)]
+
+    first_left = centers[0] - 0.5 * tooth_width
+    last_right = centers[-1] + 0.5 * tooth_width
     tooth_bottom = tooth_center_y - 0.5 * tooth_height
-    if tooth_left < -half_domain or tooth_right > half_domain:
+
+    if first_left < -half_domain or last_right > half_domain:
         raise ValueError("I denti escono lateralmente dal dominio [-0.5, 0.5].")
     if tooth_bottom < -half_domain:
         raise ValueError("I denti escono sotto y=-0.5.")
 
     n_rectangles = n_teeth + 1
     names = ["rectangle"] + [f"rectangle{i}" for i in range(1, n_rectangles)]
-    start_x = center_x - 0.5 * pitch * (n_teeth - 1)
 
     lines = [
         "surf->phi->shape:                               " + " + ".join(names),
@@ -236,12 +250,11 @@ def build_phi_comb_block(
         "",
     ]
 
-    for i in range(n_teeth):
-        cx = start_x + i * pitch
-        name = f"rectangle{i+1}"
+    for i, cx in enumerate(centers, start=1):
+        name = f"rectangle{i}"
         lines.append(f"{name}->sides length:\t[{fmt(tooth_width)},{fmt(tooth_height)}]")
         lines.append(f"{name}->center:\t\t[{fmt(cx)},{fmt(tooth_center_y)}]")
-        if i != n_teeth - 1:
+        if i != n_teeth:
             lines.append("")
 
     lines.append("")
@@ -253,7 +266,6 @@ def build_pore2d_text(args):
         n_teeth=args.teeth,
         tooth_width=args.tooth_width,
         tooth_height=args.tooth_height,
-        pitch=args.pitch,
         center_x=args.center_x,
         base_width=args.base_width,
         base_height=args.base_height,
@@ -263,16 +275,15 @@ def build_pore2d_text(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con un pettine che scende dall'alto."
+        description="Genera da zero pore2D.dat con un pettine che scende dall'alto e spaziatura uniforme."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--teeth", type=int, default=3)
     parser.add_argument("--tooth-width", type=float, default=0.18)
-    parser.add_argument("--tooth-height", type=float, default=0.42)
-    parser.add_argument("--pitch", type=float, default=0.24)
+    parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--center-x", type=float, default=0.0)
-    parser.add_argument("--base-width", type=float, default=6.0)
-    parser.add_argument("--base-height", type=float, default=0.20)
+    parser.add_argument("--base-width", type=float, default=1.0)
+    parser.add_argument("--base-height", type=float, default=0.10)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
