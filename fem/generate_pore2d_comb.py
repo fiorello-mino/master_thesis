@@ -191,7 +191,6 @@ def build_phi_shape_block(
     tooth_width=0.12,
     tooth_height=0.22,
     side_width=0.12,
-    side_height=0.50,
     base_width=1.2,
     base_height=0.2,
     base_center_y=-0.4,
@@ -210,6 +209,7 @@ def build_phi_shape_block(
             f"usa almeno ~{2*eps:.3f}."
         )
 
+    side_height = tooth_height
     inner_available_width = visible_width - 2.0 * side_width
     total_inner_teeth_width = n_inner_teeth * tooth_width
 
@@ -223,7 +223,7 @@ def build_phi_shape_block(
 
     base_top = base_center_y + 0.5 * base_height
     tooth_center_y = base_top + 0.5 * tooth_height
-    side_center_y = -0.5 + 0.5 * side_height
+    side_center_y = base_top + 0.5 * side_height
 
     x_start = visible_left + side_width + gap
     inner_centers = [
@@ -271,7 +271,6 @@ def build_pore2d_text(args):
         tooth_width=args.tooth_width,
         tooth_height=args.tooth_height,
         side_width=args.side_width,
-        side_height=args.side_height,
         base_width=args.base_width,
         base_height=args.base_height,
         base_center_y=args.base_center_y,
@@ -284,11 +283,10 @@ def main():
         description="Genera pore2D.dat con base inferiore, lati verticali e denti interni."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--n-inner-teeth", type=int, default=2)
-    parser.add_argument("--tooth-width", type=float, default=0.16)
+    parser.add_argument("--n-inner-teeth", type=int, default=3)
+    parser.add_argument("--tooth-width", type=float, default=0.12)
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--side-width", type=float, default=0.12)
-    parser.add_argument("--side-height", type=float, default=0.50)
     parser.add_argument("--base-width", type=float, default=1.2)
     parser.add_argument("--base-height", type=float, default=0.2)
     parser.add_argument("--base-center-y", type=float, default=-0.4)
