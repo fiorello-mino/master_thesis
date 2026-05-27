@@ -264,12 +264,12 @@ def main():
         description="Genera da zero pore2D.dat con un pettine con base in basso e spaziatura uniforme."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--teeth", type=int, default=3)
+    parser.add_argument("--teeth", type=int, default=5)
     parser.add_argument("--tooth-width", type=float, default=0.18)
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--center-x", type=float, default=0.0)
     parser.add_argument("--base-width", type=float, default=5.0)
-    parser.add_argument("--base-height", type=float, default=0.25)
+    parser.add_argument("--base-height", type=float, default=0.55)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
