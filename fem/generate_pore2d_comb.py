@@ -225,8 +225,8 @@ def build_phi_comb_block(
     lines = [
         "surf->phi->shape:                               " + " + ".join(names),
         "",
-        "surf->phi->shape->inner value:                  1",
-        "surf->phi->shape->outer value:                  0",
+        "surf->phi->shape->inner value:                  0",
+        "surf->phi->shape->outer value:                  1",
         "surf->phi->shape->center:\t\t        [ 0. , 0. ]",
         "",
         "surf->phi->shape->eps:                          ${surf->eps}",
@@ -268,7 +268,7 @@ def main():
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--teeth", type=int, default=3)
     parser.add_argument("--tooth-width", type=float, default=0.18)
-    parser.add_argument("--tooth-height", type=float, default=0.22)
+    parser.add_argument("--tooth-height", type=float, default=0.42)
     parser.add_argument("--pitch", type=float, default=0.24)
     parser.add_argument("--center-x", type=float, default=0.0)
     parser.add_argument("--base-width", type=float, default=6.0)
