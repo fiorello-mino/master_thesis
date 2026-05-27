@@ -198,8 +198,8 @@ def build_phi_comb_block(
     eps = 5.0 / 64.0
     half_domain = 0.5
 
-    if base_width != 1.0:
-        raise ValueError("Hai chiesto una base larga 1, quindi base_width deve essere 1.0.")
+    if abs(base_width - 1.0) > 1e-12:
+        raise ValueError("La base deve essere larga 1.0.")
 
     if tooth_width < 2.0 * eps:
         raise ValueError(
@@ -212,14 +212,12 @@ def build_phi_comb_block(
 
     base_left = center_x - 0.5 * base_width
     base_right = center_x + 0.5 * base_width
-
     if base_left < -half_domain or base_right > half_domain:
         raise ValueError("La base esce dal dominio [-0.5, 0.5].")
 
     tooth_left = center_x - 0.5 * pitch * (n_teeth - 1) - 0.5 * tooth_width
     tooth_right = center_x + 0.5 * pitch * (n_teeth - 1) + 0.5 * tooth_width
     tooth_bottom = tooth_center_y - 0.5 * tooth_height
-
     if tooth_left < -half_domain or tooth_right > half_domain:
         raise ValueError("I denti escono lateralmente dal dominio [-0.5, 0.5].")
     if tooth_bottom < -half_domain:
@@ -264,14 +262,13 @@ def build_pore2d_text(args):
         center_x=args.center_x,
         base_width=args.base_width,
         base_height=args.base_height,
-        base_center_y=args.base_center_y,
     )
     return HEADER + "\n" + phi_block + FOOTER
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con un profilo a pettine per dominio 1x1 centrato in (0,0)."
+        description="Genera da zero pore2D.dat con un pettine che scende dall'alto."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--teeth", type=int, default=3)
@@ -279,9 +276,8 @@ def main():
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--pitch", type=float, default=0.24)
     parser.add_argument("--center-x", type=float, default=0.0)
-    parser.add_argument("--base-width", type=float, default=0.78)
+    parser.add_argument("--base-width", type=float, default=1.0)
     parser.add_argument("--base-height", type=float, default=0.10)
-    parser.add_argument("--base-center-y", type=float, default=-0.18)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
