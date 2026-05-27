@@ -297,10 +297,10 @@ def main():
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--n-inner-teeth", type=int, default=2)
     parser.add_argument("--tooth-width", type=float, default=0.16)
-    parser.add_argument("--tooth-height", type=float, default=0.22)
+    parser.add_argument("--tooth-height", type=float, default=0.42)
     parser.add_argument("--side-width", type=float, default=0.12)
     parser.add_argument("--base-width", type=float, default=1.2)
-    parser.add_argument("--base-height", type=float, default=0.2)
+    parser.add_argument("--base-height", type=float, default=0.3)
     parser.add_argument("--base-center-y", type=float, default=-0.4)
     parser.add_argument("--embed-depth", type=float, default=0.05)
 
