@@ -186,11 +186,12 @@ def fmt(x):
     return s
 
 
-def build_phi_comb_block(
-    n_teeth=3,
-    tooth_width=0.18,
+def build_phi_shape_block(
+    n_inner_teeth=3,
+    tooth_width=0.12,
     tooth_height=0.22,
-    center_x=0.0,
+    side_width=0.12,
+    side_height=0.50,
     base_width=1.2,
     base_height=0.2,
     base_center_y=-0.4,
@@ -200,32 +201,39 @@ def build_phi_comb_block(
     visible_right = 0.5
     visible_width = visible_right - visible_left
 
-    if n_teeth < 1:
-        raise ValueError("n_teeth deve essere almeno 1.")
+    if n_inner_teeth < 1:
+        raise ValueError("n_inner_teeth deve essere almeno 1.")
 
     if tooth_width < 2.0 * eps:
         raise ValueError(
             f"tooth_width={tooth_width} troppo piccolo per eps={eps:.6f}; "
-            f"usa almeno ~{2*eps:.3f}, meglio ~{3*eps:.3f}."
+            f"usa almeno ~{2*eps:.3f}."
         )
 
-    total_teeth_width = n_teeth * tooth_width
-    if total_teeth_width >= visible_width:
+    inner_available_width = visible_width - 2.0 * side_width
+    total_inner_teeth_width = n_inner_teeth * tooth_width
+
+    if total_inner_teeth_width >= inner_available_width:
         raise ValueError(
-            "I denti occupano tutta la larghezza visibile del dominio; "
-            "riduci tooth_width o n_teeth."
+            "I denti interni occupano tutta la larghezza disponibile; "
+            "riduci tooth_width o n_inner_teeth."
         )
 
-    gap = (visible_width - total_teeth_width) / (n_teeth + 1)
+    gap = (inner_available_width - total_inner_teeth_width) / (n_inner_teeth + 1)
 
     base_top = base_center_y + 0.5 * base_height
     tooth_center_y = base_top + 0.5 * tooth_height
+    side_center_y = -0.5 + 0.5 * side_height
 
-    x_left = visible_left + gap
-    centers = [x_left + 0.5 * tooth_width + i * (tooth_width + gap) for i in range(n_teeth)]
+    x_start = visible_left + side_width + gap
+    inner_centers = [
+        x_start + 0.5 * tooth_width + i * (tooth_width + gap)
+        for i in range(n_inner_teeth)
+    ]
 
-    n_rectangles = n_teeth + 1
-    names = ["rectangle"] + [f"rectangle{i}" for i in range(1, n_rectangles)]
+    names = ["rectangle", "rectangle1", "rectangle2"] + [
+        f"rectangle{i}" for i in range(3, 3 + n_inner_teeth)
+    ]
 
     lines = [
         "surf->phi->shape:                               " + " + ".join(names),
@@ -237,15 +245,20 @@ def build_phi_comb_block(
         "surf->phi->shape->eps:                          ${surf->eps}",
         "",
         f"rectangle->sides length:\t[{fmt(base_width)},{fmt(base_height)}]",
-        f"rectangle->center:\t\t[{fmt(center_x)},{fmt(base_center_y)}]",
+        f"rectangle->center:\t\t[0.0,{fmt(base_center_y)}]",
+        "",
+        f"rectangle1->sides length:\t[{fmt(side_width)},{fmt(side_height)}]",
+        f"rectangle1->center:\t\t[-0.5,{fmt(side_center_y)}]",
+        "",
+        f"rectangle2->sides length:\t[{fmt(side_width)},{fmt(side_height)}]",
+        f"rectangle2->center:\t\t[0.5,{fmt(side_center_y)}]",
         "",
     ]
 
-    for i, cx in enumerate(centers, start=1):
-        name = f"rectangle{i}"
-        lines.append(f"{name}->sides length:\t[{fmt(tooth_width)},{fmt(tooth_height)}]")
-        lines.append(f"{name}->center:\t\t[{fmt(cx)},{fmt(tooth_center_y)}]")
-        if i != n_teeth:
+    for k, cx in enumerate(inner_centers, start=3):
+        lines.append(f"rectangle{k}->sides length:\t[{fmt(tooth_width)},{fmt(tooth_height)}]")
+        lines.append(f"rectangle{k}->center:\t\t[{fmt(cx)},{fmt(tooth_center_y)}]")
+        if k != 2 + n_inner_teeth:
             lines.append("")
 
     lines.append("")
@@ -253,11 +266,12 @@ def build_phi_comb_block(
 
 
 def build_pore2d_text(args):
-    phi_block = build_phi_comb_block(
-        n_teeth=args.teeth,
+    phi_block = build_phi_shape_block(
+        n_inner_teeth=args.n_inner_teeth,
         tooth_width=args.tooth_width,
         tooth_height=args.tooth_height,
-        center_x=args.center_x,
+        side_width=args.side_width,
+        side_height=args.side_height,
         base_width=args.base_width,
         base_height=args.base_height,
         base_center_y=args.base_center_y,
@@ -267,13 +281,14 @@ def build_pore2d_text(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con base visibile in basso e denti verso l'alto."
+        description="Genera pore2D.dat con base inferiore, lati verticali e denti interni."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--teeth", type=int, default=3)
-    parser.add_argument("--tooth-width", type=float, default=0.18)
+    parser.add_argument("--n-inner-teeth", type=int, default=3)
+    parser.add_argument("--tooth-width", type=float, default=0.12)
     parser.add_argument("--tooth-height", type=float, default=0.22)
-    parser.add_argument("--center-x", type=float, default=0.0)
+    parser.add_argument("--side-width", type=float, default=0.12)
+    parser.add_argument("--side-height", type=float, default=0.50)
     parser.add_argument("--base-width", type=float, default=1.2)
     parser.add_argument("--base-height", type=float, default=0.2)
     parser.add_argument("--base-center-y", type=float, default=-0.4)
