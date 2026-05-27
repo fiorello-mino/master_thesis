@@ -209,8 +209,6 @@ def build_phi_comb_block(
 
     base_left = center_x - 0.5 * base_width
     base_right = center_x + 0.5 * base_width
-    if base_left < -half_domain or base_right > half_domain:
-        raise ValueError("La base esce dal dominio [-0.5, 0.5].")
 
     tooth_left = center_x - 0.5 * pitch * (n_teeth - 1) - 0.5 * tooth_width
     tooth_right = center_x + 0.5 * pitch * (n_teeth - 1) + 0.5 * tooth_width
