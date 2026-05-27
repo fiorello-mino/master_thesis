@@ -262,9 +262,9 @@ def build_pore2d_text(args):
         tooth_height=args.tooth_height,
         pitch=args.pitch,
         center_x=args.center_x,
-        stem_width=args.stem_width,
-        stem_height=args.stem_height,
-        stem_center_y=args.stem_center_y,
+        base_width=args.base_width,
+        base_height=args.base_height,
+        base_center_y=args.base_center_y,
     )
     return HEADER + "\n" + phi_block + FOOTER
 
@@ -279,9 +279,9 @@ def main():
     parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--pitch", type=float, default=0.24)
     parser.add_argument("--center-x", type=float, default=0.0)
-    parser.add_argument("--stem-width", type=float, default=0.78)
-    parser.add_argument("--stem-height", type=float, default=0.10)
-    parser.add_argument("--stem-center-y", type=float, default=-0.18)
+    parser.add_argument("--base-width", type=float, default=0.78)
+    parser.add_argument("--base-height", type=float, default=0.10)
+    parser.add_argument("--base-center-y", type=float, default=-0.18)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
