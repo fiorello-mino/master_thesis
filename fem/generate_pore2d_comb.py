@@ -204,11 +204,11 @@ def build_phi_shape_block(
     if n_inner_teeth < 1:
         raise ValueError("n_inner_teeth deve essere almeno 1.")
 
-    if tooth_width < 2.0 * eps:
-        raise ValueError(
-            f"tooth_width={tooth_width} troppo piccolo per eps={eps:.6f}; "
-            f"usa almeno ~{2*eps:.3f}."
-        )
+    # if tooth_width < 2.0 * eps:
+    #     raise ValueError(
+    #         f"tooth_width={tooth_width} troppo piccolo per eps={eps:.6f}; "
+    #         f"usa almeno ~{2*eps:.3f}."
+    #     )
 
     if embed_depth <= 0:
         raise ValueError("embed_depth deve essere positivo.")
@@ -296,7 +296,7 @@ def main():
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--n-inner-teeth", type=int, default=1)
-    parser.add_argument("--tooth-width", type=float, default=0.16)
+    parser.add_argument("--tooth-width", type=float, default=0.1)
     parser.add_argument("--tooth-height", type=float, default=0.6)
     parser.add_argument("--side-width", type=float, default=0.1)
     parser.add_argument("--base-width", type=float, default=1.2)
