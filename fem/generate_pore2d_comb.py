@@ -206,32 +206,18 @@ def build_phi_comb_block(
     total_width = base_width
     total_teeth_width = n_teeth * tooth_width
     if total_teeth_width >= total_width:
-        raise ValueError("I denti occupano tutta la larghezza: riduci tooth_width o n_teeth.")
+        raise ValueError("I denti occupano tutta la larghezza disponibile della base.")
 
     gap = (total_width - total_teeth_width) / (n_teeth + 1)
-
     if gap <= 0.0:
         raise ValueError("Gap non positivo.")
-    if gap < tooth_width:
-        pass
-
-    base_center_y = half_domain - 0.5 * base_height
-    tooth_center_y = base_center_y - 0.5 * base_height - 0.5 * tooth_height
 
     base_left = center_x - 0.5 * base_width
-    base_right = center_x + 0.5 * base_width
+    base_center_y = -half_domain + 0.5 * base_height
+    tooth_center_y = base_center_y + 0.5 * base_height + 0.5 * tooth_height
 
     x_left = base_left + gap
     centers = [x_left + 0.5 * tooth_width + i * (tooth_width + gap) for i in range(n_teeth)]
-
-    first_left = centers[0] - 0.5 * tooth_width
-    last_right = centers[-1] + 0.5 * tooth_width
-    tooth_bottom = tooth_center_y - 0.5 * tooth_height
-
-    if first_left < -half_domain or last_right > half_domain:
-        raise ValueError("I denti escono lateralmente dal dominio [-0.5, 0.5].")
-    if tooth_bottom < -half_domain:
-        raise ValueError("I denti escono sotto y=-0.5.")
 
     n_rectangles = n_teeth + 1
     names = ["rectangle"] + [f"rectangle{i}" for i in range(1, n_rectangles)]
@@ -275,15 +261,15 @@ def build_pore2d_text(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Genera da zero pore2D.dat con un pettine che scende dall'alto e spaziatura uniforme."
+        description="Genera da zero pore2D.dat con un pettine con base in basso e spaziatura uniforme."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
     parser.add_argument("--teeth", type=int, default=3)
     parser.add_argument("--tooth-width", type=float, default=0.18)
-    parser.add_argument("--tooth-height", type=float, default=0.32)
+    parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--center-x", type=float, default=0.0)
-    parser.add_argument("--base-width", type=float, default=1.0)
-    parser.add_argument("--base-height", type=float, default=0.10)
+    parser.add_argument("--base-width", type=float, default=5.0)
+    parser.add_argument("--base-height", type=float, default=0.25)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
