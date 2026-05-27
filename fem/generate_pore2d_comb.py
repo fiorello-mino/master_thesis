@@ -194,6 +194,7 @@ def build_phi_shape_block(
     base_width=1.2,
     base_height=0.2,
     base_center_y=-0.4,
+    embed_depth=0.05,
 ):
     eps = 5.0 / 64.0
     visible_left = -0.5
@@ -209,6 +210,12 @@ def build_phi_shape_block(
             f"usa almeno ~{2*eps:.3f}."
         )
 
+    if embed_depth <= 0:
+        raise ValueError("embed_depth deve essere positivo.")
+
+    if embed_depth >= tooth_height:
+        raise ValueError("embed_depth deve essere minore di tooth_height.")
+
     side_height = tooth_height
     inner_available_width = visible_width - 2.0 * side_width
     total_inner_teeth_width = n_inner_teeth * tooth_width
@@ -222,8 +229,12 @@ def build_phi_shape_block(
     gap = (inner_available_width - total_inner_teeth_width) / (n_inner_teeth + 1)
 
     base_top = base_center_y + 0.5 * base_height
-    tooth_center_y = base_top + 0.5 * tooth_height
-    side_center_y = base_top + 0.5 * side_height
+
+    tooth_bottom = base_top - embed_depth
+    tooth_center_y = tooth_bottom + 0.5 * tooth_height
+
+    side_bottom = base_top - embed_depth
+    side_center_y = side_bottom + 0.5 * side_height
 
     x_start = visible_left + side_width + gap
     inner_centers = [
@@ -274,6 +285,7 @@ def build_pore2d_text(args):
         base_width=args.base_width,
         base_height=args.base_height,
         base_center_y=args.base_center_y,
+        embed_depth=args.embed_depth,
     )
     return HEADER + "\n" + phi_block + FOOTER
 
@@ -283,13 +295,14 @@ def main():
         description="Genera pore2D.dat con base inferiore, lati verticali e denti interni."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--n-inner-teeth", type=int, default=2)
-    parser.add_argument("--tooth-width", type=float, default=0.16)
-    parser.add_argument("--tooth-height", type=float, default=0.32)
+    parser.add_argument("--n-inner-teeth", type=int, default=3)
+    parser.add_argument("--tooth-width", type=float, default=0.12)
+    parser.add_argument("--tooth-height", type=float, default=0.22)
     parser.add_argument("--side-width", type=float, default=0.12)
     parser.add_argument("--base-width", type=float, default=1.2)
-    parser.add_argument("--base-height", type=float, default=0.3)
+    parser.add_argument("--base-height", type=float, default=0.2)
     parser.add_argument("--base-center-y", type=float, default=-0.4)
+    parser.add_argument("--embed-depth", type=float, default=0.05)
 
     args = parser.parse_args()
     text = build_pore2d_text(args)
