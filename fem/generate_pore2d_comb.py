@@ -74,8 +74,8 @@ surf->phi->signed distance->boundary initialization: \t\t\t3
 #\tLOCAL REFINEMENT
 surf->phi->refinement:                      \t\tpf     % grad, pf
 surf->phi->refinement->pf->level in outer domain: \t4
-surf->phi->refinement->pf->level on interface: \t\t15
-surf->phi->refinement->pf->level on points: \t\t15
+surf->phi->refinement->pf->level on interface: \t\t12
+surf->phi->refinement->pf->level on points: \t\t12
 surf->phi->refinement->pf->level in inner domain: \t4
 surf->phi->refinement->pf->initial level:               4
 surf->phi->refinement->pf->min interface value:\t\t0.05    % Default=0.05
@@ -295,10 +295,10 @@ def main():
         description="Genera pore2D.dat con base inferiore, lati verticali e denti interni."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--n-inner-teeth", type=int, default=2)
+    parser.add_argument("--n-inner-teeth", type=int, default=3)
     parser.add_argument("--tooth-width", type=float, default=0.16)
     parser.add_argument("--tooth-height", type=float, default=0.52)
-    parser.add_argument("--side-width", type=float, default=0.12)
+    parser.add_argument("--side-width", type=float, default=0.1)
     parser.add_argument("--base-width", type=float, default=1.2)
     parser.add_argument("--base-height", type=float, default=0.3)
     parser.add_argument("--base-center-y", type=float, default=-0.4)
