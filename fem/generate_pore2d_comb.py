@@ -295,7 +295,7 @@ def main():
         description="Genera pore2D.dat con base inferiore, lati verticali e denti interni."
     )
     parser.add_argument("-o", "--output", default="pore2D.dat")
-    parser.add_argument("--n-inner-teeth", type=int, default=3)
+    parser.add_argument("--n-inner-teeth", type=int, default=5)
     parser.add_argument("--tooth-width", type=float, default=0.08)
     parser.add_argument("--tooth-height", type=float, default=0.6)
     parser.add_argument("--side-width", type=float, default=0.1)
