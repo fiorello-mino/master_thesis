@@ -21,7 +21,7 @@ surf->space->name:					[phi,mu]
 #############################################################################################
 #	CUSTOM
 surf->stabilizing function for mu:			1	% 1->Yes 0->No
-surf->eps:                                              0.078125
+surf->eps:                                              0.0115
 
 #       BC
 surf->boundary conditions->Periodic BC:			  [ -1 ]
@@ -56,7 +56,7 @@ surf->phi->mode:                                shape % external file , constant
 surf->phi->external file:				init/test.arh
 surf->phi->constant:                            1.
 
-surf->phi->shape:                               rectangle + rectangle1 + rectangle2 + rectangle3
+surf->phi->shape:                               rectangle + rectangle1 + rectangle2 + rectangle3 + rectangle4 + rectangle5 + rectangle6 + rectangle7 + rectangle8
 
 surf->phi->shape->inner value:                  1
 surf->phi->shape->outer value:                  0
@@ -73,8 +73,23 @@ rectangle1->center:		[-0.5,0.0]
 rectangle2->sides length:	[0.1,0.6]
 rectangle2->center:		[0.5,0.0]
 
-rectangle3->sides length:	[0.16,0.6]
-rectangle3->center:		[-1.38777878078e-17,0.0]
+rectangle3->sides length:	[0.03,0.6]
+rectangle3->center:		[-0.296428571429,0.0]
+
+rectangle4->sides length:	[0.03,0.6]
+rectangle4->center:		[-0.177857142857,0.0]
+
+rectangle5->sides length:	[0.03,0.6]
+rectangle5->center:		[-0.0592857142857,0.0]
+
+rectangle6->sides length:	[0.03,0.6]
+rectangle6->center:		[0.0592857142857,0.0]
+
+rectangle7->sides length:	[0.03,0.6]
+rectangle7->center:		[0.177857142857,0.0]
+
+rectangle8->sides length:	[0.03,0.6]
+rectangle8->center:		[0.296428571429,0.0]
 
 #############################################################################################
 surf->phi->signed distance:			                                1          % 1->Yes 0->No
