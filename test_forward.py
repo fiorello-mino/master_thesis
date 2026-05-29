@@ -30,7 +30,7 @@ future = series.shape[1] - in_seq_length - 1
 x = clip_series(series, in_seq_length).to(args.device)
 
 model = model_class(
-    hiddenunits=args.hidden,
+    hidden_units=args.hidden,
     inputchannels=1,
     outputchannels=None if not args.extract_param else args.num_params,
     hiddenchannels=args.channels,
