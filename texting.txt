@@ -1,0 +1,4 @@
+python -m py_compile train.py src/classes.py src/dataloaders.py src/parser.py src/utils.py
+
+
+python -c "from src.classes import ConvGRU, ConvGRU3D, ConvGRUClassifier; from src.dataloaders import give_dataloaders, give_3D_dataloaders; from src.parser import TrainingParser; from src.utils import clip_series, withdual; print('imports ok')"
