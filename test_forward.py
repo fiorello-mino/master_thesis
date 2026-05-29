@@ -29,19 +29,24 @@ future = series.shape[1] - in_seq_length - 1
 
 x = clip_series(series, in_seq_length).to(args.device)
 
+if not args.extract_param:
+    out_ch = 1  # una sola fase scalare
+else:
+    out_ch = args.num_params
+
 model = model_class(
     hidden_units=args.hidden,
-    inputchannels=1,
-    outputchannels=None if not args.extract_param else args.num_params,
-    hiddenchannels=args.channels,
-    kernelsize=args.kernel_size,
-    paddingmode=args.padding,
+    input_channels=1,
+    output_channels=None if not args.extract_param else args.num_params,
+    hidden_channels=args.channels,
+    kernel_size=args.kernel_size,
+    padding_mode=args.padding,
     bias=args.bias,
     divergence=args.divergence,
     conservative=args.conservative,
-    numparams=args.num_params if not args.extract_param else 0,
+    num_params=args.num_params if not args.extract_param else 0,
     dropout=args.dropout,
-    dropoutprob=args.dropout_prob,
+    dropout_prob=args.dropout_prob,
 ).to(args.device)
 
 if args.extract_param:
