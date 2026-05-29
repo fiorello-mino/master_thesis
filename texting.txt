@@ -6,4 +6,11 @@ python -c "from src.classes import ConvGRU, ConvGRU3D, ConvGRUClassifier; from s
 
 python -c "from src.parser import TrainingParser; import sys; sys.argv=['prog']; args=TrainingParser().parse_args(); print(args.batch, args.subseq_min, args.subseq_max, args.device)"
 
+python test_loader.py --batch 1 --device cpu
+
+python test_forward.py --batch 1 --device cpu
+
+python test_step.py --batch 1 --device cpu
+
+python train.py --debug --epochs 1 --batch 1 --device cpu --id sanity_cpu
 
