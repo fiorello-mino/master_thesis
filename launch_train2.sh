@@ -1,39 +1,64 @@
 #!/usr/bin/env bash
 
-TRAIN_SET="/home/fiorello/master_thesis/machine_learning/train/training_set_64_from_5.txt"
-VALID_SET="/home/fiorello/master_thesis/machine_learning/train/validation_set_64_from_5.txt"
+# ================== CONFIGURAZIONE ==================
 
-DEVICE="cuda"
-RUN_ID="train_normal"
+PYTHON=python3
+TRAIN_SCRIPT="/home/fiorello/CRANE/train.py"
 
-EPOCHS=100
-BATCH=1
-LR=5e-4
-HIDDEN=2
-CHANNELS=35
-KERNELSIZE=3
+DEVICE="cuda:0"
+RUN_ID="lr_5e-5_hl_3_tr_5"
+
+TRAINSET="/home/fiorello/master_thesis/machine_learning/train/training_set_64_from_5.txt"
+VALIDSET="/home/fiorello/master_thesis/machine_learning/train/validation_set_64_from_5.txt"
+
+EPOCHS=500
+BATCH=3
+LR=5e-5
+WEIGHTD=0e-4
+SEED=666
+
+SIZE=64
+PADDING="circular"
+HIDDEN=3
+CHANNELS=16
+KERNELSIZE=5
+
+NPROC=4
+NUMPARAMS=0
 SUBSEQMIN=1
-SUBSEQMAX=99
-NPROC=1
-MASSW=2.0
-DROPOUTPROB=0.25
+SUBSEQMAX=49
+NOISEREG=0.0125
+RAMPLENGTH=48
 
-python train.py \
-  --epochs "$EPOCHS" \
-  --batch "$BATCH" \
-  --device "$DEVICE" \
-  --train_set "$TRAIN_SET" \
-  --valid_set "$VALID_SET" \
-  --id "$RUN_ID" \
-  --lr "$LR" \
-  --hidden "$HIDDEN" \
-  --channels "$CHANNELS" \
-  --kernelsize "$KERNELSIZE" \
-  --subseqmin "$SUBSEQMIN" \
-  --subseqmax "$SUBSEQMAX" \
-  --nproc "$NPROC" \
-  --massW "$MASSW" \
-  --padding circular \
-  --size 64 \
-  --dropout \
-  --dropoutprob "$DROPOUTPROB"
+# ================== LANCIO TRAINING ==================
+
+$PYTHON "$TRAIN_SCRIPT" \
+    --device "$DEVICE" \
+    --padding "$PADDING" \
+    --size "$SIZE" \
+    --seed "$SEED" \
+    --epochs "$EPOCHS" \
+    --nocrop \
+    --bias \
+    --lr "$LR" \
+    --batch "$BATCH" \
+    --weightd "$WEIGHTD" \
+    --trainset "$TRAINSET" \
+    --validset "$VALIDSET" \
+    --id "$RUN_ID" \
+    --logfreq 1 \
+    --kernelsize "$KERNELSIZE" \
+    --hidden "$HIDDEN" \
+    --channels "$CHANNELS" \
+    --nproc "$NPROC" \
+    --numparams "$NUMPARAMS" \
+    --subseqmin "$SUBSEQMIN" \
+    --subseqmax "$SUBSEQMAX" \
+    --reflection \
+    --noisereg "$NOISEREG" \
+    --rotation90 \
+    --divergence \
+    --dual \
+    --ramp \
+    --ramplength "$RAMPLENGTH"
+#   --reloadmodel "/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt"
