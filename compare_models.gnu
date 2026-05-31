@@ -110,8 +110,8 @@ set output outdir.'seq0000_rel_err_E.png'
 set xlabel 'Time step'
 set ylabel 'Relative error on E'
 set grid
-plot evoA using 1:(abs($11-$10)/abs($10)) with lines lc rgb 'blue' lw 2 title labelA, \
-     evoB using 1:(abs($11-$10)/abs($10)) with lines lc rgb 'red'  lw 2 title labelB
+plot evoA using 1:(($10>0 && $10==$10 && $11==$11) ? abs($11-$10)/abs($10) : 1/0) with lines lc rgb 'blue' lw 2 title 'labelA', \
+     evoB using 1:(($10>0 && $10==$10 && $11==$11) ? abs($11-$10)/abs($10) : 1/0) with lines lc rgb 'red' lw 2 title 'labelB'
 
 #######################################################################
 # 10) max_true / max_pred
