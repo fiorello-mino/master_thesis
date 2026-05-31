@@ -17,9 +17,10 @@ set datafile separator whitespace
 set key top left
 
 # colonne errors.txt: 1:id  2:maxMAE  3:maxMSE  4:overallMAE  5:overallMSE
-# colonne evo.txt:    1:t   2:MAE     3:MSE      4:avg_True    5:avg_Pred
-#                     6:min_True 7:min_Pred 8:max_True 9:max_Pred
-#                     10:E_True  11:E_Pred
+# colonne evo.txt:    1:MAE  2:MSE  3:avg_True  4:avg_Pred
+#                     5:min_True  6:min_Pred  7:max_True  8:max_Pred
+#                     9:E_True  10:E_Pred
+# asse x nei plot evo: $0 = indice di riga = frame index
 
 #######################################################################
 # 1) overall MAE per sequenza
@@ -68,8 +69,8 @@ set output outdir.'seq0000_MAE_vs_t.png'
 set xlabel 'Time step'
 set ylabel 'MAE'
 set grid
-plot evoA using 1:2 with lines lc rgb 'blue' lw 2 title labelA, \
-     evoB using 1:2 with lines lc rgb 'red'  lw 2 title labelB
+plot evoA using ($0):1 with lines lc rgb 'blue' lw 2 title labelA, \
+     evoB using ($0):1 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
 # 6) MSE(t) seq 0000
@@ -78,52 +79,69 @@ set output outdir.'seq0000_MSE_vs_t.png'
 set xlabel 'Time step'
 set ylabel 'MSE'
 set grid
-plot evoA using 1:3 with lines lc rgb 'blue' lw 2 title labelA, \
-     evoB using 1:3 with lines lc rgb 'red'  lw 2 title labelB
+plot evoA using ($0):2 with lines lc rgb 'blue' lw 2 title labelA, \
+     evoB using ($0):2 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
 # 7) avg_true / avg_pred — modello A
 #######################################################################
-set output outdir.'seq0000_avg.png'
+set output outdir.'seq0000_avg_A.png'
 set xlabel 'Time step'
 set ylabel 'Average field'
 set grid
-plot evoA using 1:4 with lines lc rgb 'black' lw 2 title 'avg\_true', \
-     evoA using 1:5 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA, \
-     evoB using 1:5 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
+plot evoA using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelA, \
+     ''    using ($0):4 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA
 
 #######################################################################
-# 8) energia nel tempo — E_true comune + E_pred A e B
+# 8) avg_true / avg_pred — modello B
+#######################################################################
+set output outdir.'seq0000_avg_B.png'
+set xlabel 'Time step'
+set ylabel 'Average field'
+set grid
+plot evoB using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelB, \
+     ''    using ($0):4 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
+
+#######################################################################
+# 9) energia nel tempo — E_true comune + E_pred A e B
 #######################################################################
 set output outdir.'seq0000_energy.png'
 set xlabel 'Time step'
 set ylabel 'Energy'
 set grid
-plot evoA using 1:10 with lines lc rgb 'black' lw 2 title 'E\_true', \
-     evoA using 1:11 with lines lc rgb 'blue'  lw 2 title 'E\_pred '.labelA, \
-     evoB using 1:11 with lines lc rgb 'red'   lw 2 title 'E\_pred '.labelB
+plot evoA using ($0):9  with lines lc rgb 'black' lw 2 title 'E\_true', \
+     evoA using ($0):10 with lines lc rgb 'blue'  lw 2 title 'E\_pred '.labelA, \
+     evoB using ($0):10 with lines lc rgb 'red'   lw 2 title 'E\_pred '.labelB
 
 #######################################################################
-# 9) errore relativo sull'energia
+# 10) errore relativo sull'energia
 #######################################################################
 set output outdir.'seq0000_rel_err_E.png'
 set xlabel 'Time step'
 set ylabel 'Relative error on E'
 set grid
-plot evoA using 1:(($10>0 && $10==$10 && $11==$11) ? abs($11-$10)/abs($10) : 1/0) with lines lc rgb 'blue' lw 2 title 'labelA', \
-     evoB using 1:(($10>0 && $10==$10 && $11==$11) ? abs($11-$10)/abs($10) : 1/0) with lines lc rgb 'red' lw 2 title 'labelB'
+plot evoA using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'blue' lw 2 title labelA, \
+     evoB using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
-# 10) max_true / max_pred
+# 11) max_true / max_pred — modello A
 #######################################################################
-set output outdir.'seq0000_max.png'
+set output outdir.'seq0000_max_A.png'
 set xlabel 'Time step'
 set ylabel 'Max field value'
 set grid
-plot evoA using 1:8 with lines lc rgb 'black' lw 2 title 'max\_true', \
-     evoA using 1:9 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA, \
-     evoB using 1:9 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
+plot evoA using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelA, \
+     ''    using ($0):8 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA
 
+#######################################################################
+# 12) max_true / max_pred — modello B
+#######################################################################
+set output outdir.'seq0000_max_B.png'
+set xlabel 'Time step'
+set ylabel 'Max field value'
+set grid
+plot evoB using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelB, \
+     ''    using ($0):8 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
 
 unset output
 ### fine script ########################################################
