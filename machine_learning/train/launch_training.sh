@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE/train.py \
 	--weightd 1e-5 \
 	--train_set 'training_set_64_2_from_10.txt' \
 	--valid_set 'validation_set_64_2_from_10.txt' \
-	--id 'lr1e-4_b8_k3_hl2_ch16_seq_20' \
+	--id 'lr1e-4_b8_k3_hl2_ch16_seq_30' \
 	--logfreq 1 \
 	--kernel_size 3 \
 	--hidden 2 \
@@ -21,7 +21,7 @@ python3 /home/fiorello/CRANE/train.py \
 	--nproc 4 \
 	--num_params 0 \
 	--subseq_min 5 \
-	--subseq_max 20 \
+	--subseq_max 30 \
 	--reflection \
 	--noise_reg 0 \
 	--rotation90 \
