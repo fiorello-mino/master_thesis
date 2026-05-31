@@ -29,8 +29,8 @@ set output outdir.'overallMAE_compare.png'
 set xlabel 'Sequence id'
 set ylabel 'Overall MAE'
 set grid
-plot errorsA using 1:4 with points pt 7 ps 1.2 lc rgb 'blue' title labelA, \
-     errorsB using 1:4 with points pt 5 ps 1.2 lc rgb 'red'  title labelB
+plot errorsA using 1:4 with lines lc rgb 'blue' lw 2 title labelA, \
+     errorsB using 1:4 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
 # 2) overall MSE per sequenza
@@ -39,8 +39,8 @@ set output outdir.'overallMSE_compare.png'
 set xlabel 'Sequence id'
 set ylabel 'Overall MSE'
 set grid
-plot errorsA using 1:5 with points pt 7 ps 1.2 lc rgb 'blue' title labelA, \
-     errorsB using 1:5 with points pt 5 ps 1.2 lc rgb 'red'  title labelB
+plot errorsA using 1:5 with lines lc rgb 'blue' lw 2 title labelA, \
+     errorsB using 1:5 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
 # 3) max MAE per sequenza
@@ -49,8 +49,8 @@ set output outdir.'maxMAE_compare.png'
 set xlabel 'Sequence id'
 set ylabel 'Max MAE'
 set grid
-plot errorsA using 1:2 with impulses lc rgb 'blue' title labelA, \
-     errorsB using 1:2 with impulses lc rgb 'red'  title labelB
+plot errorsA using 1:2 with lines lc rgb 'blue' lw 2 title labelA, \
+     errorsB using 1:2 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
 # 4) max MSE per sequenza
@@ -59,8 +59,8 @@ set output outdir.'maxMSE_compare.png'
 set xlabel 'Sequence id'
 set ylabel 'Max MSE'
 set grid
-plot errorsA using 1:3 with impulses lc rgb 'blue' title labelA, \
-     errorsB using 1:3 with impulses lc rgb 'red'  title labelB
+plot errorsA using 1:3 with lines lc rgb 'blue' lw 2 title labelA, \
+     errorsB using 1:3 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
 # 5) MAE(t) seq 0000
@@ -85,25 +85,16 @@ plot evoA using ($0):2 with lines lc rgb 'blue' lw 2 title labelA, \
 #######################################################################
 # 7) avg_true / avg_pred — modello A
 #######################################################################
-set output outdir.'seq0000_avg_A.png'
+set output outdir.'seq0000_avg.png'
 set xlabel 'Time step'
 set ylabel 'Average field'
 set grid
 plot evoA using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelA, \
-     ''    using ($0):4 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA
+     evoA using ($0):4 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA, \
+     evoB using ($0):4 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
 
 #######################################################################
-# 8) avg_true / avg_pred — modello B
-#######################################################################
-set output outdir.'seq0000_avg_B.png'
-set xlabel 'Time step'
-set ylabel 'Average field'
-set grid
-plot evoB using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelB, \
-     ''    using ($0):4 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
-
-#######################################################################
-# 9) energia nel tempo — E_true comune + E_pred A e B
+# 8) energia nel tempo — E_true comune + E_pred A e B
 #######################################################################
 set output outdir.'seq0000_energy.png'
 set xlabel 'Time step'
@@ -114,7 +105,7 @@ plot evoA using ($0):9  with lines lc rgb 'black' lw 2 title 'E\_true', \
      evoB using ($0):10 with lines lc rgb 'red'   lw 2 title 'E\_pred '.labelB
 
 #######################################################################
-# 10) errore relativo sull'energia
+# 9) errore relativo sull'energia
 #######################################################################
 set output outdir.'seq0000_rel_err_E.png'
 set xlabel 'Time step'
@@ -124,24 +115,15 @@ plot evoA using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'blue' lw 2 title l
      evoB using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
-# 11) max_true / max_pred — modello A
+# 10) max_true / max_pred
 #######################################################################
-set output outdir.'seq0000_max_A.png'
+set output outdir.'seq0000_max.png'
 set xlabel 'Time step'
 set ylabel 'Max field value'
 set grid
 plot evoA using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelA, \
-     ''    using ($0):8 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA
-
-#######################################################################
-# 12) max_true / max_pred — modello B
-#######################################################################
-set output outdir.'seq0000_max_B.png'
-set xlabel 'Time step'
-set ylabel 'Max field value'
-set grid
-plot evoB using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelB, \
-     ''    using ($0):8 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
+     evoA using ($0):8 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA, \
+     evoB using ($0):8 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
 
 unset output
 ### fine script ########################################################
