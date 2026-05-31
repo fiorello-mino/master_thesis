@@ -1,7 +1,7 @@
 #!/bin/sh
 
 LOG_DIR_NAME="lr_5e-5_hl_3_tr_5"
-SEQUENCE_TABLE="/data/fiorello/ext_test_64/testing_set_from_5.txt"
+SEQUENCE_TABLE="/data/fiorello/ext_test_64/testing_set_from_5_half_total_time.txt"
 OUTPUT_FOLDER="/data/fiorello/ext_test_64/lr_5e-5_hl_3_tr_5"
 SCRIPT_PATH="./test_script.py"
 
