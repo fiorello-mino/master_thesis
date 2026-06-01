@@ -10,14 +10,14 @@ python3 /home/fiorello/CRANE/train.py \
 	--bias \
 	--lr 1e-4 \
 	--batch 8 \
-	--weightd 3e-5 \
+	--weightd 1e-5 \
 	--train_set 'training_set_64_2_from_10.txt' \
 	--valid_set 'validation_set_64_2_from_10.txt' \
-	--id 'lr1e-4_b8_k3_hl2_ch16_seq20_ramp5_wd3e-5' \
+	--id 'lr1e-4_b8_k3_hl2_ch24_seq20_ramp5_wd1e-5' \
 	--logfreq 1 \
 	--kernel_size 3 \
 	--hidden 2 \
-	--channels 16 \
+	--channels 24 \
 	--nproc 4 \
 	--num_params 0 \
 	--subseq_min 5 \
