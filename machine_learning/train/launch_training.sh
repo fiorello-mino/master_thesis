@@ -10,10 +10,10 @@ python3 /home/fiorello/CRANE/train.py \
 	--bias \
 	--lr 1e-4 \
 	--batch 8 \
-	--weightd 1e-5 \
+	--weightd 3e-5 \
 	--train_set 'training_set_64_2_from_10.txt' \
 	--valid_set 'validation_set_64_2_from_10.txt' \
-	--id 'lr1e-4_b8_k3_hl2_ch16_seq_20_ramp5' \
+	--id 'lr1e-4_b8_k3_hl2_ch16_seq20_ramp5_wd3e-5' \
 	--logfreq 1 \
 	--kernel_size 3 \
 	--hidden 2 \
@@ -27,6 +27,6 @@ python3 /home/fiorello/CRANE/train.py \
 	--rotation90 \
 	--divergence \
 	--dual \
-	--ramp_length 10 \
+	--ramp_length 5 \
 	--ramp 
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt'
