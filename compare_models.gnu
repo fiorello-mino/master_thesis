@@ -1,15 +1,17 @@
 ### plot_compare.gp ###################################################
 # Cambia solo qui i path e i label
 # -------------------------------------------------------------------
-errorsA = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq20/errors.txt'
-errorsB = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq30/errors.txt'
-evoA    = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq20/0000/evo.txt'
-evoB    = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq30/0000/evo.txt'
+errorsA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/errors.txt'
+errorsB = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/errors.txt'
+medianA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/median_energy_error.txt'
+medianB = = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/median_energy_error.txt'
+#evoA    = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq20/0000/evo.txt'
+#evoB    = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/0000/evo.txt'
 
-labelA  = 'subseq\_max = 20'
-labelB  = 'subseq\_max = 30'
+labelA  = 'lr5e-5_k5_hl3'
+labelB  = 'lr1e-4_k7_hl2'
 
-outdir  = 'plots/seq20_vs_seq30/'
+outdir  = 'plots/prec_vs_new_2/'
 # -------------------------------------------------------------------
 
 set terminal pngcairo size 900,700 enhanced font ',12'
@@ -63,67 +65,87 @@ plot errorsA using 1:3 with lines lc rgb 'blue' lw 2 title labelA, \
      errorsB using 1:3 with lines lc rgb 'red'  lw 2 title labelB
 
 #######################################################################
-# 5) MAE(t) seq 0000
+# 5) mediana dell'errore relativo per dt
 #######################################################################
-set output outdir.'seq0000_MAE_vs_t.png'
-set xlabel 'Time step'
-set ylabel 'MAE'
+set output outdir.'median_rel_error_compare.png'
+set xlabel "time"
+set ylabel "median |ΔE| / |E_true|"
 set grid
-plot evoA using ($0):1 with lines lc rgb 'blue' lw 2 title labelA, \
-     evoB using ($0):1 with lines lc rgb 'red'  lw 2 title labelB
+plot medianA using 1:2 with lines lc rgb 'blue' lw 2 title labelA, \
+     errorsB using 1:2 with lines lc rgb 'red'  lw 2 title labelB
 
-#######################################################################
-# 6) MSE(t) seq 0000
-#######################################################################
-set output outdir.'seq0000_MSE_vs_t.png'
-set xlabel 'Time step'
-set ylabel 'MSE'
-set grid
-plot evoA using ($0):2 with lines lc rgb 'blue' lw 2 title labelA, \
-     evoB using ($0):2 with lines lc rgb 'red'  lw 2 title labelB
 
-#######################################################################
-# 7) avg_true / avg_pred — modello A
-#######################################################################
-set output outdir.'seq0000_avg.png'
-set xlabel 'Time step'
-set ylabel 'Average field'
-set grid
-plot evoA using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelA, \
-     evoA using ($0):4 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA, \
-     evoB using ($0):4 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
 
-#######################################################################
-# 8) energia nel tempo — E_true comune + E_pred A e B
-#######################################################################
-set output outdir.'seq0000_energy.png'
-set xlabel 'Time step'
-set ylabel 'Energy'
-set grid
-plot evoA using ($0):9  with lines lc rgb 'black' lw 2 title 'E\_true', \
-     evoA using ($0):10 with lines lc rgb 'blue'  lw 2 title 'E\_pred '.labelA, \
-     evoB using ($0):10 with lines lc rgb 'red'   lw 2 title 'E\_pred '.labelB
 
-#######################################################################
-# 9) errore relativo sull'energia
-#######################################################################
-set output outdir.'seq0000_rel_err_E.png'
-set xlabel 'Time step'
-set ylabel 'Relative error on E'
-set grid
-plot evoA using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'blue' lw 2 title labelA, \
-     evoB using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'red'  lw 2 title labelB
 
-#######################################################################
-# 10) max_true / max_pred
-#######################################################################
-set output outdir.'seq0000_max.png'
-set xlabel 'Time step'
-set ylabel 'Max field value'
-set grid
-plot evoA using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelA, \
-     evoA using ($0):8 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA, \
-     evoB using ($0):8 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
+
+
+
+
+
+
+# #######################################################################
+# # 5) MAE(t) seq 0000
+# #######################################################################
+# set output outdir.'seq0000_MAE_vs_t.png'
+# set xlabel 'Time step'
+# set ylabel 'MAE'
+# set grid
+# plot evoA using ($0):1 with lines lc rgb 'blue' lw 2 title labelA, \
+#      evoB using ($0):1 with lines lc rgb 'red'  lw 2 title labelB
+
+# #######################################################################
+# # 6) MSE(t) seq 0000
+# #######################################################################
+# set output outdir.'seq0000_MSE_vs_t.png'
+# set xlabel 'Time step'
+# set ylabel 'MSE'
+# set grid
+# plot evoA using ($0):2 with lines lc rgb 'blue' lw 2 title labelA, \
+#      evoB using ($0):2 with lines lc rgb 'red'  lw 2 title labelB
+
+# #######################################################################
+# # 7) avg_true / avg_pred — modello A
+# #######################################################################
+# set output outdir.'seq0000_avg.png'
+# set xlabel 'Time step'
+# set ylabel 'Average field'
+# set grid
+# plot evoA using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelA, \
+#      evoA using ($0):4 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA, \
+#      evoB using ($0):4 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
+
+# #######################################################################
+# # 8) energia nel tempo — E_true comune + E_pred A e B
+# #######################################################################
+# set output outdir.'seq0000_energy.png'
+# set xlabel 'Time step'
+# set ylabel 'Energy'
+# set grid
+# plot evoA using ($0):9  with lines lc rgb 'black' lw 2 title 'E\_true', \
+#      evoA using ($0):10 with lines lc rgb 'blue'  lw 2 title 'E\_pred '.labelA, \
+#      evoB using ($0):10 with lines lc rgb 'red'   lw 2 title 'E\_pred '.labelB
+
+# #######################################################################
+# # 9) errore relativo sull'energia
+# #######################################################################
+# set output outdir.'seq0000_rel_err_E.png'
+# set xlabel 'Time step'
+# set ylabel 'Relative error on E'
+# set grid
+# plot evoA using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'blue' lw 2 title labelA, \
+#      evoB using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'red'  lw 2 title labelB
+
+# #######################################################################
+# # 10) max_true / max_pred
+# #######################################################################
+# set output outdir.'seq0000_max.png'
+# set xlabel 'Time step'
+# set ylabel 'Max field value'
+# set grid
+# plot evoA using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelA, \
+#      evoA using ($0):8 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA, \
+#      evoB using ($0):8 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
 
 unset output
 ### fine script ########################################################
