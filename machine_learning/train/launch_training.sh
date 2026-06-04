@@ -15,7 +15,7 @@ python3 /home/fiorello/CRANE/train.py \
 	--valid_set 'validation_set_64_2_from_10.txt' \
 	--id 'lr1e-4_b4_k5_hl2_ch16_seq20_ramp5_wd2e-5' \
 	--logfreq 1 \
-	--kernel_size 7 \
+	--kernel_size 5 \
 	--hidden 2 \
 	--channels 16 \
 	--nproc 4 \
