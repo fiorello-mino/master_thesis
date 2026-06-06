@@ -1,17 +1,17 @@
 ### plot_compare.gp ###################################################
 # Cambia solo qui i path e i label
 # -------------------------------------------------------------------
-errorsA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/errors.txt'
-errorsB = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/errors.txt'
-medianA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/median_energy_error.txt'
-medianB = = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/median_energy_error.txt'
+#errorsA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/errors.txt'
+#errorsB = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/errors.txt'
+#medianA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/median_energy_error.txt'
+#medianB = = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/median_energy_error.txt'
 #evoA    = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq20/0000/evo.txt'
 #evoB    = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/0000/evo.txt'
 
-labelA  = 'lr5e-5_k5_hl3'
-labelB  = 'lr1e-4_k7_hl2'
+#labelA  = 'lr5e-5_k5_hl3'
+#labelB  = 'lr1e-4_k7_hl2'
 
-outdir  = 'plots/prec_vs_new_2/'
+#outdir  = 'plots/prec_vs_new_2/'
 # -------------------------------------------------------------------
 
 set terminal pngcairo size 900,700 enhanced font ',12'
@@ -71,8 +71,14 @@ set output outdir.'median_rel_error_compare.png'
 set xlabel "time"
 set ylabel "median |ΔE| / |E_true|"
 set grid
-plot medianA using 1:2 with lines lc rgb 'blue' lw 2 title labelA, \
-     errorsB using 1:2 with lines lc rgb 'red'  lw 2 title labelB
+
+set style fill transparent solid 0.2 noborder
+
+plot \
+    medianA using 1:3:4 with filledcurves lc rgb 'blue'  title labelA.'_IQR', \
+    medianB using 1:3:4 with filledcurves lc rgb 'red'   title labelB.'_IQR', \
+    medianA using 1:2      with lines       lc rgb 'blue' lw 2 title labelA, \
+    medianB using 1:2      with lines       lc rgb 'red'  lw 2 title labelB
 
 
 

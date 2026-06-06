@@ -104,7 +104,10 @@ class Config:
     dropout: bool = False
     dropout_prob: float | None = None
     epsilon: float = 5.0 / 64
-    dx: float = 1.0 / 64        
+    dx: float = 1.0 / 64  
+    dt: float = 1e-6
+    steps_per_save: int = 100_000
+    starting_frame: int = 10     
     # === MODEL VARIABLES ===
     
     
@@ -142,6 +145,9 @@ def parse_args() -> Config:
     parser.add_argument('--dropout-prob', type=float, default=None)
     parser.add_argument('--epsilon', type=float, default=5.0/64)
     parser.add_argument('--dx', type=float, default=1.0/64)
+    parser.add_argument('--dt', type=float, default=1e-6)
+    parser.add_argument('--steps_per_save', type=int, default=100_000)
+    parser.add_argument('--starting_frame', type=int, default=10)
 
     parser.add_argument('--num-png', type=int, default=100)
     parser.add_argument('--num-vtk', type=int, default=0)
@@ -192,6 +198,9 @@ def parse_args() -> Config:
         dropout_prob=args.dropout_prob,
         epsilon = args.epsilon,
         dx = args.dx,
+        dt = args.dt,
+        steps_per_save = args.steps_per_save,
+        starting_frame = args.starting_frame,
         num_png=args.num_png,
         num_vtk=args.num_vtk,
         num_npy=args.num_npy,
@@ -389,6 +398,9 @@ def write_evo_file(
     jump: int,
     epsilon: float,
     dx: float,
+    dt: float,
+    steps_per_save: int,
+    starting_frame: int
 ) -> None:
     sequence_np = sequence.detach().cpu().numpy()
     pred_np = pred_sequence.detach().cpu().numpy()
@@ -396,9 +408,9 @@ def write_evo_file(
     evo_path = kk_path / 'evo.txt'
     with evo_path.open('w') as file_evo:
         file_evo.write(
-            '# 1: MAE | 2: MSE | 3: avg_True | 4: avg_Pred | '
-            '5: min_True | 6: min_Pred | 7: max_True | 8: max_Pred | '
-            '9: E_True | 10: E_Pred\n'
+            '# 1: time | 2: MAE | 3: MSE | 4: avg_True | 5: avg_Pred | '
+            '6: min_True | 7: min_Pred | 8: max_True | 9: max_Pred | '
+            '10: E_True | 11: E_Pred\n'
         )
 
         # timesteps usati come input: solo energia del true
@@ -409,9 +421,10 @@ def write_evo_file(
             true_2d = true[0, 0, :, :]     # (H, W)
 
             e_true = total_free_energy(true_2d, epsilon, dx)
+            time = (t + starting_frame) * dt * steps_per_save
 
             file_evo.write(
-                f'nan\tnan\t{true.mean()}\tnan\t'
+                f'{time}\tnan\tnan\t{true.mean()}\tnan\t'
                 f'{true.min()}\tnan\t{true.max()}\tnan\t'
                 f'{e_true}\tnan\n'
             )
@@ -432,9 +445,10 @@ def write_evo_file(
 
             e_true = total_free_energy(true_2d, epsilon, dx)
             e_pred = total_free_energy(pred_2d, epsilon, dx)
+            time = (t + starting_frame) * dt * steps_per_save
 
             file_evo.write(
-                f'{np.abs(diff).mean()}\t{np.square(diff).mean()}\t'
+                f'{time}\t{np.abs(diff).mean()}\t{np.square(diff).mean()}\t'
                 f'{true.mean()}\t{pred.mean()}\t'
                 f'{true.min()}\t{pred.min()}\t{true.max()}\t{pred.max()}\t'
                 f'{e_true}\t{e_pred}\n'
@@ -601,6 +615,9 @@ def main() -> None:
                         cfg.min_seq,
                         cfg.epsilon,
                         cfg.dx,
+                        cfg.dt,
+                        cfg.steps_per_save,
+                        cfg.starting_frame
                     )
                     counters['evo'] += 1
 
