@@ -136,14 +136,14 @@ def generate_phi_block(
     x_max = 0.5
     x_min = -0.5
     L_base_x = 2.0
-    L_base_y = random.uniform(0.2, 0.8)
+    L_base_y = random.uniform(0.2, 0.5)
     base_sides = (L_base_x, L_base_y)
     center_base_x = 0.0
     center_base_y = 0.5
     base_center = (center_base_x, center_base_y)
     
-    n_teeth = random.randint(2, 6)
-    height_min = L_base_y + 0.1
+    n_teeth = random.randint(2, 8)
+    height_min = L_base_y + 0.7
     height_max = 2.0 - L_base_y
     y_center = 0.5
     gap_min = 2*epsilon
@@ -177,7 +177,7 @@ def main():
     before, phi_block, after = get_phi_block(path)
     
     new_phi_block = generate_phi_block(
-        epsilon = 0.0115,
+        epsilon = 0.01953125,
         width_max = 0.3
     )
     

@@ -21,7 +21,7 @@ surf->space->name:					[phi,mu]
 #############################################################################################
 #	CUSTOM
 surf->stabilizing function for mu:			1	% 1->Yes 0->No
-surf->eps:                                              0.0115
+surf->eps:                                              0.01953125
 
 #       BC
 surf->boundary conditions->Periodic BC:			  [ -1 ]
