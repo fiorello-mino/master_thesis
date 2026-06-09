@@ -175,19 +175,33 @@ def generate_phi_block(
         
         
 def main():
-    
     path = Path("pore2D.dat")
     before, phi_block, after = get_phi_block(path)
-    
-    new_phi_block = generate_phi_block(
-        epsilon = 0.01953125,
-        width_max = 0.3
-    )
-    
-    new_text = before + new_phi_block + after
-    
-    out_path = Path("prova.dat")
-    out_path.write_text(new_text)
+
+    epsilon = 0.01953125
+    width_max = 0.3
+
+    out_dir = Path("dataset_pori")
+    out_dir.mkdir(exist_ok=True)
+
+    n_files = 200
+
+    for k in range(n_files):
+        new_phi_block = generate_phi_block(
+            epsilon=epsilon,
+            width_max=width_max,
+        )
+        new_text = before + new_phi_block + after
+
+        run_dir = f"{k:03d}"
+
+        old_line = "output->directory:                                      pore_2D"
+        new_line = f"output->directory:                                      {run_dir}"
+        new_text = new_text.replace(old_line, new_line)
+
+        filename = f"{k:03d}.dat"
+        out_path = out_dir / filename
+        out_path.write_text(new_text)
     
 
 if __name__ == "__main__":
