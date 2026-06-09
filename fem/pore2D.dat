@@ -58,8 +58,8 @@ surf->phi->constant:                            1.
 
 surf->phi->shape:                               rectangle + rectangle1 + rectangle2 + rectangle3 + rectangle4 + rectangle5 + rectangle6 + rectangle7 + rectangle8
 
-surf->phi->shape->inner value:                  1
-surf->phi->shape->outer value:                  0
+surf->phi->shape->inner value:                  0
+surf->phi->shape->outer value:                  1
 surf->phi->shape->center:		        [ 0. , 0. ]
 
 surf->phi->shape->eps:                          ${surf->eps}
