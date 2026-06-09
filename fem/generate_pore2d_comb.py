@@ -91,11 +91,14 @@ def generate_all_teeth(
 
     L = x_max - x_min
 
-    while True:
+    max_tries = 10000
+    for _ in range(max_tries):
         widths = [random.uniform(2*epsilon, width_max) for _ in range(n_teeth)]
         total_width = sum(widths) + (n_teeth - 1) * gap_min
         if total_width <= L:
             break
+    else:
+        raise RuntimeError("Impossibile trovare una configurazione di larghezze compatibile dopo 10000 tentativi.")
     
     cur_x = x_min + gap_min
     
