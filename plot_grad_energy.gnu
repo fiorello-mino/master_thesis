@@ -10,7 +10,7 @@
 # 7: p75_tot
 
 set terminal pngcairo size 1400,900 enhanced font "Arial,14"
-set output "grad_vs_energy_comparison.png"
+set output "/data/fiorello/grad_vs_energy/grad_vs_energy_comparison.png"
 
 set title "Energia gradiente vs Energia totale vs tempo" font ",18"
 set xlabel "Tempo [s]" font ",14"
