@@ -142,15 +142,15 @@ def generate_phi_block(
 
     # base rossa
     L_base_x = x_max - x_min          # coerente con il dominio
-    L_base_y = 0.4
+    L_base_y = 0.2
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0, 0.5)
 
     # parametri denti blu
-    n_teeth = random.randint(3, 8)    # ad es. tra 3 e 8
+    n_teeth = 6
     y_center = 0.5
-    height_min = L_base_y + 0.1
-    height_max = 2.0 - L_base_y
+    height_min = L_base_y + 0.8
+    height_max = 2.0 - 2*epsilon
 
     # riga shape (ora che conosci n_teeth)
     lines.append(build_shape_line(n_teeth))
@@ -195,8 +195,8 @@ def main():
 
     new_phi_block = generate_phi_block(
     epsilon=0.01953125,
-    width_max=0.3,
-    k_spacing=2,
+    width_max=0.2,
+    k_spacing=1,
     )
     new_text = before + new_phi_block + after
 
