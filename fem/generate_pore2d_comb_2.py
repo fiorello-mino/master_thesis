@@ -102,9 +102,18 @@ def generate_all_teeth(
 
     w_max_final = min(w_target, width_max)
     w = max(2 * epsilon, w_max_final)
-
-    d_c = k_spacing * w
-    span = (n_teeth - 1) * d_c + w
+    
+    for _ in range(20): 
+        d_c = (k_spacing+1) * w
+        span = (n_teeth - 1) * d_c + w
+        if span <= L:
+            break
+       
+        w = max(2 * epsilon, 0.9 * w)
+    else:
+        raise RuntimeError(
+            f"Impossibile piazzare {n_teeth} denti: span={span:.4f} > L={L:.4f} anche dopo riduzione di w."
+        )
 
     x_mid = 0.5 * (x_min + x_max)
     first_center = x_mid - 0.5 * span + 0.5 * w
