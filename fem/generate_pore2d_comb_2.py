@@ -100,7 +100,7 @@ def generate_all_teeth(
     w = max(2 * epsilon, 0.8 * w_max_final)
 
     # 2) distanza tra centri
-    d_c = k_spacing * w
+    d_c = (k_spacing+1) * w
 
     # 3) span reale
     span = (n_teeth - 1) * d_c + w
@@ -123,31 +123,38 @@ def generate_all_teeth(
     
 def generate_phi_block(
     epsilon: float,
+    width_max: float,
     k_spacing: int,
 ) -> str:
     lines = []
 
+    # header PHI
     lines.append("#       PHI")
     lines.append(" ")
     lines.append("surf->phi->mode:                                shape % external file , constant")
-    lines.append("surf->phi->external file:				init/test.arh")
+    lines.append("surf->phi->external file:             init/test.arh")
     lines.append("surf->phi->constant:                            1.")
     lines.append(" ")
 
+    # dominio in x
     x_min = -0.5
     x_max = 0.5
 
-    L_base_x = x_max - x_min
-    L_base_y = 0.2
+    # base rossa
+    L_base_x = x_max - x_min          # coerente con il dominio
+    L_base_y = 0.4
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0, 0.5)
 
-    n_teeth = 2
-    height_min = L_base_y + 0.8
-    height_max = 2.0 - 2*epsilon
+    # parametri denti blu
+    n_teeth = random.randint(3, 8)    # ad es. tra 3 e 8
     y_center = 0.5
+    height_min = L_base_y + 0.1
+    height_max = 2.0 - L_base_y
 
+    # riga shape (ora che conosci n_teeth)
     lines.append(build_shape_line(n_teeth))
+    # inner/outer a seconda di come hai definito fase blu/rossa
     lines.append("surf->phi->shape->inner value:                  0")
     lines.append("surf->phi->shape->outer value:                  1")
     lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
@@ -155,15 +162,18 @@ def generate_phi_block(
     lines.append("surf->phi->shape->eps:                          ${surf->eps}")
     lines.append(" ")
 
+    # blocchi base + denti
     base_block = generate_base_rectangle(base_sides, base_center)
     teeth_block = generate_all_teeth(
         n_teeth=n_teeth,
+        epsilon=epsilon,
         x_min=x_min,
         x_max=x_max,
         y_center=y_center,
-        k_spacing=k_spacing,
         height_min=height_min,
         height_max=height_max,
+        width_max=width_max,
+        k_spacing=k_spacing,
     )
 
     lines.append(base_block)
@@ -184,8 +194,9 @@ def main():
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
 
     new_phi_block = generate_phi_block(
-        epsilon=epsilon,
-        k_spacing=1,
+    epsilon=0.01953125,
+    width_max=0.3,
+    k_spacing=2,
     )
     new_text = before + new_phi_block + after
 
