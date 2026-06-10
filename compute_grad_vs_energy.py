@@ -75,7 +75,7 @@ def main():
     out_dir = Path("/data/fiorello/grad_vs_energy")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    dx = 5.0 / 64
+    dx = 1.0 / 64
     epsilon = 5*dx
     ny, nx = 64, 64
     x_left, x_right, y_up, y_down = build_neighbour_arrays(ny, nx)
