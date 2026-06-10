@@ -78,29 +78,36 @@ def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
 
 def generate_all_teeth(
     n_teeth: int,
-    epsilon: float,
     x_min: float,
     x_max: float,
     y_center: float,
+    k_spacing: int,      # 1, 2, 3 o 4
     height_min: float,
-    height_max: float,   
-    width_max: float,
-    gap_min: float                    
+    height_max: float,
 ):
     blocks = []
 
     L = x_max - x_min
 
-    dist_c = L / n_teeth
-    x_c = np.arange(x_min, x_max, dist_c) + 0.5*dist_c
-    
-    for i in range(n_teeth):
-            
-        Lx = 0.1*dist_c 
-        Ly = 1.8
+    denom = (n_teeth - 1) * k_spacing + 1
+    w_max_geom = L / denom
 
-        rectangle_sides = (Lx, Ly)
-        block_i = generate_tooth_rectangle(i+1, rectangle_sides, x_c[i], y_center)
+    w = 0.8 * w_max_geom
+
+    d_c = k_spacing * w
+
+    span = (n_teeth - 1) * d_c + w
+
+    x_mid = 0.5 * (x_min + x_max)
+
+    first_center = x_mid - 0.5 * span + 0.5 * w
+
+    x_centers = [first_center + i * d_c for i in range(n_teeth)]
+
+    for i, x_c in enumerate(x_centers, start=1):
+        Ly = 1.6
+        rectangle_sides = (w, Ly)
+        block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
         blocks.append(block_i)
 
     return "\n".join(blocks)
@@ -109,54 +116,54 @@ def generate_all_teeth(
     
 def generate_phi_block(
     epsilon: float,
-    width_max: float
+    k_spacing: int,
 ) -> str:
-    
-    
     lines = []
-    
+
     lines.append("#       PHI")
     lines.append(" ")
     lines.append("surf->phi->mode:                                shape % external file , constant")
     lines.append("surf->phi->external file:				init/test.arh")
     lines.append("surf->phi->constant:                            1.")
     lines.append(" ")
-    
-    x_max = 0.5
+
     x_min = -0.5
-    L_base_x = 2.0
+    x_max = 0.5
+
+    L_base_x = x_max - x_min
     L_base_y = 0.4
     base_sides = (L_base_x, L_base_y)
-    center_base_x = 0.0
-    center_base_y = 0.5
-    base_center = (center_base_x, center_base_y)
-    
-    n_teeth = 1
-    height_min = L_base_y + 0.7
+    base_center = (0.0, 0.5)
+
+    n_teeth = 2
+    height_min = L_base_y + 0.1
     height_max = 2.0 - L_base_y
     y_center = 0.5
-    gap_min = 2*epsilon
-    
+
     lines.append(build_shape_line(n_teeth))
     lines.append("surf->phi->shape->inner value:                  0")
     lines.append("surf->phi->shape->outer value:                  1")
-    lines.append("surf->phi->shape->center:		        [ 0. , 0. ]")
+    lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
     lines.append(" ")
     lines.append("surf->phi->shape->eps:                          ${surf->eps}")
     lines.append(" ")
-    
+
     base_block = generate_base_rectangle(base_sides, base_center)
     teeth_block = generate_all_teeth(
-        n_teeth, epsilon, x_min, x_max, y_center,
-        height_min, height_max, width_max, gap_min
+        n_teeth=n_teeth,
+        x_min=x_min,
+        x_max=x_max,
+        y_center=y_center,
+        k_spacing=k_spacing,
+        height_min=height_min,
+        height_max=height_max,
     )
-    
+
     lines.append(base_block)
     lines.append(teeth_block)
     lines.append(" ")
 
-    block = "\n".join(lines)
-    return block
+    return "\n".join(lines)
     
         
         
@@ -171,7 +178,7 @@ def main():
 
     new_phi_block = generate_phi_block(
         epsilon=epsilon,
-        width_max=width_max,
+        k_spacing=1,
     )
     new_text = before + new_phi_block + after
 
