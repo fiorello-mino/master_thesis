@@ -106,7 +106,7 @@ def generate_all_teeth(
     for _ in range(20): 
         d_c = (k_spacing+1) * w
         span = (n_teeth - 1) * d_c + w
-        if span <= L:
+        if span <= L-(4*epsilon):
             break
        
         w = max(2 * epsilon, 0.9 * w)
