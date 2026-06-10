@@ -76,6 +76,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     dx = 5.0 / 64
+    epsilon = 5*dx
     ny, nx = 64, 64
     x_left, x_right, y_up, y_down = build_neighbour_arrays(ny, nx)
 
@@ -97,7 +98,7 @@ def main():
             gy = np.empty_like(phi)
 
             e_grad = gradient_energy(phi, dx, gx, gy, x_left, x_right, y_up, y_down)
-            run_energies_grad.append(e_grad)
+            run_energies_grad.append(0.5*epsilon*e_grad)
 
         if not run_energies_grad:
             print(f"Nessun file .npy trovato in {npy_dir}, salto")
