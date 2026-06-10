@@ -94,7 +94,7 @@ def generate_all_teeth(
 
     w = 0.8 * w_max_geom
 
-    d_c = k_spacing * w
+    d_c = (k_spacing + 1) * w
 
     span = (n_teeth - 1) * d_c + w
 
@@ -105,7 +105,7 @@ def generate_all_teeth(
     x_centers = [first_center + i * d_c for i in range(n_teeth)]
 
     for i, x_c in enumerate(x_centers, start=1):
-        Ly = 1.6
+        Ly = random.uniform(height_min, height_max)
         rectangle_sides = (w, Ly)
         block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
         blocks.append(block_i)
@@ -131,13 +131,13 @@ def generate_phi_block(
     x_max = 0.5
 
     L_base_x = x_max - x_min
-    L_base_y = 0.4
+    L_base_y = 0.2
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0, 0.5)
 
     n_teeth = 2
-    height_min = L_base_y + 0.1
-    height_max = 2.0 - L_base_y
+    height_min = L_base_y + 0.8
+    height_max = 2.0 - 2*epsilon
     y_center = 0.5
 
     lines.append(build_shape_line(n_teeth))
