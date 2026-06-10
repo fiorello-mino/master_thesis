@@ -78,28 +78,35 @@ def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
 
 def generate_all_teeth(
     n_teeth: int,
+    epsilon: float,
     x_min: float,
     x_max: float,
     y_center: float,
-    k_spacing: int,      # 1, 2, 3 o 4
     height_min: float,
     height_max: float,
+    width_max: float,
+    k_spacing: int,   # 1..4
 ):
     blocks = []
 
     L = x_max - x_min
 
-    denom = (n_teeth - 1) * k_spacing + 1
-    w_max_geom = L / denom
+    # 1) limiti sulla larghezza
+    w_geom_max = L / (3 * n_teeth)
+    w_physical_max = width_max
+    w_max_final = min(w_geom_max, w_physical_max)
 
-    w = 0.8 * w_max_geom
+    # imposto w con vincolo w >= 2*epsilon
+    w = max(2 * epsilon, 0.8 * w_max_final)
 
-    d_c = (k_spacing + 1) * w
+    # 2) distanza tra centri
+    d_c = k_spacing * w
 
+    # 3) span reale
     span = (n_teeth - 1) * d_c + w
 
+    # 4) centro del dominio
     x_mid = 0.5 * (x_min + x_max)
-
     first_center = x_mid - 0.5 * span + 0.5 * w
 
     x_centers = [first_center + i * d_c for i in range(n_teeth)]
