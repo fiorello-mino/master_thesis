@@ -49,11 +49,6 @@ def gradient_energy(phi, dx, gx, gy, x_left, x_right, y_up, y_down):
 
 
 def read_evo_file(path: Path):
-    """
-    Leggo evo.txt:
-    - ogni linea: ... e_true (colonna 9)
-    - ritorno lista di energie totali nel tempo
-    """
     data = []
 
     if not path.is_file():
@@ -84,21 +79,18 @@ def main():
     ny, nx = 64, 64
     x_left, x_right, y_up, y_down = build_neighbour_arrays(ny, nx)
 
-    # energy_t sarà una lista di liste:
     # energy_t[t] = [E_grad_run0_t, E_grad_run1_t, ...]
+    # e_tot_t[t] = [E_tot_run0_t, E_tot_run1_t, ...]
     energy_t = []
+    e_tot_t = []
 
-    # Ciclo sulle 100 sottocartelle 0000..0099
     for i in range(100):
         npy_dir = dataset_dir / f"{i:04d}"
         evo_path = test_dir / f"{i:04d}" / "evo.txt"
 
-        # 1) Carico evo.txt (energie totali di riferimento)
         evo_energies = read_evo_file(evo_path)
 
-        # 2) Carico tutti i .npy e calco E_grad per ogni frame
         run_energies_grad = []
-
         for npy_path in sorted(npy_dir.glob("*.npy")):
             phi = np.load(npy_path)
             gx = np.empty_like(phi)
@@ -111,32 +103,36 @@ def main():
             print(f"Nessun file .npy trovato in {npy_dir}, salto")
             continue
 
-        # Se evo_energies e run_energies_grad hanno lunghezze diverse,
-        # decidi tu come comportarti (es. tagliare al minimo).
         max_frames = min(len(evo_energies), len(run_energies_grad))
 
-        # Per ogni tempo t, costruiamo una lista di E_grad (da tutte le run)
-        # Inizializo energy_t se necessario
         if not energy_t:
             energy_t = [[] for _ in range(max_frames)]
+            e_tot_t = [[] for _ in range(max_frames)]
 
         for t in range(max_frames):
             energy_t[t].append(run_energies_grad[t])
+            e_tot_t[t].append(evo_energies[t])
 
     if not energy_t:
         raise RuntimeError("Nessun dato caricato: controlla dataset_dir e test_dir")
 
-    # Calcolo mediana e percentili per ogni tempo
-    median_t = np.array([np.median(v) for v in energy_t], dtype=float)
-    p25_t = np.array([np.percentile(v, 25) for v in energy_t], dtype=float)
-    p75_t = np.array([np.percentile(v, 75) for v in energy_t], dtype=float)
+    #_statistiche E_grad
+    median_grad = np.array([np.median(v) for v in energy_t], dtype=float)
+    p25_grad = np.array([np.percentile(v, 25) for v in energy_t], dtype=float)
+    p75_grad = np.array([np.percentile(v, 75) for v in energy_t], dtype=float)
 
-    out_path = out_dir / "grad_energy_stats.txt"
+    # statistiche E_tot
+    median_tot = np.array([np.median(v) for v in e_tot_t], dtype=float)
+    p25_tot = np.array([np.percentile(v, 25) for v in e_tot_t], dtype=float)
+    p75_tot = np.array([np.percentile(v, 75) for v in e_tot_t], dtype=float)
+
+    # salva file con 8 colonne
+    out_path = out_dir / "grad_vs_energy_stats.txt"
     with out_path.open("w") as f:
-        f.write("# t\tmedian\tp25\tp75\n")
-        for t in range(len(median_t)):
+        f.write("# time  median_grad  p25_grad  p75_grad  median_tot  p25_tot  p75_tot\n")
+        for t in range(len(median_grad)):
             time = (args.starting_frame + t) * args.dt * args.steps_per_save
-            f.write(f"{time}\t{median_t[t]}\t{p25_t[t]}\t{p75_t[t]}\n")
+            f.write(f"{time}\t{median_grad[t]}\t{p25_grad[t]}\t{p75_grad[t]}\t{median_tot[t]}\t{p25_tot[t]}\t{p75_tot[t]}\n")
 
 
 if __name__ == "__main__":
