@@ -33,7 +33,7 @@ set style fill solid 0.2 border -1
 set key top left font ",14"
 
 plot \
-    "grad_vs_energy_stats.txt" using 1:2 title "E_grad: mediana" with lines ls 1, \
+    "/data/fiorello/grad_vs_energy/grad_vs_energy_stats.txt" using 1:2 title "E_grad: mediana" with lines ls 1, \
     "" using 1:3:4 title "E_grad: quartili" with filledcurves lc rgb "#0060AD" fs solid 0.2, \
-    "grad_vs_energy_stats.txt" using 1:5 title "E_tot: mediana" with lines ls 3, \
+    "/data/fiorello/grad_vs_energy/grad_vs_energy_stats.txt" using 1:5 title "E_tot: mediana" with lines ls 3, \
     "" using 1:6:7 title "E_tot: quartili" with filledcurves lc rgb "#AA0000" fs solid 0.2
