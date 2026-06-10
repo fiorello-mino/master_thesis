@@ -96,11 +96,11 @@ def generate_all_teeth(
     
     for i in range(n_teeth):
             
-        Lx = 0.5*dist_c 
-        Ly = 1.0
+        Lx = 0.1*dist_c 
+        Ly = 1.8
 
         rectangle_sides = (Lx, Ly)
-        block_i = generate_tooth_rectangle(i+1, rectangle_sides, x_c, y_center)
+        block_i = generate_tooth_rectangle(i+1, rectangle_sides, x_c[i], y_center)
         blocks.append(block_i)
 
     return "\n".join(blocks)
@@ -167,18 +167,17 @@ def main():
     epsilon = 0.01953125
     width_max = 0.3
 
-    out_dir = Path("/home/fiorello/mesoEvo/install_seq/pore2D")
+    out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
 
-    for k in range(n_files):
-        new_phi_block = generate_phi_block(
-            epsilon=epsilon,
-            width_max=width_max,
-        )
-        new_text = before + new_phi_block + after
+    new_phi_block = generate_phi_block(
+        epsilon=epsilon,
+        width_max=width_max,
+    )
+    new_text = before + new_phi_block + after
 
-        filename = f"prova.dat"
-        out_path = out_dir / filename
-        out_path.write_text(new_text)
+    filename = f"prova.dat"
+    out_path = out_dir / filename
+    out_path.write_text(new_text)
     
 
 if __name__ == "__main__":
