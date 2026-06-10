@@ -21,11 +21,11 @@ set grid front
 set xtics auto
 set ytics auto
 
-# Stili
-set style line grad_med  lc rgb "#0060AD" lt 1 lw 2        # mediana gradiente
-set style line grad_band lc rgb "#0060AD" lt 2 lw 1        # contorno banda gradiente
-set style line tot_med   lc rgb "#AA0000" lt 1 lw 2        # mediana totale
-set style line tot_band  lc rgb "#AA0000" lt 2 lw 1        # contorno banda totale
+# Stili con indici numerici
+set style line 1 lc rgb "#0060AD" lt 1 lw 2   # mediana gradiente (blu)
+set style line 2 lc rgb "#0060AD" lt 2 lw 1   # contorno banda gradiente
+set style line 3 lc rgb "#AA0000" lt 1 lw 2   # mediana totale (rosso)
+set style line 4 lc rgb "#AA0000" lt 2 lw 1   # contorno banda totale
 
 set style fill solid 0.2 border -1
 
@@ -33,7 +33,7 @@ set style fill solid 0.2 border -1
 set key top left font ",14"
 
 plot \
-    "/data/fiorello/grad_vs_energy/grad_vs_energy_stats.txt" using 1:2 title "E_grad: mediana" with lines ls grad_med, \
+    "grad_vs_energy_stats.txt" using 1:2 title "E_grad: mediana" with lines ls 1, \
     "" using 1:3:4 title "E_grad: quartili" with filledcurves lc rgb "#0060AD" fs solid 0.2, \
-    "/data/fiorello/grad_vs_energy_stats.txt" using 1:5 title "E_tot: mediana" with lines ls tot_med, \
+    "grad_vs_energy_stats.txt" using 1:5 title "E_tot: mediana" with lines ls 3, \
     "" using 1:6:7 title "E_tot: quartili" with filledcurves lc rgb "#AA0000" fs solid 0.2
