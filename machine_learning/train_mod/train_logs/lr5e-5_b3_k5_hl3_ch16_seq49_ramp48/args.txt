@@ -3,7 +3,7 @@ bias 	 : 	 True
 bootstrap 	 : 	 False 
 channels 	 : 	 16 
 cmap 	 : 	 gray 
-coeffEn 	 : 	 0.01 
+coeffEn 	 : 	 0.1 
 conservative 	 : 	 False 
 crop 	 : 	 False 
 croplims 	 : 	 (0.25, 0.75) 
@@ -13,7 +13,9 @@ divergence 	 : 	 True
 dropout 	 : 	 False 
 dropout_prob 	 : 	 0.25 
 dual 	 : 	 True 
+dx 	 : 	 0.015625 
 epochs 	 : 	 500 
+eps 	 : 	 0.078125 
 extract_param 	 : 	 False 
 gifs 	 : 	 True 
 graphics 	 : 	 True 

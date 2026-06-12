@@ -30,5 +30,7 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--ramp_length 48 \
 	--ramp \
 	--massW 2.0 \
-	--coeffEn 1.0
+	--coeffEn 0.1 \
+        --eps 0.078125 \
+	--dx 0.015625	
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt'
