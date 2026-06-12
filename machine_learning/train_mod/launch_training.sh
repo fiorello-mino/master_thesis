@@ -28,7 +28,7 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--divergence \
 	--dual \
 	--massW 2.0 \
-	--coeffEn 1.0 \
+	--coeffEn 10.0 \
 	--coeffGrad 0.0 \
         --eps 0.078125 \
 	--dx 0.015625	
