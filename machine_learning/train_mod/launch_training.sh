@@ -27,11 +27,11 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--rotation90 \
 	--divergence \
 	--dual \
-	--ramp_length 48 \
-	--ramp \
 	--massW 2.0 \
-	--coeffEn 0.3 \
+	--coeffEn 1.0 \
 	--coeffGrad 0.0 \
         --eps 0.078125 \
 	--dx 0.015625	
+	#--ramp \
+	#--ramp_length 48 \
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt'

@@ -156,7 +156,7 @@ def generate_phi_block(
     base_center = (0.0, 0.5)
 
     # parametri denti blu
-    n_teeth = 6
+    n_teeth = 8
     y_center = 0.5
     height_min = L_base_y + 0.8
     height_max = 2.0 - 2*epsilon
@@ -197,15 +197,12 @@ def main():
     path = Path("pore2D.dat")
     before, phi_block, after = get_phi_block(path)
 
-    epsilon = 0.01953125
-    width_max = 0.1
-
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
 
     new_phi_block = generate_phi_block(
-    epsilon=0.01953125,
-    width_max=0.05,
-    k_spacing=3,
+    epsilon=0.009765625,
+    width_max=0.04,
+    k_spacing=4,
     )
     new_text = before + new_phi_block + after
 

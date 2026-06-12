@@ -3,7 +3,7 @@ bias 	 : 	 True
 bootstrap 	 : 	 False 
 channels 	 : 	 16 
 cmap 	 : 	 gray 
-coeffEn 	 : 	 0.3 
+coeffEn 	 : 	 1.0 
 coeffGrad 	 : 	 0.0 
 conservative 	 : 	 False 
 crop 	 : 	 False 
@@ -35,8 +35,8 @@ npy 	 : 	 False
 num_params 	 : 	 0 
 padding 	 : 	 circular 
 paths 	 : 	 {'master': 'train_logs/prova_2', 'model': 'train_logs/prova_2/model', 'png': 'train_logs/prova_2/pngs', 'gif': 'train_logs/prova_2/gifs', 'lossplot': 'train_logs/prova_2/lossplot.png', 'trainloss': 'train_logs/prova_2/train_loss.txt', 'validloss': 'train_logs/prova_2/valid_loss.txt', 'vtk': None, 'npy': None} 
-ramp 	 : 	 True 
-ramp_length 	 : 	 48 
+ramp 	 : 	 False 
+ramp_length 	 : 	 100 
 reflection 	 : 	 True 
 reflectionX 	 : 	 True 
 reflectionY 	 : 	 True 

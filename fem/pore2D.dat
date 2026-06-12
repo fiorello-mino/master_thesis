@@ -21,7 +21,7 @@ surf->space->name:					[phi,mu]
 #############################################################################################
 #	CUSTOM
 surf->stabilizing function for mu:			1	% 1->Yes 0->No
-surf->eps:                                              0.01953125
+surf->eps:                                              0.009765625
 
 #       BC
 surf->boundary conditions->Periodic BC:			  [ -1 ]
@@ -102,8 +102,8 @@ surf->phi->signed distance->boundary initialization: 			3
 #	LOCAL REFINEMENT
 surf->phi->refinement:                      		pf     % grad, pf
 surf->phi->refinement->pf->level in outer domain: 	4
-surf->phi->refinement->pf->level on interface: 		13
-surf->phi->refinement->pf->level on points: 		13
+surf->phi->refinement->pf->level on interface: 		15
+surf->phi->refinement->pf->level on points: 		15
 surf->phi->refinement->pf->level in inner domain: 	4
 surf->phi->refinement->pf->initial level:               4
 surf->phi->refinement->pf->min interface value:		0.05    % Default=0.05
