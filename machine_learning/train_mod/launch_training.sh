@@ -30,7 +30,7 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--ramp_length 48 \
 	--ramp \
 	--massW 2.0 \
-	--coeffEn 0.1 \
+	--coeffEn 0.3 \
 	--coeffGrad 0.0 \
         --eps 0.078125 \
 	--dx 0.015625	

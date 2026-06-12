@@ -103,7 +103,7 @@ def generate_all_teeth(
     w_max_final = min(w_target, width_max)
     w = max(2 * epsilon, w_max_final)
     
-    for _ in range(20): 
+    for _ in range(10000): 
         d_c = (k_spacing+1) * w
         span = (n_teeth - 1) * d_c + w
         if span <= L-(4*epsilon):
@@ -120,7 +120,8 @@ def generate_all_teeth(
     x_centers = [first_center + i * d_c for i in range(n_teeth)]
 
     for i, x_c in enumerate(x_centers, start=1):
-        Ly = random.uniform(height_min, height_max)
+        #Ly = random.uniform(height_min, height_max)
+        Ly = min(40*w, height_max)
         rectangle_sides = (w, Ly)
         block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
         blocks.append(block_i)
@@ -197,14 +198,14 @@ def main():
     before, phi_block, after = get_phi_block(path)
 
     epsilon = 0.01953125
-    width_max = 0.3
+    width_max = 0.1
 
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
 
     new_phi_block = generate_phi_block(
     epsilon=0.01953125,
-    width_max=0.2,
-    k_spacing=1,
+    width_max=0.05,
+    k_spacing=3,
     )
     new_text = before + new_phi_block + after
 
