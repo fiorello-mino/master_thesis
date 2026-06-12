@@ -5,7 +5,7 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--padding 'circular' \
 	--size 64 \
 	--seed 666 \
-	--epochs 500 \
+	--epochs 10 \
 	--nocrop \
 	--bias \
 	--lr 5e-5 \
@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--weightd 0e-5 \
 	--train_set 'training_set_64_2_from_10.txt' \
 	--valid_set 'validation_set_64_2_from_10.txt' \
-	--id 'lr5e-5_b3_k5_hl3_ch16_seq49_ramp48' \
+	--id 'prova' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -31,6 +31,7 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--ramp \
 	--massW 2.0 \
 	--coeffEn 0.1 \
+	--coeffGrad 0.0 \
         --eps 0.078125 \
 	--dx 0.015625	
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt'
