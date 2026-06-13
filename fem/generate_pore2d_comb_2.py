@@ -32,7 +32,6 @@ def build_shape_line(n_teeth: int) -> str:
     names = ["rectangle"]
     for i in range(1, n_teeth + 1):
         names.append(f"rectangle{i}")
-
     shape_exp = " + ".join(names)
     return f"surf->phi->shape:                               {shape_exp}"
 
@@ -54,7 +53,13 @@ def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
 
 
 def sample_candidate_params(case_hint=None):
-
+    """
+    case_hint guida il sampling iniziale.
+    La classificazione finale deep/shallow viene comunque fatta a posteriori.
+    near/far dipende solo da k_spacing:
+      near <=> k_spacing <= 3
+      far  <=> k_spacing > 3
+    """
     if case_hint is None:
         case_hint = random.choice([
             "near_deep",
@@ -138,7 +143,7 @@ def generate_all_teeth(
             Ly = depth_ratio * gap
             Ly = min(max(Ly, height_min), height_max)
 
-            ratio_eff = Ly / gap
+            ratio_eff = Ly / gap if gap > 0 else float("inf")
 
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
@@ -165,19 +170,24 @@ def generate_all_teeth(
     )
 
 
-def classify_case(gap, ratio_eff, gap_threshold, ratio_threshold):
-    near_far = "near" if gap <= gap_threshold else "far"
+def classify_case(k_spacing, Ly, w, ratio_threshold):
+
+    near_far = "near" if k_spacing <= 3 else "far"
+
+    gap = k_spacing * w
+    ratio_eff = Ly / gap
     deep_shallow = "deep" if ratio_eff >= ratio_threshold else "shallow"
-    return f"{near_far}_{deep_shallow}"
+
+    case_eff = f"{near_far}_{deep_shallow}"
+    return case_eff, ratio_eff, gap
 
 
 def generate_phi_block(
     epsilon: float,
     width_max: float,
     case_target=None,
-    gap_threshold=0.12,
-    ratio_threshold=2.5,
-    max_tries=200,
+    ratio_threshold=4.0,
+    max_tries=300,
 ) -> str:
     x_min = -0.5
     x_max = 0.5
@@ -196,7 +206,7 @@ def generate_phi_block(
         raise ValueError(f"case_target non valido: {case_target}")
 
     for _ in range(max_tries):
-        case_hint, k_spacing, depth_ratio, n_teeth_initial = sample_candidate_params(case_target)
+        case_hint, k_spacing, depth_ratio, n_teeth_initial = sample_candidate_params(case_hint=case_target)
 
         teeth_block, info = generate_all_teeth(
             n_teeth=n_teeth_initial,
@@ -211,10 +221,10 @@ def generate_phi_block(
             depth_ratio=depth_ratio,
         )
 
-        case_eff = classify_case(
-            gap=info["gap"],
-            ratio_eff=info["depth_ratio_eff"],
-            gap_threshold=gap_threshold,
+        case_eff, ratio_eff, gap = classify_case(
+            k_spacing=info["k_spacing"],
+            Ly=info["Ly"],
+            w=info["w"],
             ratio_threshold=ratio_threshold,
         )
 
@@ -258,8 +268,7 @@ def main():
         epsilon=0.01953125,
         width_max=0.08,
         case_target="near_deep",
-        gap_threshold=0.12,
-        ratio_threshold=2.5,
+        ratio_threshold=4.0,
         max_tries=300,
     )
 
