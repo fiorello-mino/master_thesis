@@ -1,14 +1,11 @@
 from pathlib import Path
-import numpy as np
 import random
 
 
 def load_pore2d(path: Path) -> str:
     if not path.is_file():
         raise FileNotFoundError(f"File {path} non trovato.")
-
-    text = path.read_text()
-    return text
+    return path.read_text()
 
 
 def get_phi_block(path: Path):
@@ -33,83 +30,51 @@ def get_phi_block(path: Path):
 
 def build_shape_line(n_teeth: int) -> str:
     names = ["rectangle"]
-
     for i in range(1, n_teeth + 1):
         names.append(f"rectangle{i}")
-
     shape_exp: str = " + ".join(names)
     line: str = f"surf->phi->shape:                               {shape_exp}"
-
     return line
 
 
 def generate_base_rectangle(base_sides, base_center):
     lines = []
-
     lines.append(f"rectangle->sides length: [{base_sides[0]},{base_sides[1]}]")
     lines.append(f"rectangle->center:       [{base_center[0]},{base_center[1]}]")
     lines.append(" ")
-
     block = "\n".join(lines)
     return block
 
 
 def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
     lines = []
-
     lines.append(f"rectangle{i}->sides length:  [{rectangle_sides[0]},{rectangle_sides[1]}]")
     lines.append(f"rectangle{i}->center:    [{x_center},{y_center}]")
     lines.append(" ")
-
     block = "\n".join(lines)
     return block
 
 
-def sample_params_from_case(n_teeth: int, case: str ):
-    
-    if n_teeth <= 2:
-        if case == "near_deep":
-            k_spacing = random.randint(1,3)
-            ratio = random.uniform(2.0, 3.5)
-        
-        elif case == "near_shallow":
-            k_spacing = random.randint(1,3)
-            ratio = random.uniform(0.8, 1.5)
-        
-        elif case == "far_deep":
-            k_spacing = random.randint(4,6)
-            ratio = random.uniform(2.0, 3.5)
-        
-        elif case == "far_shallow":
-            k_spacing = random.randint(4,6)
-            ratio = random.uniform(0.8, 1.5)
-        
-        else:
-            raise ValueError(f"Caso non valido: {case}")
-    
+def sample_params_from_case(distance: str, depth: str):
+    # distanza → k_spacing
+    if distance == "near":
+        k_spacing = random.randint(1, 3)
+    elif distance == "far":
+        k_spacing = random.randint(4, 6)
     else:
-        if case == "near_deep":
-            k_spacing = random.randint(1,3)
-            ratio = random.uniform(2.0, 3.5)
-        
-        elif case == "near_shallow":
-            k_spacing = random.randint(1,3)
-            ratio = random.uniform(0.8, 1.5)
-        
-        elif case == "far_deep":
-            k_spacing = random.randint(4,6)
-            ratio = random.uniform(2.0, 3.5)
-        
-        elif case == "far_shallow":
-            k_spacing = random.randint(4,6)
-            ratio = random.uniform(0.8, 1.5)
-        
-        else:
-            raise ValueError(f"Caso non valido: {case}")
-        
+        raise ValueError(f"Distanza non valida: {distance}")
+
+    # profondità → ratio = Ly / (k_spacing * w)
+    if depth == "deep":
+        ratio = random.uniform(15.0, 25.0)
+    elif depth == "shallow":
+        ratio = random.uniform(5.0, 12.0)
+    else:
+        raise ValueError(f"Profondità non valida: {depth}")
+
     return k_spacing, ratio
-        
-    
+
+
 def generate_all_teeth(
     n_teeth: int,
     epsilon: float,
@@ -119,13 +84,16 @@ def generate_all_teeth(
     height_min: float,
     height_max: float,
     width_max: float,
-    case: str,
+    distance: str,
+    depth: str,
 ):
     L = x_max - x_min
-    
-    k_spacing, ratio = sample_params_from_case(n_teeth, case)
+
+    # parametri scelti in base a distance/depth
+    k_spacing, ratio = sample_params_from_case(distance, depth)
 
     while n_teeth >= 1:
+        # stima iniziale di w
         if n_teeth <= 2:
             w_target = L / 2.0
         elif n_teeth <= 8:
@@ -140,6 +108,7 @@ def generate_all_teeth(
 
         success = False
 
+        # riduzione progressiva di w se non entra nel dominio
         for _ in range(10000):
             d_c = (k_spacing + 1) * w
             span = (n_teeth - 1) * d_c + w
@@ -149,18 +118,22 @@ def generate_all_teeth(
                 break
 
             new_w = max(2 * epsilon, 0.9 * w)
-
             if new_w == w:
                 break
-
             w = new_w
 
         if success:
+            # calcolo definitivo di posizione e altezza
+            d_c = (k_spacing + 1) * w
+            span = (n_teeth - 1) * d_c + w
+
             x_mid = 0.5 * (x_min + x_max)
             first_center = x_mid - 0.5 * span + 0.5 * w
             x_centers = [first_center + i * d_c for i in range(n_teeth)]
-            
-            Ly = min(max(height_min, 2 * ratio * w * k_spacing), height_max)
+
+            gap = k_spacing * w
+            Ly = ratio * gap
+            Ly = min(max(Ly, height_min), height_max)
 
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
@@ -170,6 +143,7 @@ def generate_all_teeth(
 
             return "\n".join(blocks), n_teeth
 
+        # se non funziona, prova con un dente in meno
         n_teeth -= 1
 
     raise RuntimeError(
@@ -180,7 +154,8 @@ def generate_all_teeth(
 def generate_phi_block(
     epsilon: float,
     width_max: float,
-    case: str,
+    distance: str,
+    depth: str,
 ) -> str:
     lines = []
 
@@ -191,14 +166,17 @@ def generate_phi_block(
     lines.append("surf->phi->constant:                            1.")
     lines.append(" ")
 
+    # dominio x
     x_min = -0.5
     x_max = 0.5
 
+    # base
     L_base_x = x_max - x_min
     L_base_y = 0.2
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0, 0.5)
 
+    # sampling numero denti
     n_teeth = random.randint(1, 8)
     y_center = 0.5
     height_min = L_base_y + 0.8
@@ -214,7 +192,8 @@ def generate_phi_block(
         height_min=height_min,
         height_max=height_max,
         width_max=width_max,
-        case=case,
+        distance=distance,
+        depth=depth,
     )
 
     lines.append(build_shape_line(n_teeth_final))
@@ -241,7 +220,8 @@ def main():
     new_phi_block = generate_phi_block(
         epsilon=0.01953125,
         width_max=0.08,
-        case="near_deep",
+        distance="near",
+        depth="deep",      
     )
     new_text = before + new_phi_block + after
 
