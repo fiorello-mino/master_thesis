@@ -53,6 +53,39 @@ def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
     return "\n".join(lines)
 
 
+def sample_candidate_params(case_hint=None):
+
+    if case_hint is None:
+        case_hint = random.choice([
+            "near_deep",
+            "near_shallow",
+            "far_deep",
+            "far_shallow",
+        ])
+
+    if case_hint == "near_deep":
+        k_spacing = random.randint(1, 3)
+        depth_ratio = random.uniform(3.0, 8.0)
+
+    elif case_hint == "near_shallow":
+        k_spacing = random.randint(1, 3)
+        depth_ratio = random.uniform(0.3, 2.0)
+
+    elif case_hint == "far_deep":
+        k_spacing = random.randint(4, 6)
+        depth_ratio = random.uniform(3.0, 8.0)
+
+    elif case_hint == "far_shallow":
+        k_spacing = random.randint(4, 6)
+        depth_ratio = random.uniform(0.3, 2.0)
+
+    else:
+        raise ValueError(f"Caso non valido: {case_hint}")
+
+    n_teeth = random.randint(1, 8)
+    return case_hint, k_spacing, depth_ratio, n_teeth
+
+
 def generate_all_teeth(
     n_teeth: int,
     epsilon: float,
@@ -91,7 +124,6 @@ def generate_all_teeth(
                 break
 
             new_w = max(2 * epsilon, 0.9 * w)
-
             if new_w == w:
                 break
 
@@ -102,8 +134,11 @@ def generate_all_teeth(
             first_center = x_mid - 0.5 * span + 0.5 * w
             x_centers = [first_center + i * d_c for i in range(n_teeth)]
 
-            Ly = 2 * depth_ratio * k_spacing * w
+            gap = k_spacing * w
+            Ly = depth_ratio * gap
             Ly = min(max(Ly, height_min), height_max)
+
+            ratio_eff = Ly / gap
 
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
@@ -111,7 +146,17 @@ def generate_all_teeth(
                 block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
                 blocks.append(block_i)
 
-            return "\n".join(blocks), n_teeth, k_spacing, w, Ly
+            info = {
+                "n_teeth_final": n_teeth,
+                "k_spacing": k_spacing,
+                "w": w,
+                "gap": gap,
+                "Ly": Ly,
+                "depth_ratio_input": depth_ratio,
+                "depth_ratio_eff": ratio_eff,
+            }
+
+            return "\n".join(blocks), info
 
         n_teeth -= 1
 
@@ -120,47 +165,20 @@ def generate_all_teeth(
     )
 
 
-def sample_morphology(case=None):
-    if case is None:
-        case = random.choice([
-            "near_deep",
-            "near_shallow",
-            "far_deep",
-            "far_shallow",
-        ])
-
-    if case == "near_deep":
-        k_spacing = random.randint(1, 3)
-        depth_ratio = random.uniform(8.0, 16.0)
-
-    elif case == "near_shallow":
-        k_spacing = random.randint(1, 3)
-        depth_ratio = random.uniform(1.0, 3.0)
-
-    elif case == "far_deep":
-        k_spacing = random.randint(4, 6)
-        depth_ratio = random.uniform(8.0, 16.0)
-
-    else:  # far_shallow
-        k_spacing = random.randint(4, 6)
-        depth_ratio = random.uniform(1.0, 3.0)
-
-    return case, k_spacing, depth_ratio
+def classify_case(gap, ratio_eff, gap_threshold, ratio_threshold):
+    near_far = "near" if gap <= gap_threshold else "far"
+    deep_shallow = "deep" if ratio_eff >= ratio_threshold else "shallow"
+    return f"{near_far}_{deep_shallow}"
 
 
 def generate_phi_block(
     epsilon: float,
     width_max: float,
+    case_target=None,
+    gap_threshold=0.12,
+    ratio_threshold=2.5,
+    max_tries=200,
 ) -> str:
-    lines = []
-
-    lines.append("#       PHI")
-    lines.append(" ")
-    lines.append("surf->phi->mode:                                shape % external file , constant")
-    lines.append("surf->phi->external file:             init/test.arh")
-    lines.append("surf->phi->constant:                            1.")
-    lines.append(" ")
-
     x_min = -0.5
     x_max = 0.5
 
@@ -169,41 +187,65 @@ def generate_phi_block(
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0, 0.5)
 
-    case, k_spacing, depth_ratio = sample_morphology("near_deep")
-
-    n_teeth = random.randint(1, 8)
     y_center = 0.5
     height_min = L_base_y + 0.8
     height_max = 2.0 - 2 * epsilon
 
-    base_block = generate_base_rectangle(base_sides, base_center)
+    valid_cases = {None, "near_deep", "near_shallow", "far_deep", "far_shallow"}
+    if case_target not in valid_cases:
+        raise ValueError(f"case_target non valido: {case_target}")
 
-    teeth_block, n_teeth_final, k_spacing_used, w_used, Ly_used = generate_all_teeth(
-        n_teeth=n_teeth,
-        epsilon=epsilon,
-        x_min=x_min,
-        x_max=x_max,
-        y_center=y_center,
-        height_min=height_min,
-        height_max=height_max,
-        width_max=width_max,
-        k_spacing=k_spacing,
-        depth_ratio=depth_ratio,
+    for _ in range(max_tries):
+        case_hint, k_spacing, depth_ratio, n_teeth_initial = sample_candidate_params(case_target)
+
+        teeth_block, info = generate_all_teeth(
+            n_teeth=n_teeth_initial,
+            epsilon=epsilon,
+            x_min=x_min,
+            x_max=x_max,
+            y_center=y_center,
+            height_min=height_min,
+            height_max=height_max,
+            width_max=width_max,
+            k_spacing=k_spacing,
+            depth_ratio=depth_ratio,
+        )
+
+        case_eff = classify_case(
+            gap=info["gap"],
+            ratio_eff=info["depth_ratio_eff"],
+            gap_threshold=gap_threshold,
+            ratio_threshold=ratio_threshold,
+        )
+
+        if case_target is None or case_eff == case_target:
+            lines = []
+
+            lines.append("#       PHI")
+            lines.append(" ")
+            lines.append("surf->phi->mode:                                shape % external file , constant")
+            lines.append("surf->phi->external file:             init/test.arh")
+            lines.append("surf->phi->constant:                            1.")
+            lines.append(" ")
+
+            lines.append(build_shape_line(info["n_teeth_final"]))
+            lines.append("surf->phi->shape->inner value:                  0")
+            lines.append("surf->phi->shape->outer value:                  1")
+            lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
+            lines.append(" ")
+            lines.append("surf->phi->shape->eps:                          ${surf->eps}")
+            lines.append(" ")
+
+            base_block = generate_base_rectangle(base_sides, base_center)
+            lines.append(base_block)
+            lines.append(teeth_block)
+            lines.append(" ")
+
+            return "\n".join(lines)
+
+    raise RuntimeError(
+        f"Non sono riuscito a generare un campione del tipo {case_target} in {max_tries} tentativi."
     )
-
-    lines.append(build_shape_line(n_teeth_final))
-    lines.append("surf->phi->shape->inner value:                  0")
-    lines.append("surf->phi->shape->outer value:                  1")
-    lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
-    lines.append(" ")
-    lines.append("surf->phi->shape->eps:                          ${surf->eps}")
-    lines.append(" ")
-
-    lines.append(base_block)
-    lines.append(teeth_block)
-    lines.append(" ")
-
-    return "\n".join(lines)
 
 
 def main():
@@ -215,6 +257,10 @@ def main():
     new_phi_block = generate_phi_block(
         epsilon=0.01953125,
         width_max=0.08,
+        case_target="near_deep",
+        gap_threshold=0.12,
+        ratio_threshold=2.5,
+        max_tries=300,
     )
 
     new_text = before + new_phi_block + after
