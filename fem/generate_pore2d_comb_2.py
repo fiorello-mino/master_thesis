@@ -200,8 +200,8 @@ def main():
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
 
     new_phi_block = generate_phi_block(
-    epsilon=0.009765625,
-    width_max=0.04,
+    epsilon=0.01953125,
+    width_max=0.05,
     k_spacing=4,
     )
     new_text = before + new_phi_block + after
