@@ -108,7 +108,7 @@ def generate_all_teeth(
             d_c = (k_spacing + 1) * w
             span = (n_teeth - 1) * d_c + w
 
-            if span <= L - (4 * epsilon):
+            if span <= L - (10 * epsilon):
                 success = True
                 break
 
@@ -124,9 +124,11 @@ def generate_all_teeth(
             first_center = x_mid - 0.5 * span + 0.5 * w
             x_centers = [first_center + i * d_c for i in range(n_teeth)]
 
+            rapp = random.uniform(1,10)
+            Ly = min(rapp * w * k_spacing, height_max)
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
-                Ly = min(40 * w, height_max)
+                #Ly = min(40 * w, height_max)
                 rectangle_sides = (w, Ly)
                 block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
                 blocks.append(block_i)
@@ -167,7 +169,7 @@ def generate_phi_block(
     base_center = (0.0, 0.5)
 
     # parametri denti blu
-    n_teeth = 8
+    n_teeth = random.randint(1,8)
     y_center = 0.5
     height_min = L_base_y + 0.8
     height_max = 2.0 - 2*epsilon
@@ -211,8 +213,8 @@ def main():
 
     new_phi_block = generate_phi_block(
     epsilon=0.01953125,
-    width_max=0.05,
-    k_spacing=4,
+    width_max=0.08,
+    k_spacing=3,
     )
     new_text = before + new_phi_block + after
 
