@@ -172,19 +172,10 @@ def generate_phi_block(
     height_min = L_base_y + 0.8
     height_max = 2.0 - 2*epsilon
 
-    # riga shape (ora che conosci n_teeth)
-    lines.append(build_shape_line(n_teeth))
-    # inner/outer a seconda di come hai definito fase blu/rossa
-    lines.append("surf->phi->shape->inner value:                  0")
-    lines.append("surf->phi->shape->outer value:                  1")
-    lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
-    lines.append(" ")
-    lines.append("surf->phi->shape->eps:                          ${surf->eps}")
-    lines.append(" ")
 
     # blocchi base + denti
     base_block = generate_base_rectangle(base_sides, base_center)
-    teeth_block = generate_all_teeth(
+    teeth_block, n_teeth_final = generate_all_teeth(
         n_teeth=n_teeth,
         epsilon=epsilon,
         x_min=x_min,
@@ -195,6 +186,14 @@ def generate_phi_block(
         width_max=width_max,
         k_spacing=k_spacing,
     )
+
+    lines.append(build_shape_line(n_teeth_final))
+    lines.append("surf->phi->shape->inner value:                  0")
+    lines.append("surf->phi->shape->outer value:                  1")
+    lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
+    lines.append(" ")
+    lines.append("surf->phi->shape->eps:                          ${surf->eps}")
+    lines.append(" ")
 
     lines.append(base_block)
     lines.append(teeth_block)
