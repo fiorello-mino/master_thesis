@@ -85,48 +85,59 @@ def generate_all_teeth(
     height_min: float,
     height_max: float,
     width_max: float,
-    k_spacing: int,     
+    k_spacing: int,
 ):
-    blocks = []
-
     L = x_max - x_min
 
-    if n_teeth <= 2:
-        w_target = L / 2.0    
-    elif n_teeth <= 8:
-        denom = (n_teeth - 1) * k_spacing + 1
-        w_target = L / denom
-    else:
-        denom = (n_teeth - 1) * k_spacing + 1
-        w_target = 0.8 * L / denom
+    while n_teeth >= 1:
+        if n_teeth <= 2:
+            w_target = L / 2.0
+        elif n_teeth <= 8:
+            denom = (n_teeth - 1) * k_spacing + 1
+            w_target = L / denom
+        else:
+            denom = (n_teeth - 1) * k_spacing + 1
+            w_target = 0.8 * L / denom
 
-    w_max_final = min(w_target, width_max)
-    w = max(2 * epsilon, w_max_final)
-    
-    for _ in range(10000): 
-        d_c = (k_spacing+1) * w
-        span = (n_teeth - 1) * d_c + w
-        if span <= L-(4*epsilon):
-            break
-       
-        w = max(2 * epsilon, 0.9 * w)
-    else:
-        raise RuntimeError(
-            f"Impossibile piazzare {n_teeth} denti: span={span:.4f} > L={L:.4f} anche dopo riduzione di w."
-        )
+        w_max_final = min(w_target, width_max)
+        w = max(2 * epsilon, w_max_final)
 
-    x_mid = 0.5 * (x_min + x_max)
-    first_center = x_mid - 0.5 * span + 0.5 * w
-    x_centers = [first_center + i * d_c for i in range(n_teeth)]
+        success = False
 
-    for i, x_c in enumerate(x_centers, start=1):
-        #Ly = random.uniform(height_min, height_max)
-        Ly = min(40*w, height_max)
-        rectangle_sides = (w, Ly)
-        block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
-        blocks.append(block_i)
+        for _ in range(10000):
+            d_c = (k_spacing + 1) * w
+            span = (n_teeth - 1) * d_c + w
 
-    return "\n".join(blocks)
+            if span <= L - (4 * epsilon):
+                success = True
+                break
+
+            new_w = max(2 * epsilon, 0.9 * w)
+
+            if new_w == w:
+                break
+
+            w = new_w
+
+        if success:
+            x_mid = 0.5 * (x_min + x_max)
+            first_center = x_mid - 0.5 * span + 0.5 * w
+            x_centers = [first_center + i * d_c for i in range(n_teeth)]
+
+            blocks = []
+            for i, x_c in enumerate(x_centers, start=1):
+                Ly = min(40 * w, height_max)
+                rectangle_sides = (w, Ly)
+                block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
+                blocks.append(block_i)
+
+            return "\n".join(blocks), n_teeth
+
+        n_teeth -= 1
+
+    raise RuntimeError(
+    f"Impossibile piazzare denti: nemmeno con n_teeth=1 si trova w valido."
+)
 
     
     
