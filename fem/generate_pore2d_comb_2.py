@@ -28,9 +28,9 @@ def get_phi_block(path: Path):
     return before, phi_block, after
 
 
-def build_shape_line(n_teeth: int) -> str:
+def build_shape_line(n_pores: int) -> str:
     names = ["rectangle"]
-    for i in range(1, n_teeth + 1):
+    for i in range(1, n_pores + 1):
         names.append(f"rectangle{i}")
     shape_exp: str = " + ".join(names)
     line: str = f"surf->phi->shape:                               {shape_exp}"
@@ -46,7 +46,7 @@ def generate_base_rectangle(base_sides, base_center):
     return block
 
 
-def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
+def generate_pore_rectangle(i: int, rectangle_sides, x_center, y_center):
     lines = []
     lines.append(f"rectangle{i}->sides length:  [{rectangle_sides[0]},{rectangle_sides[1]}]")
     lines.append(f"rectangle{i}->center:    [{x_center},{y_center}]")
@@ -76,8 +76,8 @@ def sample_params_from_case(distance: str, depth: str):
     return k_spacing, ratio
 
 
-def generate_all_teeth(
-    n_teeth: int,
+def generate_all_pores(
+    n_pores: int,
     epsilon: float,
     x_min: float,
     x_max: float,
@@ -93,15 +93,15 @@ def generate_all_teeth(
     # parametri scelti in base a distance/depth
     k_spacing, ratio = sample_params_from_case(distance, depth)
 
-    while n_teeth >= 1:
+    while n_pores >= 1:
         # stima iniziale di w
-        if n_teeth <= 2:
+        if n_pores <= 2:
             w_target = L / 2.0
-        elif n_teeth <= 8:
-            denom = (n_teeth - 1) * k_spacing + 1
+        elif n_pores <= 8:
+            denom = (n_pores - 1) * k_spacing + 1
             w_target = L / denom
         else:
-            denom = (n_teeth - 1) * k_spacing + 1
+            denom = (n_pores - 1) * k_spacing + 1
             w_target = 0.8 * L / denom
 
         w_max_final = min(w_target, width_max)
@@ -112,7 +112,7 @@ def generate_all_teeth(
         # riduzione progressiva di w se non entra nel dominio
         for _ in range(10000):
             d_c = (k_spacing + 1) * w
-            span = (n_teeth - 1) * d_c + w
+            span = (n_pores - 1) * d_c + w
 
             if span <= L - (10 * epsilon):
                 success = True
@@ -126,11 +126,11 @@ def generate_all_teeth(
         if success:
             # calcolo definitivo di posizione e altezza
             d_c = (k_spacing + 1) * w
-            span = (n_teeth - 1) * d_c + w
+            span = (n_pores - 1) * d_c + w
 
             x_mid = 0.5 * (x_min + x_max)
             first_center = x_mid - 0.5 * span + 0.5 * w
-            x_centers = [first_center + i * d_c for i in range(n_teeth)]
+            x_centers = [first_center + i * d_c for i in range(n_pores)]
 
             Ly = 2 * ratio * w
             Ly = min(max(Ly, height_min), height_max)
@@ -138,16 +138,16 @@ def generate_all_teeth(
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
                 rectangle_sides = (w, Ly)
-                block_i = generate_tooth_rectangle(i, rectangle_sides, x_c, y_center)
+                block_i = generate_pore_rectangle(i, rectangle_sides, x_c, y_center)
                 blocks.append(block_i)
 
-            return "\n".join(blocks), n_teeth
+            return "\n".join(blocks), n_pores
 
         # se non funziona, prova con un dente in meno
-        n_teeth -= 1
+        n_pores -= 1
 
     raise RuntimeError(
-        "Impossibile piazzare denti: nemmeno con n_teeth=1 si trova w valido."
+        "Impossibile piazzare denti: nemmeno con n_pores=1 si trova w valido."
     )
 
 
@@ -176,16 +176,16 @@ def generate_phi_block(
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0, 0.5)
 
-    # sampling numero denti
-    n_teeth = 5
-    #n_teeth = random.randint(1, 8)
+    # sampling numero pori
+    n_pores = 5
+    #n_pores = random.randint(1, 8)
     y_center = 0.5
     height_min = L_base_y + 0.2
     height_max = 2.0 - 10 * epsilon
 
     base_block = generate_base_rectangle(base_sides, base_center)
-    teeth_block, n_teeth_final = generate_all_teeth(
-        n_teeth=n_teeth,
+    pores_block, n_pores_final = generate_all_pores(
+        n_pores=n_pores,
         epsilon=epsilon,
         x_min=x_min,
         x_max=x_max,
@@ -197,7 +197,7 @@ def generate_phi_block(
         depth=depth,
     )
 
-    lines.append(build_shape_line(n_teeth_final))
+    lines.append(build_shape_line(n_pores_final))
     lines.append("surf->phi->shape->inner value:                  0")
     lines.append("surf->phi->shape->outer value:                  1")
     lines.append("surf->phi->shape->center:             [ 0. , 0. ]")
@@ -206,7 +206,7 @@ def generate_phi_block(
     lines.append(" ")
 
     lines.append(base_block)
-    lines.append(teeth_block)
+    lines.append(pores_block)
     lines.append(" ")
 
     return "\n".join(lines)
