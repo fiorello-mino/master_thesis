@@ -3,6 +3,7 @@ import random
 
 factor = 20.0
 
+
 def load_pore2d(path: Path) -> str:
     if not path.is_file():
         raise FileNotFoundError(f"File {path} non trovato.")
@@ -43,8 +44,7 @@ def generate_base_rectangle(base_sides, base_center):
     lines.append(f"rectangle->sides length: [{base_sides[0]},{base_sides[1]}]")
     lines.append(f"rectangle->center:       [{base_center[0]},{base_center[1]}]")
     lines.append(" ")
-    block = "\n".join(lines)
-    return block
+    return "\n".join(lines)
 
 
 def generate_pore_rectangle(i: int, rectangle_sides, x_center, y_center):
@@ -52,21 +52,17 @@ def generate_pore_rectangle(i: int, rectangle_sides, x_center, y_center):
     lines.append(f"rectangle{i}->sides length:  [{rectangle_sides[0]},{rectangle_sides[1]}]")
     lines.append(f"rectangle{i}->center:    [{x_center},{y_center}]")
     lines.append(" ")
-    block = "\n".join(lines)
-    return block
+    return "\n".join(lines)
 
 
 def sample_params_from_case(distance: str, depth: str):
-    # distanza → k_spacing
     if distance == "near":
-        k_spacing = random.uniform(1.5, 2.3)
         k_spacing = 1.5
     elif distance == "far":
         k_spacing = random.uniform(4.0, 8.0)
     else:
         raise ValueError(f"Distanza non valida: {distance}")
 
-    # profondità → ratio = Ly / (k_spacing * w)
     if depth == "deep":
         ratio = random.uniform(12.0, 20.0)
     elif depth == "shallow":
@@ -90,12 +86,9 @@ def generate_all_pores(
     depth: str,
 ):
     L = x_max - x_min
-
-    # parametri scelti in base a distance/depth
     k_spacing, ratio = sample_params_from_case(distance, depth)
 
     while n_pores >= 1:
-        # stima iniziale di w
         if n_pores <= 2:
             w_target = L / 2.0
         elif n_pores <= 8:
@@ -110,7 +103,6 @@ def generate_all_pores(
 
         success = False
 
-        # riduzione progressiva di w se non entra nel dominio
         for _ in range(10000):
             d_c = (k_spacing + 1) * w
             span = (n_pores - 1) * d_c + w
@@ -125,7 +117,6 @@ def generate_all_pores(
             w = new_w
 
         if success:
-            # calcolo definitivo di posizione e altezza
             d_c = (k_spacing + 1) * w
             span = (n_pores - 1) * d_c + w
 
@@ -144,12 +135,9 @@ def generate_all_pores(
 
             return "\n".join(blocks), n_pores
 
-        # se non funziona, prova con un dente in meno
         n_pores -= 1
 
-    raise RuntimeError(
-        "Impossibile piazzare denti: nemmeno con n_pores=1 si trova w valido."
-    )
+    raise RuntimeError("Impossibile piazzare denti: nemmeno con n_pores=1 si trova w valido.")
 
 
 def generate_phi_block(
@@ -167,22 +155,18 @@ def generate_phi_block(
     lines.append("surf->phi->constant:                            1.")
     lines.append(" ")
 
-    # dominio x
-    x_min = -0.5*factor
-    x_max = 0.5*factor
+    x_min = -0.5 * factor
+    x_max = 0.5 * factor
 
-    # base
     L_base_x = x_max - x_min
-    L_base_y = 0.2*factor
+    L_base_y = 0.2 * factor
     base_sides = (L_base_x, L_base_y)
-    base_center = (0.0*factor, 0.5*factor)
+    base_center = (0.0 * factor, 0.5 * factor)
 
-    # sampling numero pori
     n_pores = 5
-    #n_pores = random.randint(1, 8)
-    y_center = 0.5*factor
-    height_min = L_base_y + 0.2*factor
-    height_max = (2.0 - 10 * epsilon)*factor
+    y_center = 0.5 * factor
+    height_min = L_base_y + 0.2 * factor
+    height_max = 2.0 * factor - 10 * epsilon
 
     base_block = generate_base_rectangle(base_sides, base_center)
     pores_block, n_pores_final = generate_all_pores(
@@ -218,13 +202,15 @@ def main():
     before, phi_block, after = get_phi_block(path)
 
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     new_phi_block = generate_phi_block(
-        epsilon=0.01953125*factor,
-        width_max=0.055*factor,
+        epsilon=0.01953125 * factor,
+        width_max=0.055 * factor,
         distance="near",
-        depth="deep"      
+        depth="deep"
     )
+
     new_text = before + new_phi_block + after
 
     filename = "prova.dat"
