@@ -58,17 +58,18 @@ def generate_tooth_rectangle(i: int, rectangle_sides, x_center, y_center):
 def sample_params_from_case(distance: str, depth: str):
     # distanza → k_spacing
     if distance == "near":
-        k_spacing = random.randint(1, 3)
+        k_spacing = random.uniform(1.5, 2.3)
+        k_spacing = 1.5
     elif distance == "far":
-        k_spacing = random.randint(4, 6)
+        k_spacing = random.uniform(4.0, 8.0)
     else:
         raise ValueError(f"Distanza non valida: {distance}")
 
     # profondità → ratio = Ly / (k_spacing * w)
     if depth == "deep":
-        ratio = random.uniform(15.0, 25.0)
+        ratio = random.uniform(12.0, 20.0)
     elif depth == "shallow":
-        ratio = random.uniform(5.0, 12.0)
+        ratio = random.uniform(1.0, 9.0)
     else:
         raise ValueError(f"Profondità non valida: {depth}")
 
@@ -131,8 +132,7 @@ def generate_all_teeth(
             first_center = x_mid - 0.5 * span + 0.5 * w
             x_centers = [first_center + i * d_c for i in range(n_teeth)]
 
-            gap = k_spacing * w
-            Ly = ratio * gap
+            Ly = 2 * ratio * w
             Ly = min(max(Ly, height_min), height_max)
 
             blocks = []
@@ -177,10 +177,11 @@ def generate_phi_block(
     base_center = (0.0, 0.5)
 
     # sampling numero denti
-    n_teeth = random.randint(1, 8)
+    n_teeth = 5
+    #n_teeth = random.randint(1, 8)
     y_center = 0.5
-    height_min = L_base_y + 0.8
-    height_max = 2.0 - 6 * epsilon
+    height_min = L_base_y + 0.2
+    height_max = 2.0 - 10 * epsilon
 
     base_block = generate_base_rectangle(base_sides, base_center)
     teeth_block, n_teeth_final = generate_all_teeth(
@@ -219,9 +220,9 @@ def main():
 
     new_phi_block = generate_phi_block(
         epsilon=0.01953125,
-        width_max=0.08,
+        width_max=0.055,
         distance="near",
-        depth="deep",      
+        depth="deep"      
     )
     new_text = before + new_phi_block + after
 

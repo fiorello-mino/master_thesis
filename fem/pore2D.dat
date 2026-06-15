@@ -102,8 +102,8 @@ surf->phi->signed distance->boundary initialization: 			3
 #	LOCAL REFINEMENT
 surf->phi->refinement:                      		pf     % grad, pf
 surf->phi->refinement->pf->level in outer domain: 	4
-surf->phi->refinement->pf->level on interface: 		15
-surf->phi->refinement->pf->level on points: 		15
+surf->phi->refinement->pf->level on interface: 		12
+surf->phi->refinement->pf->level on points: 		12
 surf->phi->refinement->pf->level in inner domain: 	4
 surf->phi->refinement->pf->initial level:               4
 surf->phi->refinement->pf->min interface value:		0.05    % Default=0.05
@@ -118,7 +118,7 @@ surf->output->physics:                                  phys
 surf->output->last:	                                last
 surf->output->last->iterations:                  100
 
-surf->output->write every i-th timestep:         1
+surf->output->write every i-th timestep:         30
 surf->output->ParaView format:                          1
 surf->output->ParaView animation:                       1
 surf->output->append index:                             1
@@ -183,9 +183,9 @@ surf->space->estimator[3]:				0
 
 #############################################################################################
 #	ADAPT
-surf->adapt->timestep:					5.e-3
+surf->adapt->timestep:					5.0e-4
 surf->adapt->start time:				0.0
-surf->adapt->end time:					1.0
+surf->adapt->end time:					1.2
 
 surf->adapt->min timestep:				1.e-6
 surf->adapt->max timestep:				1.e4
