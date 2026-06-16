@@ -163,7 +163,7 @@ def generate_phi_block(
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0 * factor, 0.5 * factor)
 
-    n_pores = 5
+    n_pores = 8
     y_center = 0.5 * factor
     height_min = L_base_y + 0.2 * factor
     height_max = 2.0 * factor - 10 * epsilon
@@ -212,6 +212,10 @@ def main():
     )
 
     new_text = before + new_phi_block + after
+    
+    old_line = "output->directory:                                      pore_2D"
+    new_line = f"output->directory:                                      pore_8"
+    new_text = new_text.replace(old_line, new_line)
 
     filename = "prova.dat"
     out_path = out_dir / filename
