@@ -1,7 +1,7 @@
 from pathlib import Path
 import random
 
-factor = 20.0
+factor = 2
 
 
 def load_pore2d(path: Path) -> str:
@@ -198,7 +198,7 @@ def generate_phi_block(
 
 
 def main():
-    path = Path("pore2D.dat")
+    path = Path("pore2D_rescaled.dat")
     before, phi_block, after = get_phi_block(path)
 
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")

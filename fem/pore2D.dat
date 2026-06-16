@@ -102,8 +102,8 @@ surf->phi->signed distance->boundary initialization: 			3
 #	LOCAL REFINEMENT
 surf->phi->refinement:                      		pf     % grad, pf
 surf->phi->refinement->pf->level in outer domain: 	4
-surf->phi->refinement->pf->level on interface: 		13
-surf->phi->refinement->pf->level on points: 		13
+surf->phi->refinement->pf->level on interface: 		12
+surf->phi->refinement->pf->level on points: 		12
 surf->phi->refinement->pf->level in inner domain: 	4
 surf->phi->refinement->pf->initial level:               4
 surf->phi->refinement->pf->min interface value:		0.05    % Default=0.05
