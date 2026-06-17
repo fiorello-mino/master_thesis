@@ -1,11 +1,11 @@
 # !/bin/bash
 
-python3 /home/fiorello/CRANE_mod/train.py \
+python3 /home/fiorello/CRANE_mod/train_2.py \
 	--device  'cuda:0' \
 	--padding 'circular' \
 	--size 64 \
 	--seed 666 \
-	--epochs 10 \
+	--epochs 300 \
 	--nocrop \
 	--bias \
 	--lr 5e-5 \
@@ -28,10 +28,10 @@ python3 /home/fiorello/CRANE_mod/train.py \
 	--divergence \
 	--dual \
 	--massW 2.0 \
-	--coeffEn 10.0 \
-	--coeffGrad 0.0 \
+	--coeffEn 5.0 \
+	--coeffGrad 1e-9 \
         --eps 0.078125 \
 	--dx 0.015625	
-	#--ramp \
-	#--ramp_length 48 \
+	--ramp \
+	--ramp_length 48
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_2_from_10/model/epoch_279.pt'

@@ -99,7 +99,7 @@ def generate_all_pores(
             w_target = 0.8 * L / denom
 
         w_max_final = min(w_target, width_max)
-        w = max(2 * epsilon, w_max_final)
+        w = max(4 * epsilon, w_max_final)
 
         success = False
 
@@ -111,7 +111,7 @@ def generate_all_pores(
                 success = True
                 break
 
-            new_w = max(2 * epsilon, 0.9 * w)
+            new_w = max(4 * epsilon, 0.9 * w)
             if new_w == w:
                 break
             w = new_w
@@ -205,7 +205,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     new_phi_block = generate_phi_block(
-        epsilon=0.01953125 * factor,
+        epsilon=0.009765625 * factor,
         width_max=0.055 * factor,
         distance="near",
         depth="deep"
@@ -217,7 +217,7 @@ def main():
     new_line = f"output->directory:                                      pore_8"
     new_text = new_text.replace(old_line, new_line)
 
-    filename = "prova.dat"
+    filename = "prova_8.dat"
     out_path = out_dir / filename
     out_path.write_text(new_text)
 

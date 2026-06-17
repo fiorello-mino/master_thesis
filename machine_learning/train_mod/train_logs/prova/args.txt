@@ -3,8 +3,8 @@ bias 	 : 	 True
 bootstrap 	 : 	 False 
 channels 	 : 	 16 
 cmap 	 : 	 gray 
-coeffEn 	 : 	 0.0 
-coeffGrad 	 : 	 0.0 
+coeffEn 	 : 	 1.0 
+coeffGrad 	 : 	 1e-08 
 conservative 	 : 	 False 
 crop 	 : 	 False 
 croplims 	 : 	 (0.25, 0.75) 
@@ -15,7 +15,7 @@ dropout 	 : 	 False
 dropout_prob 	 : 	 0.25 
 dual 	 : 	 True 
 dx 	 : 	 0.015625 
-epochs 	 : 	 10 
+epochs 	 : 	 300 
 eps 	 : 	 0.078125 
 extract_param 	 : 	 False 
 gifs 	 : 	 True 

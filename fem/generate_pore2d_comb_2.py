@@ -105,7 +105,7 @@ def generate_all_pores(
             w_target = 0.8 * L / denom
 
         w_max_final = min(w_target, width_max)
-        w = max(2 * epsilon, w_max_final)
+        w = max(3 * epsilon, w_max_final)
 
         success = False
 
@@ -118,7 +118,7 @@ def generate_all_pores(
                 success = True
                 break
 
-            new_w = max(2 * epsilon, 0.9 * w)
+            new_w = max(3 * epsilon, 0.9 * w)
             if new_w == w:
                 break
             w = new_w
@@ -177,7 +177,7 @@ def generate_phi_block(
     base_center = (0.0, 0.5)
 
     # sampling numero pori
-    n_pores = 5
+    n_pores = 8
     #n_pores = random.randint(1, 8)
     y_center = 0.5
     height_min = L_base_y + 0.2
@@ -220,7 +220,7 @@ def main():
 
     new_phi_block = generate_phi_block(
         epsilon=0.01953125,
-        width_max=0.055,
+        width_max=0.1,
         distance="near",
         depth="deep"      
     )
