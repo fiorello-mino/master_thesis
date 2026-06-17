@@ -205,7 +205,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     new_phi_block = generate_phi_block(
-        epsilon=0.009765625 * factor,
+        epsilon=0.0130208 * factor,
         width_max=0.055 * factor,
         distance="near",
         depth="deep"
