@@ -1,7 +1,7 @@
 from pathlib import Path
 import random
 
-factor = 2
+factor = 1.9
 
 
 def load_pore2d(path: Path) -> str:
@@ -64,7 +64,7 @@ def sample_params_from_case(distance: str, depth: str):
         raise ValueError(f"Distanza non valida: {distance}")
 
     if depth == "deep":
-        ratio = random.uniform(12.0, 20.0)
+        ratio = random.uniform(14.0, 20.0)
     elif depth == "shallow":
         ratio = random.uniform(4.0, 9.0)
     else:
@@ -163,7 +163,7 @@ def generate_phi_block(
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0 * factor, 0.5 * factor)
 
-    n_pores = 1
+    n_pores = 6
     y_center = 0.5 * factor
     height_min = L_base_y + 0.2 * factor
     height_max = 2.0 * factor - 10 * epsilon
@@ -214,10 +214,10 @@ def main():
     new_text = before + new_phi_block + after
     
     old_line = "output->directory:                                      pore_prova"
-    new_line = f"output->directory:                                      pore_1_deep"
+    new_line = f"output->directory:                                      pore_6_far_deep"
     new_text = new_text.replace(old_line, new_line)
 
-    filename = "pore_1_deep.dat"
+    filename = "pore_6_far_deep.dat"
     out_path = out_dir / filename
     out_path.write_text(new_text)
 
