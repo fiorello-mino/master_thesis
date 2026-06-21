@@ -57,7 +57,7 @@ def generate_pore_rectangle(i: int, rectangle_sides, x_center, y_center):
 
 def sample_params_from_case(distance: str, depth: str):
     if distance == "near":
-        k_spacing = 1.5
+        k_spacing = random.uniform(1.5, 2.3)
     elif distance == "far":
         k_spacing = random.uniform(4.0, 8.0)
     else:
@@ -66,7 +66,7 @@ def sample_params_from_case(distance: str, depth: str):
     if depth == "deep":
         ratio = random.uniform(12.0, 20.0)
     elif depth == "shallow":
-        ratio = random.uniform(1.0, 9.0)
+        ratio = random.uniform(4.0, 9.0)
     else:
         raise ValueError(f"Profondità non valida: {depth}")
 
@@ -163,7 +163,7 @@ def generate_phi_block(
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0 * factor, 0.5 * factor)
 
-    n_pores = 8
+    n_pores = 1
     y_center = 0.5 * factor
     height_min = L_base_y + 0.2 * factor
     height_max = 2.0 * factor - 10 * epsilon
@@ -198,7 +198,7 @@ def generate_phi_block(
 
 
 def main():
-    path = Path("pore2D_rescaled.dat")
+    path = Path("init_template.dat")
     before, phi_block, after = get_phi_block(path)
 
     out_dir = Path("/home/fiorello/mesoEvo/install_seq/init")
@@ -207,17 +207,17 @@ def main():
     new_phi_block = generate_phi_block(
         epsilon=0.0130208 * factor,
         width_max=0.055 * factor,
-        distance="near",
+        distance="far",
         depth="deep"
     )
 
     new_text = before + new_phi_block + after
     
-    old_line = "output->directory:                                      pore_2D"
-    new_line = f"output->directory:                                      pore_8"
+    old_line = "output->directory:                                      pore_prova"
+    new_line = f"output->directory:                                      pore_1_deep"
     new_text = new_text.replace(old_line, new_line)
 
-    filename = "prova_8.dat"
+    filename = "pore_1_deep.dat"
     out_path = out_dir / filename
     out_path.write_text(new_text)
 

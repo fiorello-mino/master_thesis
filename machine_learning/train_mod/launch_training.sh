@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE_mod/train_2.py \
 	--weightd 0e-5 \
 	--train_set 'training_set_64_2_from_10.txt' \
 	--valid_set 'validation_set_64_2_from_10.txt' \
-	--id 'prova' \
+	--id 'coeffE1e-1_coeffG1e-5' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -28,8 +28,8 @@ python3 /home/fiorello/CRANE_mod/train_2.py \
 	--divergence \
 	--dual \
 	--massW 2.0 \
-	--coeffEn 5.0 \
-	--coeffGrad 1e-9 \
+	--coeffEn 1e-1 \
+	--coeffGrad 1e-5 \
         --eps 0.078125 \
 	--dx 0.015625	
 	--ramp \
