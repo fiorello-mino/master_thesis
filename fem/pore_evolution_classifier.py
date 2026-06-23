@@ -83,7 +83,7 @@ def pore_masks_from_labels(points: np.ndarray, labels_full: np.ndarray, y_touch_
     return pore_masks
 
 def main():
-    vtu_path = Path("surf_20.000000.vtu")
+    vtu_path = Path("surf_20.00000.vtu")
 
     mesh = meshio.read(vtu_path)
     points = mesh.points

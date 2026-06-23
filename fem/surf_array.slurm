@@ -2,7 +2,7 @@
 #SBATCH --job-name=surf_array
 #SBATCH --output=logs/surf_%A_%a.out
 #SBATCH --error=logs/surf_%A_%a.err
-#SBATCH --array=0-199%40
+#SBATCH --array=0-199
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
