@@ -227,7 +227,7 @@ def main():
     path = Path("init_template.dat")
     before, phi_block, after = get_phi_block(path)
 
-    out_dir = Path("/data/fiorello/init_files/")
+    out_dir = Path("/home/fiorello/init_files/")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     epsilon = 0.0130208 * factor
@@ -247,7 +247,7 @@ def main():
 
         new_text = before + new_phi_block + after
 
-        new_output_dir = f"/data/fiorello/dataset_pores/{tag}"
+        new_output_dir = f"/scratch/fiorello/mesoEvo_install_seq/dataset_pores/{tag}"
         new_text = replace_output_directory(new_text, new_output_dir)
 
         filename = f"{tag}.dat"
