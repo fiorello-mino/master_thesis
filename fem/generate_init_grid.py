@@ -6,15 +6,17 @@ import numpy as np
 factor = 1.9
 OUT_DIR = Path("/home/fiorello/init_files_grid")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-TEMPLATE = Path("init_template.dat")
-META_CSV = OUT_DIR / "init_grid_data.csv"
+TEMPLATE = Path("/home/fiorello/master_thesis/fem/init_template.dat")
+
+OUT_DIR2 = Path("/home/fiorello/master_thesis/fem")
+META_CSV = OUT_DIR2 / "grid_data.csv"
 
 epsilon = 0.0130208 * factor
 width_max = 0.055 * factor
 
 N_PORES_LIST = range(1, 8)
-K_VALUES = np.linspace(2.3, 4.0, 6)
-DEPTH_VALUES = [9, 10, 11, 12]
+K_VALUES = np.linspace(2.0, 5.0, 12)
+DEPTH_VALUES = [8, 9, 10, 11, 12, 13]
 
 
 def load_pore2d(path: Path) -> str:
@@ -117,7 +119,7 @@ def generate_all_pores(
                 "pores_block": "\n".join(blocks),
                 "n_pores_effective": n_pores,
                 "width": w,
-                "height": Ly,
+                "height": 0.5*Ly - 0.1*factor, #profondità del poro = Ly/2 - altezza del ceiling
             }
 
         n_pores -= 1
@@ -200,7 +202,7 @@ def main():
     tag_counter = 0
 
     for n_pores, k_spacing, depth in itertools.product(N_PORES_LIST, K_VALUES, DEPTH_VALUES):
-        tag = f"{tag_counter:04d}"
+        tag = f"{tag_counter:03d}"
 
         new_phi_block, meta = generate_phi_block_grid(
             n_pores_requested=n_pores,
@@ -209,7 +211,7 @@ def main():
         )
 
         new_text = before + new_phi_block + after
-        new_output_dir = f"/scratch/fiorello/mesoEvo_install_seq/dataset_pores/{tag}"
+        new_output_dir = f"/scratch/fiorello/mesoEvo_install_seq/dataset_pores_grid/{tag}"
         new_text = replace_output_directory(new_text, new_output_dir)
 
         out_path = OUT_DIR / f"{tag}.dat"
