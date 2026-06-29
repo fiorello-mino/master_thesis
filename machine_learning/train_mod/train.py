@@ -399,6 +399,10 @@ def e_penalty(x, y, eps, dx):
     e_pred = compute_e(x, eps, dx)
     e_true = compute_e(y, eps, dx)
     
+    print("e_pred =", e_pred.item())
+    print("e_true =", e_true.item())
+    print("diff   =", (e_pred - e_true).item())
+    
     return nn.MSELoss()(e_pred, e_true)
 
 
