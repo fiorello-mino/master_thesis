@@ -376,8 +376,8 @@ def train(model, loss_fn, optimizer, loaders, args):
 # <<< definition of loss functions <<<
 def compute_e(c, eps, dx):
     w = (18.0 / eps) * c**2 * (1.0 - c)**2
-    gx = (c.roll(-1, dims=-1) - c.roll(1, dims=-1)) / (2*dx)
-    gy = (c.roll(-1, dims=-2) - c.roll(1, dims=-2)) / (2*dx)
+    gx = (c.roll(-1, dims=-1) - c.roll(1, dims=-1)) / (2.0*dx)
+    gy = (c.roll(-1, dims=-2) - c.roll(1, dims=-2)) / (2.0*dx)
     grad_sq = gx**2 + gy**2
     
     return (0.5*eps*grad_sq + w).sum() * dx**2
