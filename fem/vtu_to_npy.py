@@ -3,7 +3,7 @@ import pyvista as pv
 from scipy.interpolate import griddata
 from pathlib import Path
 
-def vtu_to_npy_single(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
+def vtu_to_npy(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
     mesh = pv.read(vtu_path)
 
     pts = mesh.points[:, :2]
@@ -29,13 +29,14 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
     files = sorted(vtu_dir.glob("*.vtu"))
     for f in files:
         out_file = out_dir / (f.stem + ".npy")
-        vtu_to_npy_single(f, out_file, field_name, nx=nx, ny=ny, method=method)
+        vtu_to_npy(f, out_file, field_name, nx=nx, ny=ny, method=method)
         print(f"Salvato: {out_file}")
 
 def main():
     
     vtu_folder = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores_grid/000")
     npy_folder = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_npy/000")
+    
     convert_folder(
         vtu_dir=vtu_folder,
         out_dir=npy_folder,
