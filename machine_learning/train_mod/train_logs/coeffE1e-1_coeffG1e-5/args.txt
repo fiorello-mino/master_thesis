@@ -4,7 +4,7 @@ bootstrap 	 : 	 False
 channels 	 : 	 16 
 cmap 	 : 	 gray 
 coeffE 	 : 	 0.1 
-coeffG 	 : 	 1e-06 
+coeffG 	 : 	 1e-05 
 conservative 	 : 	 False 
 crop 	 : 	 False 
 croplims 	 : 	 (0.25, 0.75) 
@@ -21,7 +21,7 @@ extract_param 	 : 	 False
 gifs 	 : 	 True 
 graphics 	 : 	 True 
 hidden 	 : 	 3 
-id 	 : 	 coeffE1e-1_coeffG1e-6 
+id 	 : 	 coeffE1e-1_coeffG1e-5 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
@@ -34,7 +34,7 @@ nproc 	 : 	 4
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 circular 
-paths 	 : 	 {'master': 'train_logs/coeffE1e-1_coeffG1e-6', 'model': 'train_logs/coeffE1e-1_coeffG1e-6/model', 'png': 'train_logs/coeffE1e-1_coeffG1e-6/pngs', 'gif': 'train_logs/coeffE1e-1_coeffG1e-6/gifs', 'lossplot': 'train_logs/coeffE1e-1_coeffG1e-6/lossplot.png', 'trainloss': 'train_logs/coeffE1e-1_coeffG1e-6/train_loss.txt', 'validloss': 'train_logs/coeffE1e-1_coeffG1e-6/valid_loss.txt', 'vtk': None, 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/coeffE1e-1_coeffG1e-5', 'model': 'train_logs/coeffE1e-1_coeffG1e-5/model', 'png': 'train_logs/coeffE1e-1_coeffG1e-5/pngs', 'gif': 'train_logs/coeffE1e-1_coeffG1e-5/gifs', 'lossplot': 'train_logs/coeffE1e-1_coeffG1e-5/lossplot.png', 'trainloss': 'train_logs/coeffE1e-1_coeffG1e-5/train_loss.txt', 'validloss': 'train_logs/coeffE1e-1_coeffG1e-5/valid_loss.txt', 'vtk': None, 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 48 
 reflection 	 : 	 True 

@@ -379,13 +379,14 @@ def compute_e(c, eps, dx):
     gx = (c.roll(-1, dims=-1) - c.roll(1, dims=-1)) / (2.0*dx)
     gy = (c.roll(-1, dims=-2) - c.roll(1, dims=-2)) / (2.0*dx)
     grad_sq = gx**2 + gy**2
+    f = 0.5*eps*grad_sq + w
     
-    return (0.5*eps*grad_sq + w).sum() * dx**2
+    return f.sum(dim=(-1,-2)) * dx**2
     
     
 def bulk_grad_penalty(x, y, dx):
-    gx = (x.roll(-1, dims=-1) - x.roll(1, dims=-1)) / (2*dx)
-    gy = (x.roll(-1, dims=-2) - x.roll(1, dims=-2)) / (2*dx)
+    gx = (x.roll(-1, dims=-1) - x.roll(1, dims=-1)) / (2.0*dx)
+    gy = (x.roll(-1, dims=-2) - x.roll(1, dims=-2)) / (2.0*dx)
     grad_sq = gx**2 + gy**2
 
     # compute the penalty term respect to the bulk of the true frame y
@@ -398,10 +399,6 @@ def bulk_grad_penalty(x, y, dx):
 def e_penalty(x, y, eps, dx):
     e_pred = compute_e(x, eps, dx)
     e_true = compute_e(y, eps, dx)
-    
-    print("e_pred =", e_pred.item())
-    print("e_true =", e_true.item())
-    print("diff   =", (e_pred - e_true).item())
     
     return nn.MSELoss()(e_pred, e_true)
 

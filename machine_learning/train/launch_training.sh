@@ -10,12 +10,12 @@ python3 /home/fiorello/CRANE/train.py \
 	--bias \
 	--lr 5e-5 \
 	--batch 3 \
-	--weightd 2e-5 \
+	--weightd 0 \
 	--train_set 'training_set_64_2_from_10.txt' \
 	--valid_set 'validation_set_64_2_from_10.txt' \
 	--id 'prova_ram' \
 	--logfreq 1 \
-	--kernel_size 7 \
+	--kernel_size 5 \
 	--hidden 3 \
 	--channels 16 \
 	--nproc 4 \
