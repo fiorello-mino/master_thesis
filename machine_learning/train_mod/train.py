@@ -209,9 +209,9 @@ def train(model, loss_fn, optimizer, loaders, args):
                 loss4print = loss.item()
                 
                 epoch_valid_losses.append( loss4print )
-                epoch_valid_mse_losses.append(mse_loss)
-                epoch_valid_e_losses.append(e_loss)
-                epoch_valid_grad_losses.append(grad_loss)
+                epoch_valid_mse_losses.append(mse_loss.detach().cpu().item())
+                epoch_valid_e_losses.append(e_loss.detach().cpu().item())
+                epoch_valid_grad_losses.append(grad_loss.detach().cpu().item())
                 
             valid_losses.append( np.mean(epoch_valid_losses) )
             valid_mse_losses.append(np.mean(epoch_valid_mse_losses))
