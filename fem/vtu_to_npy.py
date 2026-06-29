@@ -34,8 +34,8 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
 
 def main():
     
-    vtu_folder = Path()
-    npy_folder = Path()
+    vtu_folder = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores_grid/000")
+    npy_folder = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_npy/000")
     convert_folder(
         vtu_dir=vtu_folder,
         out_dir=npy_folder,
