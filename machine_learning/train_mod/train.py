@@ -380,6 +380,12 @@ def compute_e(c, eps, dx):
     gy = (c.roll(-1, dims=-2) - c.roll(1, dims=-2)) / (2.0*dx)
     grad_sq = gx**2 + gy**2
     
+    grad_term = (0.5 * eps * grad_sq).sum() * dx**2
+    bulk_term = w.sum() * dx**2
+    print("grad =", grad_term.item())
+    print("bulk =", bulk_term.item())
+    print("total =", (grad_term + bulk_term).item())
+    
     return (0.5*eps*grad_sq + w).sum() * dx**2
     
     
