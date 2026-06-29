@@ -399,7 +399,7 @@ def e_penalty(x, y, eps, dx):
     e_pred = compute_e(x, eps, dx)
     e_true = compute_e(y, eps, dx)
     
-    return (e_pred - e_true)**2
+    return nn.MSELoss()(e_pred, e_true)
 
 
 def tot_loss_fn(x, y, eps, dx, coeffE, coeffG):

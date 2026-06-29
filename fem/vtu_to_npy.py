@@ -1,0 +1,51 @@
+import numpy as np
+import pyvista as pv
+from scipy.interpolate import griddata
+from pathlib import Path
+
+def vtu_to_npy_single(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
+    mesh = pv.read(vtu_path)
+
+    pts = mesh.points[:, :2]
+    vals = np.asarray(mesh.point_data[field_name]).squeeze()
+
+    x_min, y_min = pts.min(axis=0)
+    x_max, y_max = pts.max(axis=0)
+
+    xi = np.linspace(x_min, x_max, nx)
+    yi = np.linspace(y_min, y_max, ny)
+    X, Y = np.meshgrid(xi, yi)
+
+    grid = griddata(pts, vals, (X, Y), method=method)
+    grid = np.nan_to_num(grid, nan=0.0).astype(np.float32)
+
+    np.save(out_path, grid)
+
+def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"):
+    vtu_dir = Path(vtu_dir)
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    files = sorted(vtu_dir.glob("*.vtu"))
+    for f in files:
+        out_file = out_dir / (f.stem + ".npy")
+        vtu_to_npy_single(f, out_file, field_name, nx=nx, ny=ny, method=method)
+        print(f"Salvato: {out_file}")
+
+def main():
+    
+    vtu_folder = Path()
+    npy_folder = Path()
+    convert_folder(
+        vtu_dir=vtu_folder,
+        out_dir=npy_folder,
+        field_name="phi",
+        nx=128,
+        ny=128,
+        method="linear"
+    )
+    
+    print("Cartella {vtu_folder} convertita con successo in .npy nella cartella {npy_folder}.)
+    
+if __name__ == "__main__":
+    main()
