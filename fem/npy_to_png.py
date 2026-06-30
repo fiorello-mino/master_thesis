@@ -21,7 +21,7 @@ def npy_to_png_folder(npy_dir, png_dir, cmap="gray"):
 
 if __name__ == "__main__":
     npy_to_png_folder(
-        npy_dir="/scratch/fiorello/dataset_npy/000",
+        npy_dir="/home/fiorello/dataset_npy/000",
         png_dir="/home/fiorello/master_thesis/fem/png_folder",
-        cmap="RdBu_r"
+        cmap="gray"
     )
