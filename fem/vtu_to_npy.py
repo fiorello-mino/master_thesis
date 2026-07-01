@@ -3,6 +3,16 @@ import pyvista as pv
 from scipy.interpolate import griddata
 from pathlib import Path
 
+import numpy as np
+import pyvista as pv
+from scipy.interpolate import griddata
+from pathlib import Path
+
+
+def rotate_180_spatial(arr, spatial_axes=(0, 1)):
+    return np.flip(arr, axis=spatial_axes)
+
+
 def vtu_to_npy(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
     mesh = pv.read(vtu_path)
 
@@ -18,6 +28,8 @@ def vtu_to_npy(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
 
     grid = griddata(pts, vals, (X, Y), method=method)
     grid = np.nan_to_num(grid, nan=0.0).astype(np.float32)
+
+    grid = rotate_180_spatial(grid, spatial_axes=(0, 1))
 
     np.save(out_path, grid)
 
