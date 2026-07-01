@@ -41,10 +41,10 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
 
 
 def main():
-    vtu_root = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores")
-    npy_root = Path("/scratch/fiorello/dataset_pores_npy")
+    vtu_root = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores_grid")
+    npy_root = Path("/scratch/fiorello/dataset_pores_grid_npy")
 
-    for idx in range(200):
+    for idx in range(504):
         tag = f"{idx:03d}"
 
         vtu_folder = vtu_root / tag
