@@ -62,8 +62,12 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
             else:   # n_bubbles > 0
                 start_idx = random.randint(0, 149)
 
-        indices = list(range(start_idx, start_idx + 50))
-        paths = [str(folder / f"{file_idx:03d}.npy") for file_idx in indices]
+        # indice → tempo in step da 0.1
+        times = [start_idx * 0.1 + k * 0.1 for k in range(50)]
+        # formattazione 1 decimale: 0.0, 0.1, ..., 20.0
+        file_names = [f"surf_{t:.1f}.npy" for t in times]
+
+        paths = [str(folder / name) for name in file_names]
         f.write(" ".join(paths) + "\n")
 
 
