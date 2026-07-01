@@ -16,12 +16,12 @@ class GeneralParser():
         
         self.parser.add_argument(
             '--padding',
+            type=str,
             nargs='+',
-            type        = str,
-            default     = 'circular',
-            choices     = ['circular', 'zeros', 'reflect'],
-            help        = 'Padding mode for NN. In the case of PBCs, select "circular" (it is the default option)'
-            )
+            default=['circular'],
+            choices=['circular', 'zeros', 'reflect'],
+            help='One or two padding modes for NN, e.g. --padding circular or --padding circular reflect'
+        )
         
         self.parser.add_argument(
             '--bias',
@@ -233,6 +233,14 @@ class GeneralParser():
     def parse_args(self):
         
         args = self.parser.parse_args()
+        
+        if len(args.padding) > 2:
+        raise ValueError(
+            f'--padding accepts one or two values, got {args.padding}'
+        )
+
+        if len(args.padding) == 1:
+            args.padding = [args.padding[0], args.padding[0]]
         
         # add "derived" arguments
         if args.nographics:
