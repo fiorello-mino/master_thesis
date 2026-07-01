@@ -2,8 +2,8 @@
 
 python3 /home/fiorello/CRANE_bc/train.py \
 	--device  'cuda:0' \
-	--padding 'circular' 'reflect' \
-	--size 64 \
+	--padding circular reflect \
+	--size 128 \
 	--seed 666 \
 	--epochs 500 \
 	--nocrop \
@@ -33,5 +33,5 @@ python3 /home/fiorello/CRANE_bc/train.py \
         --eps 0.078125 \
 	--dx 0.015625 \
 	--ramp \
-	--ramp_length 48 \
-	--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
+	--ramp_length 48 
+	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
