@@ -2,7 +2,7 @@
 
 python3 /home/fiorello/CRANE_bc/train.py \
 	--device  'cuda:0' \
-	--padding 'circular,reflect' \
+	--padding 'circular' 'reflect' \
 	--size 64 \
 	--seed 666 \
 	--epochs 500 \

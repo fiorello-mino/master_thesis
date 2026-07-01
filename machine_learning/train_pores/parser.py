@@ -235,9 +235,9 @@ class GeneralParser():
         args = self.parser.parse_args()
         
         if len(args.padding) > 2:
-        raise ValueError(
-            f'--padding accepts one or two values, got {args.padding}'
-        )
+            raise ValueError(
+                f'--padding accepts one or two values, got {args.padding}'
+            )
 
         if len(args.padding) == 1:
             args.padding = [args.padding[0], args.padding[0]]
