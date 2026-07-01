@@ -3,11 +3,6 @@ import pyvista as pv
 from scipy.interpolate import griddata
 from pathlib import Path
 
-import numpy as np
-import pyvista as pv
-from scipy.interpolate import griddata
-from pathlib import Path
-
 
 def rotate_180_spatial(arr, spatial_axes=(0, 1)):
     return np.flip(arr, axis=spatial_axes)
@@ -33,6 +28,7 @@ def vtu_to_npy(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
 
     np.save(out_path, grid)
 
+
 def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"):
     vtu_dir = Path(vtu_dir)
     out_dir = Path(out_dir)
@@ -44,21 +40,32 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
         vtu_to_npy(f, out_file, field_name, nx=nx, ny=ny, method=method)
         print(f"Salvato: {out_file}")
 
+
 def main():
-    
-    vtu_folder = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores_grid/000")
-    npy_folder = Path("/home/fiorello/dataset_npy/000")
-    
-    convert_folder(
-        vtu_dir=vtu_folder,
-        out_dir=npy_folder,
-        field_name="phi",
-        nx=128,
-        ny=128,
-        method="linear"
-    )
-    
-    print("Cartella {vtu_folder} convertita con successo in .npy nella cartella {npy_folder}.")
-    
+    vtu_root = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores")
+    npy_root = Path("/scratch/fiorello/dataset_pores_npy")
+
+    for idx in range(200):
+        tag = f"{idx:03d}"
+
+        vtu_folder = vtu_root / tag
+        npy_folder = npy_root / tag
+
+        if not vtu_folder.exists():
+            print(f"Cartella mancante, salto: {vtu_folder}")
+            continue
+
+        convert_folder(
+            vtu_dir=vtu_folder,
+            out_dir=npy_folder,
+            field_name="phi",
+            nx=128,
+            ny=128,
+            method="linear"
+        )
+
+        print(f"Cartella {vtu_folder} convertita con successo in .npy nella cartella {npy_folder}.")
+
+
 if __name__ == "__main__":
     main()
