@@ -1,15 +1,14 @@
 from pathlib import Path
 import random
 import csv
-from scipy.stats import truncnorm
+
+from scipy.stats import beta
 
 
 factor = 1.9
 N_FILES = 100
-N_GLOBAL = 70
-N_BOUNDARY = N_FILES - N_GLOBAL
-
 SEED = 42
+
 random.seed(SEED)
 
 
@@ -63,39 +62,30 @@ def generate_pore_rectangle(i: int, rectangle_sides, x_center, y_center):
     return "\n".join(lines)
 
 
-# --- sampling utilities ---
+def sample_skewed_params():
+    """
+    Campionamento sbilanciato verso:
+    - k_spacing piccoli
+    - ratio grandi
 
-def sample_truncnorm(mean, std, low, high):
-    a = (low - mean) / std
-    b = (high - mean) / std
-    return truncnorm.rvs(a, b, loc=mean, scale=std)
+    Beta(a,b) ha supporto [0,1], poi riscaliamo ai range fisici.
+    """
 
+    # Range globali plausibili
+    k_min, k_max = 1.5, 8.0
+    r_min, r_max = 4.0, 20.0
 
-def sample_global_params():
-    # uniform su tutto il dominio plausibile
-    k_spacing = random.uniform(1.5, 8.0)
-    ratio = random.uniform(4.0, 20.0)
-    return k_spacing, ratio
+    # k_spacing skewed verso valori bassi
+    # più b > a, più la massa si sposta verso 0
+    u_k = beta.rvs(a=1.0, b=2.5)
+    k_spacing = k_min + u_k * (k_max - k_min)
 
+    # ratio skewed verso valori alti
+    # più a > b, più la massa si sposta verso 1
+    u_r = beta.rvs(a=2.5, b=1.0)
+    ratio = r_min + u_r * (r_max - r_min)
 
-def sample_boundary_params():
-    # near/far boundary
-    k_spacing = sample_truncnorm(
-        mean=3.15,
-        std=0.7,
-        low=1.5,
-        high=8.0,
-    )
-
-    # shallow/deep boundary
-    ratio = sample_truncnorm(
-        mean=10.5,
-        std=2.0,
-        low=4.0,
-        high=20.0,
-    )
-
-    return k_spacing, ratio
+    return float(k_spacing), float(ratio)
 
 
 def generate_all_pores(
@@ -160,15 +150,13 @@ def generate_all_pores(
 
         n_pores -= 1
 
-    raise RuntimeError("Impossibile piazzare denti: nemmeno con n_pores=1 si trova w valido.")
+    raise RuntimeError("Impossibile piazzare pori: nemmeno con n_pores=1 si trova w valido.")
 
 
 def generate_phi_block(
     epsilon: float,
     width_max: float,
-    mode: str,
 ):
-    # mode: "global" oppure "boundary"
     lines = []
 
     lines.append("#       PHI")
@@ -191,12 +179,7 @@ def generate_phi_block(
     height_min = L_base_y + 0.2 * factor
     height_max = 2.0 * factor - 10 * epsilon
 
-    if mode == "global":
-        k_spacing, ratio = sample_global_params()
-    elif mode == "boundary":
-        k_spacing, ratio = sample_boundary_params()
-    else:
-        raise ValueError(f"Mode non valido: {mode}")
+    k_spacing, ratio = sample_skewed_params()
 
     base_block = generate_base_rectangle(base_sides, base_center)
 
@@ -226,12 +209,12 @@ def generate_phi_block(
     lines.append(" ")
 
     meta = {
-        "mode": mode,
-        "n_pores": n_pores_final,
+        "n_pores_requested": n_pores,
+        "n_pores_effective": n_pores_final,
         "k_spacing": k_spacing,
         "ratio": ratio,
-        "pore_width": w,
-        "pore_height": 0.5 * Ly - 0.1 * factor,
+        "width": w,
+        "height": 0.5 * Ly - 0.1 * factor,
     }
 
     return "\n".join(lines), meta
@@ -268,12 +251,12 @@ def main():
 
     fieldnames = [
         "tag",
-        "mode",
-        "n_pores",
+        "n_pores_requested",
+        "n_pores_effective",
         "k_spacing",
         "ratio",
-        "pore_width",
-        "pore_height",
+        "width",
+        "height",
         "output_dir",
     ]
 
@@ -281,17 +264,12 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        # lista dei mode per avere esattamente 70 global e 30 boundary
-        modes = ["global"] * N_GLOBAL + ["boundary"] * N_BOUNDARY
-        random.shuffle(modes)
-
-        for idx, mode in enumerate(modes):
+        for idx in range(N_FILES):
             tag = f"{idx:03d}"
 
             new_phi_block, meta = generate_phi_block(
                 epsilon=epsilon,
                 width_max=width_max,
-                mode=mode,
             )
 
             new_text = before + new_phi_block + after
@@ -305,22 +283,26 @@ def main():
 
             writer.writerow({
                 "tag": tag,
-                "mode": meta["mode"],
-                "n_pores": meta["n_pores"],
+                "n_pores_requested": meta["n_pores_requested"],
+                "n_pores_effective": meta["n_pores_effective"],
                 "k_spacing": meta["k_spacing"],
                 "ratio": meta["ratio"],
-                "pore_width": meta["pore_width"],
-                "pore_height": meta["pore_height"],
+                "width": meta["width"],
+                "height": meta["height"],
                 "output_dir": new_output_dir,
             })
 
             print(
-                f"Creato {out_path} | mode={meta['mode']}, "
-                f"n_pores={meta['n_pores']}, k_spacing={meta['k_spacing']:.4f}, "
-                f"ratio={meta['ratio']:.4f} | output={new_output_dir}"
+                f"Creato {out_path} | "
+                f"n_pores={meta['n_pores_effective']}, "
+                f"k_spacing={meta['k_spacing']:.4f}, "
+                f"ratio={meta['ratio']:.4f}, "
+                f"width={meta['width']:.4f}, "
+                f"height={meta['height']:.4f}"
             )
 
-    print(f"\nCSV scritto in: {csv_path}")
+    print(f"\nCreati {N_FILES} init files.")
+    print(f"CSV scritto in: {csv_path}")
 
 
 if __name__ == "__main__":
