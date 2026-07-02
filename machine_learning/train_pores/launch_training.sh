@@ -1,9 +1,9 @@
 # !/bin/bash
 
-python3 /home/fiorello/CRANE_bc/train.py \
+python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--device  'cuda:0' \
-	--padding 'circular' 'reflect' \
-	--size 128 \
+	--padding 'circular' 'circular' \
+	--size 64 \
 	--seed 666 \
 	--epochs 500 \
 	--nocrop \
@@ -11,12 +11,12 @@ python3 /home/fiorello/CRANE_bc/train.py \
 	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-5 \
-	--train_set 'train_set.txt' \
-	--valid_set 'valid_set.txt' \
-	--id 'bc_y' \
+	--train_set 'training_set_64_2_from_10.txt' \
+	--valid_set 'validation_set_64_2_from_10.txt' \
+	--id 'random' \
 	--logfreq 1 \
 	--kernel_size 5 \
-	--hidden 2 \
+	--hidden 3 \
 	--channels 16 \
 	--nproc 4 \
 	--num_params 0 \
@@ -24,14 +24,15 @@ python3 /home/fiorello/CRANE_bc/train.py \
 	--subseq_max 49 \
 	--reflection \
 	--noise_reg 0 \
-	--rotation90 \
 	--divergence \
-	--dual \
-	--massW 2.0 \
+	--massW 0.0 \
 	--coeffE 1e-1 \
-	--coeffG 1e-5 \
+	--coeffG 0.0 \
         --eps 0.078125 \
 	--dx 0.015625 \
 	--ramp \
-	--ramp_length 48 
+	--ramp_length 48
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
+	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/bc_y2/model/epoch_20.pt'
+	#--dual \
+	#--rotation90 \
