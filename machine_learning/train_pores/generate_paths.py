@@ -4,8 +4,8 @@ import random
 
 base_dir1 = Path("/data/fiorello/dataset_pores_npy")
 base_dir2 = Path("/data/fiorello/dataset_pores_grid_npy")
-train_txt = "train_set.txt"
-valid_txt  = "valid_set.txt"
+train_txt = "train_set_ram.txt"
+valid_txt  = "valid_set_ram.txt"
 
 csv_path1 = Path("/home/fiorello/init_files/dataset_pores.csv")
 csv_path2 = Path("/home/fiorello/master_thesis/fem/grid_data.csv")
@@ -63,7 +63,7 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
                 start_idx = random.randint(0, 149)
 
         # indice → tempo in step da 0.1
-        times = [start_idx * 0.1 + k * 0.1 for k in range(50)]
+        times = [start_idx * 0.1 + k * 0.1 for k in range(30)]
         # formattazione 1 decimale: 0.0, 0.1, ..., 20.0
         file_names = [f"surf_{t:.1f}.npy" for t in times]
 

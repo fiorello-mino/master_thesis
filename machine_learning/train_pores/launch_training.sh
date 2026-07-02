@@ -2,7 +2,7 @@
 
 python3 /home/fiorello/CRANE_bc/train.py \
 	--device  'cuda:0' \
-	--padding circular reflect \
+	--padding 'circular' 'reflect' \
 	--size 128 \
 	--seed 666 \
 	--epochs 500 \
@@ -16,7 +16,7 @@ python3 /home/fiorello/CRANE_bc/train.py \
 	--id 'bc_y' \
 	--logfreq 1 \
 	--kernel_size 5 \
-	--hidden 3 \
+	--hidden 2 \
 	--channels 16 \
 	--nproc 4 \
 	--num_params 0 \

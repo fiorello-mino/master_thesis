@@ -118,12 +118,12 @@ def train(model, loss_fn, optimizer, loaders, args):
             else:
                 y_pred = model(input_data, noise_reg=args.noise_reg, approx_inference=False)
                 
-            tot_loss, mse_loss, e_loss, grad_loss = loss_fn(y_pred, target_data)
-            loss = tot_loss
-            loss.backward()
-            
-            #loss = loss_fn(y_pred, target_data)
+            #tot_loss, mse_loss, e_loss, grad_loss = loss_fn(y_pred, target_data)
+            #loss = tot_loss
             #loss.backward()
+            
+            loss = loss_fn(y_pred, target_data)
+            loss.backward()
             
             if j%args.superbatch == 0 or j==len_train_loader-1:
                 optimizer.step()
@@ -201,36 +201,36 @@ def train(model, loss_fn, optimizer, loaders, args):
                     y_preds.append(y_pred.detach().cpu())
                     y_trues.append(target_data.detach().cpu())
                 
-                #loss = loss_fn(y_pred, target_data)
-                #loss4print = loss.item()
-                
-                tot_loss, mse_loss, e_loss, grad_loss = loss_fn(y_pred, target_data)
-                loss = tot_loss
+                loss = loss_fn(y_pred, target_data)
                 loss4print = loss.item()
                 
+                #tot_loss, mse_loss, e_loss, grad_loss = loss_fn(y_pred, target_data)
+                #loss = tot_loss
+                #loss4print = loss.item()
+                
                 epoch_valid_losses.append( loss4print )
-                epoch_valid_mse_losses.append(mse_loss.detach().cpu().item())
-                epoch_valid_e_losses.append(e_loss.detach().cpu().item())
-                epoch_valid_grad_losses.append(grad_loss.detach().cpu().item())
+                #epoch_valid_mse_losses.append(mse_loss.detach().cpu().item())
+                #epoch_valid_e_losses.append(e_loss.detach().cpu().item())
+                #epoch_valid_grad_losses.append(grad_loss.detach().cpu().item())
                 
             valid_losses.append( np.mean(epoch_valid_losses) )
-            valid_mse_losses.append(np.mean(epoch_valid_mse_losses))
-            valid_e_losses.append(np.mean(epoch_valid_e_losses))
-            valid_grad_losses.append(np.mean(epoch_valid_grad_losses))
+            #valid_mse_losses.append(np.mean(epoch_valid_mse_losses))
+            #valid_e_losses.append(np.mean(epoch_valid_e_losses))
+            #valid_grad_losses.append(np.mean(epoch_valid_grad_losses))
             
             with open( f'{args.paths["validloss"]}', 'a+') as valid_loss_file:
                 valid_loss_file.write(f'{valid_losses[-1]}\n')
                 
-            validloss_dir = os.path.dirname(args.paths["validloss"])
-            valid_terms_path = os.path.join(validloss_dir, 'valid_loss_terms.txt')
+            #validloss_dir = os.path.dirname(args.paths["validloss"])
+            #valid_terms_path = os.path.join(validloss_dir, 'valid_loss_terms.txt')
 
-            with open(valid_terms_path, 'a+') as valid_terms_file:
-                valid_terms_file.write(
-                    f'{valid_losses[-1]}\t'
-                    f'{valid_mse_losses[-1]}\t'
-                    f'{valid_e_losses[-1]}\t'
-                    f'{valid_grad_losses[-1]}\n'
-                )
+            #with open(valid_terms_path, 'a+') as valid_terms_file:
+            #    valid_terms_file.write(
+            #        f'{valid_losses[-1]}\t'
+            #        f'{valid_mse_losses[-1]}\t'
+            #        f'{valid_e_losses[-1]}\t'
+            #        f'{valid_grad_losses[-1]}\n'
+            #    )
             
         optimizer.zero_grad() # <- better safe than sorry
         # --- validation loop ---

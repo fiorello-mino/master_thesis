@@ -20,7 +20,7 @@ eps 	 : 	 0.078125
 extract_param 	 : 	 False 
 gifs 	 : 	 True 
 graphics 	 : 	 True 
-hidden 	 : 	 3 
+hidden 	 : 	 2 
 id 	 : 	 bc_y 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
