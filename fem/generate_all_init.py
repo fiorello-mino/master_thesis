@@ -1,5 +1,6 @@
 from pathlib import Path
 import random
+import csv
 
 
 factor = 1.9
@@ -15,12 +16,12 @@ def load_pore2d(path: Path) -> str:
 def get_phi_block(path: Path):
     text = load_pore2d(path)
 
-    start_marker: str = "#       PHI"
+    start_marker = "#       PHI"
     start_idx = text.find(start_marker)
     if start_idx == -1:
         raise RuntimeError(f"Sezione {start_marker} non trovata.")
 
-    end_marker: str = "#############################################################################################"
+    end_marker = "#############################################################################################"
     end_idx = text.find(end_marker, start_idx + 1)
     if end_idx == -1:
         raise RuntimeError(f"Stringa {end_marker} non trovata.")
@@ -36,9 +37,8 @@ def build_shape_line(n_pores: int) -> str:
     names = ["rectangle"]
     for i in range(1, n_pores + 1):
         names.append(f"rectangle{i}")
-    shape_exp: str = " + ".join(names)
-    line: str = f"surf->phi->shape:                               {shape_exp}"
-    return line
+    shape_exp = " + ".join(names)
+    return f"surf->phi->shape:                               {shape_exp}"
 
 
 def generate_base_rectangle(base_sides, base_center):
@@ -132,10 +132,9 @@ def generate_all_pores(
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
                 rectangle_sides = (w, Ly)
-                block_i = generate_pore_rectangle(i, rectangle_sides, x_c, y_center)
-                blocks.append(block_i)
+                blocks.append(generate_pore_rectangle(i, rectangle_sides, x_c, y_center))
 
-            return "\n".join(blocks), n_pores
+            return "\n".join(blocks), n_pores, k_spacing, ratio, w, Ly
 
         n_pores -= 1
 
@@ -147,7 +146,7 @@ def generate_phi_block(
     width_max: float,
     distance: str,
     depth: str,
-) -> str:
+):
     lines = []
 
     lines.append("#       PHI")
@@ -165,13 +164,14 @@ def generate_phi_block(
     base_sides = (L_base_x, L_base_y)
     base_center = (0.0 * factor, 0.5 * factor)
 
-    n_pores = random.randint(1,7)
+    n_pores = random.randint(1, 7)
     y_center = 0.5 * factor
     height_min = L_base_y + 0.2 * factor
     height_max = 2.0 * factor - 10 * epsilon
 
     base_block = generate_base_rectangle(base_sides, base_center)
-    pores_block, n_pores_final = generate_all_pores(
+
+    pores_block, n_pores_final, k_spacing, ratio, w, Ly = generate_all_pores(
         n_pores=n_pores,
         epsilon=epsilon,
         x_min=x_min,
@@ -196,7 +196,17 @@ def generate_phi_block(
     lines.append(pores_block)
     lines.append(" ")
 
-    return "\n".join(lines)
+    meta = {
+        "distance": distance,
+        "depth": depth,
+        "n_pores": n_pores_final,
+        "k_spacing": k_spacing,
+        "ratio": ratio,
+        "pore_width": w,
+        "pore_height": 0.5*Ly - 0.1*factor,
+    }
+
+    return "\n".join(lines), meta
 
 
 def random_case():
@@ -211,8 +221,7 @@ def replace_output_directory(text: str, new_output_dir: str) -> str:
 
     replaced = False
     for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped.startswith(target_key):
+        if line.strip().startswith(target_key):
             lines[i] = f"{target_key:<55}{new_output_dir}"
             replaced = True
             break
@@ -225,36 +234,70 @@ def replace_output_directory(text: str, new_output_dir: str) -> str:
 
 def main():
     path = Path("init_template.dat")
-    before, phi_block, after = get_phi_block(path)
+    before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/")
+    out_dir = Path("/home/fiorello/init_files/test/pores")
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    csv_path = out_dir / "summary.csv"
 
     epsilon = 0.0130208 * factor
     width_max = 0.055 * factor
 
-    for idx in range(N_FILES):
-        tag = f"{idx:03d}"
+    fieldnames = [
+        "tag",
+        "distance",
+        "depth",
+        "n_pores",
+        "k_spacing",
+        "ratio",
+        "pore_width",
+        "pore_height",
+        "output_dir",
+    ]
 
-        distance, depth = random_case()
+    with csv_path.open("w", newline="", encoding="utf-8") as fcsv:
+        writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
+        writer.writeheader()
 
-        new_phi_block = generate_phi_block(
-            epsilon=epsilon,
-            width_max=width_max,
-            distance=distance,
-            depth=depth,
-        )
+        for idx in range(N_FILES):
+            tag = f"{idx:03d}"
+            distance, depth = random_case()
 
-        new_text = before + new_phi_block + after
+            new_phi_block, meta = generate_phi_block(
+                epsilon=epsilon,
+                width_max=width_max,
+                distance=distance,
+                depth=depth,
+            )
 
-        new_output_dir = f"/scratch/fiorello/mesoEvo_install_seq/dataset_pores/{tag}"
-        new_text = replace_output_directory(new_text, new_output_dir)
+            new_text = before + new_phi_block + after
 
-        filename = f"{tag}.dat"
-        out_path = out_dir / filename
-        out_path.write_text(new_text)
+            new_output_dir = f"/scratch/fiorello/data_test/pores/{tag}"
+            new_text = replace_output_directory(new_text, new_output_dir)
 
-        print(f"Creato {out_path}  | distance={distance}, depth={depth} | output={new_output_dir}")
+            filename = f"{tag}.dat"
+            out_path = out_dir / filename
+            out_path.write_text(new_text)
+
+            writer.writerow({
+                "tag": tag,
+                "distance": meta["distance"],
+                "depth": meta["depth"],
+                "n_pores": meta["n_pores"],
+                "k_spacing": meta["k_spacing"],
+                "ratio": meta["ratio"],
+                "pore_width": meta["pore_width"],
+                "pore_height": meta["pore_height"],
+                "output_dir": new_output_dir,
+            })
+
+            print(
+                f"Creato {out_path} | distance={meta['distance']}, depth={meta['depth']}, "
+                f"n_pores={meta['n_pores']} | output={new_output_dir}"
+            )
+
+    print(f"\nCSV scritto in: {csv_path}")
 
 
 if __name__ == "__main__":
