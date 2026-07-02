@@ -1,6 +1,6 @@
 from pathlib import Path
 import numpy as np
-base_dir = Path("/data/fiorello/pores/ext_test")
+base_dir = Path("/data/fiorello/pores/dataset_pores_ext_test/data_test_npy")
 output_txt = "/data/fiorello/pores/ext_test/test_set.txt"
 
 n_folders = 100
