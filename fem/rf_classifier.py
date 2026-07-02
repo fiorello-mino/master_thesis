@@ -82,7 +82,7 @@ TEST_CSV = Path("test_init_summary.csv")
 
 df_test = pd.read_csv(TEST_CSV)
 
-feature_cols = ["n_pores_effective", "k_spacing", "width", "height"]
+feature_cols = ["n_pores", "k_spacing", "pore_width", "pore_height"]
 X_test = df_test[feature_cols].to_numpy()
 
 y_pred_test = rf.predict(X_test)
