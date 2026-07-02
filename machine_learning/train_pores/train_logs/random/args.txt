@@ -54,9 +54,9 @@ subseq_min 	 : 	 1
 superbatch 	 : 	 1 
 symm_kernel 	 : 	 False 
 threeD 	 : 	 False 
-train_set 	 : 	 training_set_64_2_from_10.txt 
+train_set 	 : 	 train_set_64.txt 
 translation 	 : 	 False 
 twin_image 	 : 	 False 
-valid_set 	 : 	 validation_set_64_2_from_10.txt 
+valid_set 	 : 	 valid_set_64.txt 
 vtk 	 : 	 False 
 weightd 	 : 	 0.0 

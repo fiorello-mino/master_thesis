@@ -11,8 +11,8 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-5 \
-	--train_set 'training_set_64_2_from_10.txt' \
-	--valid_set 'validation_set_64_2_from_10.txt' \
+	--train_set 'train_set_64.txt' \
+	--valid_set 'valid_set_64.txt' \
 	--id 'random' \
 	--logfreq 1 \
 	--kernel_size 5 \
