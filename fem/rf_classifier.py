@@ -70,7 +70,7 @@ ax.set_ylabel("True n_bubbles")
 ax.set_title("Confusion Matrix — RF (CV)")
 plt.tight_layout()
 plt.savefig("confusion_matrix.png", dpi=150)
-plt.show()
+#plt.show()
 
 # modello finale addestrato su tutto X,y
 rf.fit(X, y)
@@ -82,7 +82,7 @@ TEST_CSV = Path("test_init_summary.csv")
 
 df_test = pd.read_csv(TEST_CSV)
 
-feature_cols = ["n_pores", "k_spacing", "pore_width", "pore_height"]
+feature_cols = ["n_pores_effective", "k_spacing", "width", "height"]
 X_test = df_test[feature_cols].to_numpy()
 
 y_pred_test = rf.predict(X_test)
