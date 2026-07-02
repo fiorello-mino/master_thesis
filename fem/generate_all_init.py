@@ -4,7 +4,7 @@ import csv
 
 
 factor = 1.9
-N_FILES = 200
+N_FILES = 50
 
 
 def load_pore2d(path: Path) -> str:

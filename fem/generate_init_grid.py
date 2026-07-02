@@ -4,12 +4,12 @@ import itertools
 import numpy as np
 
 factor = 1.9
-OUT_DIR = Path("/home/fiorello/init_files_grid")
+OUT_DIR = Path("/home/fiorello/init_files/test/grid")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 TEMPLATE = Path("/home/fiorello/master_thesis/fem/init_template.dat")
 
 OUT_DIR2 = Path("/home/fiorello/master_thesis/fem")
-META_CSV = OUT_DIR2 / "grid_data.csv"
+META_CSV = OUT_DIR / "summary.csv"
 
 epsilon = 0.0130208 * factor
 width_max = 0.055 * factor
