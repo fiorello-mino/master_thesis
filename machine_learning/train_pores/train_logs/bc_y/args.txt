@@ -13,7 +13,7 @@ device 	 : 	 cuda:0
 divergence 	 : 	 True 
 dropout 	 : 	 False 
 dropout_prob 	 : 	 0.25 
-dual 	 : 	 True 
+dual 	 : 	 False 
 dx 	 : 	 0.015625 
 epochs 	 : 	 500 
 eps 	 : 	 0.078125 
@@ -25,7 +25,7 @@ id 	 : 	 bc_y
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
-massW 	 : 	 2.0 
+massW 	 : 	 0.0 
 nocrop 	 : 	 True 
 nogifs 	 : 	 False 
 nographics 	 : 	 False 
@@ -34,7 +34,7 @@ nproc 	 : 	 4
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 ['circular', 'reflect'] 
-paths 	 : 	 {'master': 'train_logs/bc_y', 'model': 'train_logs/bc_y/model', 'png': 'train_logs/bc_y/pngs', 'gif': 'train_logs/bc_y/gifs', 'lossplot': 'train_logs/bc_y/lossplot.png', 'trainloss': 'train_logs/bc_y/train_loss.txt', 'validloss': 'train_logs/bc_y/valid_loss.txt', 'vtk': None, 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/bc_y2', 'model': 'train_logs/bc_y2/model', 'png': 'train_logs/bc_y2/pngs', 'gif': 'train_logs/bc_y2/gifs', 'lossplot': 'train_logs/bc_y2/lossplot.png', 'trainloss': 'train_logs/bc_y2/train_loss.txt', 'validloss': 'train_logs/bc_y2/valid_loss.txt', 'vtk': None, 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 48 
 reflection 	 : 	 True 
@@ -44,7 +44,7 @@ reflectionZ 	 : 	 True
 reload 	 : 	 False 
 reload_model 	 : 	  
 rotation 	 : 	 False 
-rotation90 	 : 	 True 
+rotation90 	 : 	 False 
 rotation_order 	 : 	 0 
 seed 	 : 	 666 
 size 	 : 	 128 

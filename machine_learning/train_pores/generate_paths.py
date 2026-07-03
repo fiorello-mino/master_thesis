@@ -2,13 +2,13 @@ from pathlib import Path
 import csv
 import random
 
-base_dir1 = Path("/data/fiorello/dataset_pores_npy")
-base_dir2 = Path("/data/fiorello/dataset_pores_grid_npy")
-train_txt = "train_set_ram.txt"
-valid_txt  = "valid_set_ram.txt"
+base_dir1 = Path("/data/fiorello/pores/dataset_pores_npy")
+base_dir2 = Path("/data/fiorello/pores/dataset_pores_grid_npy")
+train_txt = "train_set.txt"
+valid_txt  = "valid_set.txt"
 
 csv_path1 = Path("/home/fiorello/init_files/dataset_pores.csv")
-csv_path2 = Path("/home/fiorello/master_thesis/fem/grid_data.csv")
+csv_path2 = Path("/home/fiorello/master_thesis/fem/csv/grid_data.csv")
 
 N_TOTAL   = 200   # tag totali da selezionare per dataset_pores_grid
 N_TRAIN   = 160   # quanti usare per train
@@ -49,9 +49,9 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
         if depth_lookup is not None:
             key = depth_lookup[folder_idx]
             if key == "deep":
-                start_idx = random.randint(0, 65)
-            elif key == "shallow":
                 start_idx = random.randint(0, 149)
+            elif key == "shallow":
+                start_idx = random.randint(0, 65)
             else:
                 continue
 
@@ -63,7 +63,7 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
                 start_idx = random.randint(0, 149)
 
         # indice → tempo in step da 0.1
-        times = [start_idx * 0.1 + k * 0.1 for k in range(30)]
+        times = [start_idx * 0.1 + k * 0.1 for k in range(65)]
         # formattazione 1 decimale: 0.0, 0.1, ..., 20.0
         file_names = [f"surf_{t:.1f}.npy" for t in times]
 
