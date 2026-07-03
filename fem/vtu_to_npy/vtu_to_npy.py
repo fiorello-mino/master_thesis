@@ -16,6 +16,7 @@ def vtu_to_npy(vtu_path, out_path, field_name, nx=128, ny=128, method="linear"):
 
     x_min, y_min = pts.min(axis=0)
     x_max, y_max = pts.max(axis=0)
+    print(x_max - x_min, y_max - y_min)
 
     xi = np.linspace(x_min, x_max, nx)
     yi = np.linspace(y_min, y_max, ny)
@@ -42,9 +43,9 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
 
 def main():
     vtu_root = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores")
-    npy_root = Path("/scratch/fiorello/dataset_pores_npy")
+    npy_root = Path("/scratch/fiorello/prova_vtu")
 
-    for idx in range(200):
+    for idx in range(2):
         tag = f"{idx:03d}"
 
         vtu_folder = vtu_root / tag
