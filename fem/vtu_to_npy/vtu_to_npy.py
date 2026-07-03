@@ -42,7 +42,7 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
 
 
 def main():
-    vtu_root = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores")
+    vtu_root = Path("/scratch/fiorello/data_train/dataset_pores")
     npy_root = Path("/scratch/fiorello/prova_vtu")
 
     for idx in range(2):

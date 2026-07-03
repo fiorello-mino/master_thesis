@@ -28,8 +28,8 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--massW 0.0 \
 	--coeffE 0e-1 \
 	--coeffG 0.0 \
-        --eps 0.02473952 \
-	--dx 0. \
+        --eps 0.024739583333333334 \
+	--dx 0.014960629921259843 \
 	--ramp \
 	--ramp_length 48
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
