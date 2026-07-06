@@ -10,9 +10,11 @@ valid_txt  = "valid_set.txt"
 csv_path1 = Path("/home/fiorello/init_files/dataset_pores.csv")
 csv_path2 = Path("/home/fiorello/master_thesis/fem/csv/grid_data.csv")
 
-N_TOTAL   = 200   # tag totali da selezionare per dataset_pores_grid
-N_TRAIN   = 160   # quanti usare per train
-# → i restanti 40 vanno in valid
+N_TOTAL   = 200
+N_TRAIN   = 160
+
+# probabilità che una sequenza parta forzatamente da frame 0
+FORCE_ZERO_PROB = 0.1   # ~10% delle sequenze partiranno da t=0
 
 # ── lettura CSV 1 ──────────────────────────────────────────────
 rows1 = []
@@ -26,68 +28,62 @@ with csv_path2.open("r", newline="") as f:
     for row in csv.DictReader(f):
         rows2.append(row)
 
-# ── costruzione lista tag per dataset_pores_grid ───────────────
-tags_nonzero = [int(r["tag"]) for r in rows2 if int(r["n_bubbles"]) > 0]  # 99 tag
+tags_nonzero = [int(r["tag"]) for r in rows2 if int(r["n_bubbles"]) > 0]
 tags_zero    = [int(r["tag"]) for r in rows2 if int(r["n_bubbles"]) == 0]
 
-n_zero_needed = N_TOTAL - len(tags_nonzero)   # 200 - 99 = 101
+n_zero_needed = N_TOTAL - len(tags_nonzero)
 extra_zeros = random.sample(tags_zero, n_zero_needed)
 
-selected_tags = sorted(tags_nonzero + extra_zeros)  # 200 tag ordinati
-# dizionario tag → n_bubbles per lookup rapido
+selected_tags = sorted(tags_nonzero + extra_zeros)
 tag_to_nbubbles = {int(r["tag"]): int(r["n_bubbles"]) for r in rows2}
 
-train_tags2 = selected_tags[:N_TRAIN]    # primi 160
-valid_tags2  = selected_tags[N_TRAIN:]   # ultimi 40
+train_tags2 = selected_tags[:N_TRAIN]
+valid_tags2  = selected_tags[N_TRAIN:]
 
 
-def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lookup=None):
-    """Scrive le righe di path nel file f, una sequenza per folder."""
+def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lookup=None, force_zero_prob=FORCE_ZERO_PROB):
     for folder_idx in folder_idx_iter:
         folder = base_dir / f"{folder_idx:03d}"
 
         if depth_lookup is not None:
             key = depth_lookup[folder_idx]
             if key == "deep":
-                start_idx = random.randint(0, 134)
+                max_start = 120
             elif key == "shallow":
-                start_idx = random.randint(0, 65)
+                max_start = 50
             else:
                 continue
 
         elif nbubbles_lookup is not None:
             n = nbubbles_lookup[folder_idx]
-            if n == 0:
-                start_idx = random.randint(0, 65)
-            else:   # n_bubbles > 0
-                start_idx = random.randint(0, 134)
+            max_start = 50 if n == 0 else 120
+        else:
+            max_start = 0
 
-        # indice → tempo in step da 0.1
-        times = [start_idx * 0.1 + k * 0.1 for k in range(65)]
-        # formattazione 1 decimale: 0.0, 0.1, ..., 20.0
+        # forza start_idx = 0 con una certa probabilità,
+        # altrimenti campiona come prima
+        if random.random() < force_zero_prob:
+            start_idx = 0
+        else:
+            start_idx = random.randint(0, max_start)
+
+        times = [start_idx * 0.1 + k * 0.1 for k in range(50)]
         file_names = [f"surf_{t:.1f}.npy" for t in times]
 
         paths = [str(folder / name) for name in file_names]
         f.write(" ".join(paths) + "\n")
 
 
-# lookup per dataset_pores (indicizzato per posizione nella lista)
-depth_by_idx    = {i: rows1[i]["depth"] for i in range(len(rows1))}
+depth_by_idx = {i: rows1[i]["depth"] for i in range(len(rows1))}
 
-# ── train_set.txt ──────────────────────────────────────────────
 with open(train_txt, "w") as f:
-    # dataset_pores: folder 000–159
     write_sequences(f, range(160), base_dir1, depth_lookup=depth_by_idx)
-    # dataset_pores_grid: primi 160 tag selezionati
     write_sequences(f, train_tags2, base_dir2, nbubbles_lookup=tag_to_nbubbles)
 
 print(f"Creato: {train_txt}")
 
-# ── valid_set.txt ──────────────────────────────────────────────
 with open(valid_txt, "w") as f:
-    # dataset_pores: folder 160–199
     write_sequences(f, range(160, 200), base_dir1, depth_lookup=depth_by_idx)
-    # dataset_pores_grid: ultimi 40 tag selezionati
     write_sequences(f, valid_tags2, base_dir2, nbubbles_lookup=tag_to_nbubbles)
 
 print(f"Creato: {valid_txt}")
