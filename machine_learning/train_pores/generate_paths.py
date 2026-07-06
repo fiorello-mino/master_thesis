@@ -49,7 +49,7 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
         if depth_lookup is not None:
             key = depth_lookup[folder_idx]
             if key == "deep":
-                start_idx = random.randint(0, 149)
+                start_idx = random.randint(0, 134)
             elif key == "shallow":
                 start_idx = random.randint(0, 65)
             else:
@@ -60,7 +60,7 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
             if n == 0:
                 start_idx = random.randint(0, 65)
             else:   # n_bubbles > 0
-                start_idx = random.randint(0, 149)
+                start_idx = random.randint(0, 134)
 
         # indice → tempo in step da 0.1
         times = [start_idx * 0.1 + k * 0.1 for k in range(65)]
