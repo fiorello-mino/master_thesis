@@ -62,9 +62,8 @@ def best_model_path(log_dir_name: str) -> tuple[Path, int, float]:
     if best_epoch is None:
         raise ValueError(f"Il file {valid_loss_file} è vuoto o contiene solo righe vuote")
 
-    #model_path = log_dir_path / "model" / f"epoch_{best_epoch}.pt"
-
-    model_path = log_dir_path / "model" / "epoch_478.pt"
+    model_path = log_dir_path / "model" / f"epoch_{best_epoch}.pt"
+    
     if not model_path.is_file():
         raise FileNotFoundError(f"Il miglior modello atteso non esiste: {model_path}")
 
@@ -97,7 +96,7 @@ class Config:
     output_channels: int = 1
     hidden_channels: int = 16
     kernel_size: int = 5
-    padding_mode: str = 'circular'
+    padding_mode: str | list[str] = ('circular',)
     separable: bool = False
     bias: bool = True
     divergence: bool = True
@@ -135,7 +134,7 @@ def parse_args() -> Config:
     parser.add_argument('--output-channels', type=int, default=1)
     parser.add_argument('--hidden-channels', type=int, default=16)
     parser.add_argument('--kernel-size', type=int, default=5)
-    parser.add_argument('--padding-mode', type=str, nargs='+', default=['circular'], choices=['circular', 'zeros', 'reflect'])
+    parser.add_argument('--padding-mode', type=str, nargs='+', default=['circular', 'reflect'], choices=['circular', 'zeros', 'reflect'])
     parser.add_argument('--separable', action='store_true')
     parser.add_argument('--bias', action='store_true', default=True)
     parser.add_argument('--no-bias', dest='bias', action='store_false')
