@@ -11,9 +11,9 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--lr 5e-5 \
 	--batch 3 \
 	--weightd 0e-5 \
-	--train_set 'train_set.txt' \
-	--valid_set 'valid_set.txt' \
-	--id 'coeffE0' \
+	--train_set 'train_set_from0.txt' \
+	--valid_set 'valid_set_from0.txt' \
+	--id 'coeffE0_from0' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 2 \

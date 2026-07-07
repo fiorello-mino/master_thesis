@@ -4,8 +4,8 @@ import random
 
 base_dir1 = Path("/data/fiorello/pores/dataset_pores_npy")
 base_dir2 = Path("/data/fiorello/pores/dataset_pores_grid_npy")
-train_txt = "train_set.txt"
-valid_txt  = "valid_set.txt"
+train_txt = "train_set_from0.txt"
+valid_txt  = "valid_set_from0.txt"
 
 csv_path1 = Path("/home/fiorello/init_files/dataset_pores.csv")
 csv_path2 = Path("/home/fiorello/master_thesis/fem/csv/grid_data.csv")
@@ -48,15 +48,15 @@ def write_sequences(f, folder_idx_iter, base_dir, depth_lookup=None, nbubbles_lo
         if depth_lookup is not None:
             key = depth_lookup[folder_idx]
             if key == "deep":
-                max_start = 120
+                max_start = 0
             elif key == "shallow":
-                max_start = 50
+                max_start = 0
             else:
                 continue
 
         elif nbubbles_lookup is not None:
             n = nbubbles_lookup[folder_idx]
-            max_start = 50 if n == 0 else 120
+            max_start = 0 if n == 0 else 0
         else:
             max_start = 0
 
