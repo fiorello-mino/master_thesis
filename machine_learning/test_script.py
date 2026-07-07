@@ -581,6 +581,7 @@ def infer_sequence(
     sequence: torch.Tensor,
     params: torch.Tensor | None,
     jump: int,
+    noise_reg: float = 0.0,   # <-- nuovo argomento con default
 ) -> torch.Tensor:
     initial_state = sequence[:, :jump, ...]
     target_sequence = sequence[:, jump:, ...]
@@ -589,7 +590,7 @@ def infer_sequence(
         initial_state,
         future=target_sequence.shape[1] - 1,
         params=params,
-        noise_reg=noise_reg,
+        noise_reg=noise_reg,   # <-- passa noise_reg al modello
         approx_inference=False,
     )
 
