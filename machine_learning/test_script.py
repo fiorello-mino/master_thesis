@@ -100,6 +100,7 @@ class Config:
     separable: bool = False
     bias: bool = True
     divergence: bool = True
+    noise_reg: float = 0.0
     num_params: int = 0
     dropout: bool = False
     dropout_prob: float | None = None
@@ -142,6 +143,7 @@ def parse_args() -> Config:
     parser.add_argument('--divergence', action='store_true', default=True)
     parser.add_argument('--conservative', action='store_true')
     parser.add_argument('--no-divergence', dest='divergence', action='store_false')
+    parser.add_argument('--noise-reg', type=float, default=0.0125)
     parser.add_argument('--num-params', type=int, default=0)
     parser.add_argument('--dropout', action='store_true')
     parser.add_argument('--dropout-prob', type=float, default=None)
@@ -196,6 +198,7 @@ def parse_args() -> Config:
         bias=args.bias,
         divergence=args.divergence,
         conservative=args.conservative,
+        noise_reg = args.noise_reg,
         num_params=args.num_params,
         dropout=args.dropout,
         dropout_prob=args.dropout_prob,
@@ -586,6 +589,7 @@ def infer_sequence(
         initial_state,
         future=target_sequence.shape[1] - 1,
         params=params,
+        noise_reg=noise_reg,
         approx_inference=False,
     )
 
@@ -628,11 +632,14 @@ def main() -> None:
                 sequence = sequence.to(device)
                 if params is not None:
                     params = params.to(device)
-                    
-                LOGGER.info(f'sequence shape: {sequence.shape}')
-                LOGGER.info(f'frame0 min={sequence[:,0].min().item()} max={sequence[:,0].max().item()} mean={sequence[:,0].mean().item()}')
 
-                pred_sequence = infer_sequence(model, sequence, params, cfg.min_seq)
+                pred_sequence = infer_sequence(
+                    model,
+                    sequence,
+                    params,
+                    cfg.min_seq,
+                    noise_reg=cfg.noise_reg,
+                )
                 mae, mse = compute_timestep_metrics(
                     pred_sequence, sequence, cfg.min_seq
                 )
