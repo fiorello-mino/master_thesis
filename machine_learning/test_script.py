@@ -124,7 +124,7 @@ def parse_args() -> Config:
     parser.add_argument('--log-dir-name', type=str, required=True)
     parser.add_argument('--sequence-table', type=Path, required=True)
     parser.add_argument('--output-folder', type=Path, required=True)
-    parser.add_argument('--img-size', type=int, default=64)
+    parser.add_argument('--img-size', type=int, default=128)
     parser.add_argument('--use-cuda', action='store_true')
     parser.add_argument('--delta-png', type=int, default=1)
 
