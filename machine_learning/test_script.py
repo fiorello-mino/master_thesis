@@ -628,6 +628,9 @@ def main() -> None:
                 sequence = sequence.to(device)
                 if params is not None:
                     params = params.to(device)
+                    
+                LOGGER.info(f'sequence shape: {sequence.shape}')
+                LOGGER.info(f'frame0 min={sequence[:,0].min().item()} max={sequence[:,0].max().item()} mean={sequence[:,0].mean().item()}')
 
                 pred_sequence = infer_sequence(model, sequence, params, cfg.min_seq)
                 mae, mse = compute_timestep_metrics(
