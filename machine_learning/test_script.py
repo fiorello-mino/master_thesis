@@ -255,9 +255,18 @@ def load_sequences(
 
             sequence = []
             for snap_path in snap_paths:
-                state_np = load_state(Path(snap_path))
+                path = Path(snap_path)
+                state_np = load_state(path)
                 state = ensure_4d(torch.from_numpy(state_np).float())
-                sequence.append(transform(state))
+
+                if path.suffix.lower() == '.png':
+                    state = transform(state)
+                elif path.suffix.lower() == '.npy':
+                    pass  # nessuna transform, come in training
+                else:
+                    raise ValueError(f'Unsupported extension: {path.suffix}')
+
+                sequence.append(state)
 
             yield torch.stack(sequence, dim=1), params, snap_paths
 
