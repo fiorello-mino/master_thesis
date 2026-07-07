@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path("/home/fiorello/CRANE_bc")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import argparse
 import ast
 import logging
 import shutil
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Iterator
 
 import numpy as np
