@@ -108,6 +108,7 @@ class Config:
     dt: float = 1e-6
     steps_per_save: int = 100_000
     starting_frame: int = 10     
+    conservative: bool = False
     # === MODEL VARIABLES ===
     
     
@@ -139,6 +140,7 @@ def parse_args() -> Config:
     parser.add_argument('--bias', action='store_true', default=True)
     parser.add_argument('--no-bias', dest='bias', action='store_false')
     parser.add_argument('--divergence', action='store_true', default=True)
+    parser.add_argument('--conservative', action='store_true')
     parser.add_argument('--no-divergence', dest='divergence', action='store_false')
     parser.add_argument('--num-params', type=int, default=0)
     parser.add_argument('--dropout', action='store_true')
@@ -193,6 +195,7 @@ def parse_args() -> Config:
         separable=args.separable,
         bias=args.bias,
         divergence=args.divergence,
+        conservative=args.conservative,
         num_params=args.num_params,
         dropout=args.dropout,
         dropout_prob=args.dropout_prob,
@@ -295,6 +298,7 @@ def build_model(cfg: Config, device: torch.device) -> ConvGRU:
         separable=cfg.separable,
         bias=cfg.bias,
         divergence=cfg.divergence,
+        conservative=cfg.conservative,
         num_params=cfg.num_params,
         dropout=cfg.dropout,
         dropout_prob=cfg.dropout_prob,
