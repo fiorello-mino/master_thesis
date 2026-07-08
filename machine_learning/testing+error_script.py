@@ -1,6 +1,6 @@
 # <<< import external modules <<<
 from sys import path
-path.append('/home/fiorello/CRANE/')
+path.append('/home/fiorello/CRANE_bc/')
 
 import numpy as np
 
@@ -31,10 +31,10 @@ NUM_NPY : int = 100
 NUM_EVO : int = 25000
 
 # <<< SCRIPT VARIABLES <<<
-MODEL_PATH      : str   = '/home/fiorello/master_thesis/machine_learning/train/train_logs/lr_5e-5_hl_3_128/model/epoch_259.pt' # model
-SEQUENCE_TABLE  : str   = '/data/fiorello/external_test_64_random/testing_set.txt'
-IMG_SIZE        : int   = 64 # resizing dimension of images in dataset
-OUTPUT_FOLDER   : str   = '/data/fiorello/external_test_64_random/test_lr_5e-5_hl_3_train128'#' # output folder name
+MODEL_PATH      : str   = '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/coeffE0/model/epoch_456.pt' # model
+SEQUENCE_TABLE  : str   = 'test_set.txt'
+IMG_SIZE        : int   = 128 # resizing dimension of images in dataset
+OUTPUT_FOLDER   : str   = 'coeffE0'#' # output folder name
 CUDA            : bool  = True # cuda control variable
 DELTA_PNG       : int   = 1  # output frequency for png. DO NOT SET TO < 1
 
@@ -43,12 +43,12 @@ DELTA_PNG       : int   = 1  # output frequency for png. DO NOT SET TO < 1
 
 # <<< MODEL VARIABLES <<<
 MIN_SEQ         : int                   = 1
-HIDDEN_UNITS    : int                   = 3 # cambia
+HIDDEN_UNITS    : int                   = 2 # cambia
 INPUT_CHANNELS  : int                   = 1 
 OUTPUT_CHANNELS : int                   = 1
 HIDDEN_CHANNELS : int                   = 16 # cambia
 KERNEL_SIZE     : int                   = 5 # cambia
-PADDING_MODE    : str                   = 'circular'    # this is NOT to be modified
+PADDING_MODE    : list[str]                   = ['circular', 'reflect']  # this is NOT to be modified
 SEPARABLE       : bool                  = False         # this is NOT to be modified
 BIAS            : bool                  = True          # modify ONLY IF you know what you are doing
 DIVERGENCE      : bool                  = True
@@ -266,7 +266,7 @@ def main() -> None:
             if(countNPYout < NUM_NPY):
                 print('Saving npy output...')
                 os.mkdir(f'{kk_path}/pred_sequence_npy')
-                seq2npy( pred_sequence.cpu(), path=f'{kk_path}/pred_sequence_npy', fname="", nf=3 )
+                seq2npy( pred_sequence.cpu(), path=f'{kk_path}/pred_sequence_npy')
                 countNPYout += 1
 
             if(countPNGout < NUM_PNG):
@@ -294,7 +294,7 @@ def main() -> None:
                 args.paths = {"png" : f'{kk_path}/pred_sequence_png'}
                 args.vmin = 0.
                 args.vmax = 1.
-                seq2png_treaded( pred_sequence[:,::DELTA_PNG,...].cpu(), name=f'snap', delta=DELTA_PNG, args=args )
+                seq2png_treaded( pred_sequence[:,::DELTA_PNG,...].cpu(), name=f'snap', args=args )
 
                 args = CustomNameSpace()
                 args.nproc = 4
@@ -303,7 +303,7 @@ def main() -> None:
                 args.vmin = -1.
                 args.vmax = 1.
                 args.paths = {"png" : f'{kk_path}/diff_sequence_png'}
-                seq2png_treaded( (pred_sequence[:,::DELTA_PNG,...].cpu()-sequence[:,::DELTA_PNG,...].cpu()), name=f'snap', delta=DELTA_PNG, args=args )      # TOLTO abs!!!!
+                seq2png_treaded( (pred_sequence[:,::DELTA_PNG,...].cpu()-sequence[:,::DELTA_PNG,...].cpu()), name=f'snap', args=args )      # TOLTO abs!!!!
                 countPNGout += 1
 
             if(countVTKout < NUM_VTK):
