@@ -91,9 +91,7 @@ def generate_all_pores(
         w_max_final = min(w_target, width_max)
         w = max(4 * epsilon, w_max_final)
 
-        span_target = L - 10 * epsilon
-        s = (span_target - n_pores * w) / (n_pores + 1)
-
+        s = (L - n_pores * w) / (n_pores + 1)
         success = w > 0 and s >= 0
 
         if success:
