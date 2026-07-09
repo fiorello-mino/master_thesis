@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--weightd 0e-5 \
 	--train_set 'train_set.txt' \
 	--valid_set 'valid_set.txt' \
-	--id 'coeffE0_div_false' \
+	--id 'prova' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 2 \
@@ -23,6 +23,7 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--subseq_min 1 \
 	--subseq_max 49 \
 	--reflection \
+	--divergence \
 	--noise_reg 0.0 \
 	--massW 0 \
 	--coeffE 0e-1 \
@@ -31,7 +32,6 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--dx 0.014960629921259843 \
 	--ramp \
 	--ramp_length 48
-	#--divergence \
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/bc_y2/model/epoch_20.pt'
 	#--dual \
