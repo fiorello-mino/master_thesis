@@ -74,7 +74,6 @@ def generate_all_pores(
     width_max: float,
 ):
     L = x_max - x_min
-    x_mid = 0.5 * (x_min + x_max)
 
     k_spacing_sampled = random.uniform(K_SPACING_MIN, K_SPACING_MAX)
     depth_ratio = random.uniform(DEPTH_RATIO_MIN, DEPTH_RATIO_MAX)
@@ -93,21 +92,19 @@ def generate_all_pores(
         w = max(4 * epsilon, w_max_final)
 
         span_target = L - 10 * epsilon
-        g = span_target / n_pores - w
+        s = (span_target - n_pores * w) / (n_pores + 1)
 
-        success = w > 0 and g >= 0
+        success = w > 0 and s >= 0
 
         if success:
-            d_c = w + g
-            block_total = n_pores * d_c
-            margin = g / 2.0
-            first_center = x_mid - block_total / 2.0 + margin + w / 2.0
+            d_c = w + s
+            first_center = x_min + s + 0.5 * w
             x_centers = [first_center + i * d_c for i in range(n_pores)]
 
             Ly = 2 * depth_ratio * w
             Ly = min(max(Ly, height_min), height_max)
 
-            k_spacing_real = g / w
+            k_spacing_real = s / w
 
             blocks = []
             for i, x_c in enumerate(x_centers, start=1):
@@ -282,8 +279,8 @@ def main():
                 f"output={new_output_dir}"
             )
 
-    print(f"\nCSV scritto in: {csv_path}")
+    print(f\"\\nCSV scritto in: {csv_path}\")
 
 
-if __name__ == "__main__":
+if __name__ == \"__main__\":
     main()
