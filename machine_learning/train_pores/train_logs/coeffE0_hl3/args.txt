@@ -3,8 +3,8 @@ bias 	 : 	 True
 bootstrap 	 : 	 False 
 channels 	 : 	 16 
 cmap 	 : 	 gray 
-coeffE 	 : 	 0.1 
-coeffG 	 : 	 1e-05 
+coeffE 	 : 	 0.0 
+coeffG 	 : 	 0.0 
 conservative 	 : 	 False 
 crop 	 : 	 False 
 croplims 	 : 	 (0.25, 0.75) 
@@ -14,14 +14,14 @@ divergence 	 : 	 True
 dropout 	 : 	 False 
 dropout_prob 	 : 	 0.25 
 dual 	 : 	 False 
-dx 	 : 	 0.015625 
+dx 	 : 	 0.014960629921259842 
 epochs 	 : 	 500 
-eps 	 : 	 0.078125 
+eps 	 : 	 0.024739583333333336 
 extract_param 	 : 	 False 
 gifs 	 : 	 True 
 graphics 	 : 	 True 
-hidden 	 : 	 2 
-id 	 : 	 bc_y 
+hidden 	 : 	 3 
+id 	 : 	 coeffE0_hl3 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
@@ -34,7 +34,7 @@ nproc 	 : 	 4
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 ['circular', 'reflect'] 
-paths 	 : 	 {'master': 'train_logs/bc_y2', 'model': 'train_logs/bc_y2/model', 'png': 'train_logs/bc_y2/pngs', 'gif': 'train_logs/bc_y2/gifs', 'lossplot': 'train_logs/bc_y2/lossplot.png', 'trainloss': 'train_logs/bc_y2/train_loss.txt', 'validloss': 'train_logs/bc_y2/valid_loss.txt', 'vtk': None, 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/coeffE0_hl3', 'model': 'train_logs/coeffE0_hl3/model', 'png': 'train_logs/coeffE0_hl3/pngs', 'gif': 'train_logs/coeffE0_hl3/gifs', 'lossplot': 'train_logs/coeffE0_hl3/lossplot.png', 'trainloss': 'train_logs/coeffE0_hl3/train_loss.txt', 'validloss': 'train_logs/coeffE0_hl3/valid_loss.txt', 'vtk': None, 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 48 
 reflection 	 : 	 True 

@@ -15,7 +15,7 @@ DEPTH_RATIO_MAX = 20.0
 N_PORES_MIN = 1
 N_PORES_MAX = 7
 
-SHOULDER_RATIO = 0.5
+SHOULDER_RATIO = 1.0
 # SHOULDER_RATIO = 1.0  -> spalle uguali al gap interno
 # SHOULDER_RATIO = 0.5  -> spalle larghe metà del gap interno
 # SHOULDER_RATIO = 2.0  -> spalle larghe il doppio del gap interno

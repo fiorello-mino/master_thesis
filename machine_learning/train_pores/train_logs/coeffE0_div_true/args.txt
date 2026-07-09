@@ -21,7 +21,7 @@ extract_param 	 : 	 False
 gifs 	 : 	 True 
 graphics 	 : 	 True 
 hidden 	 : 	 2 
-id 	 : 	 coeffE0 
+id 	 : 	 coeffE0_div_true 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
@@ -29,12 +29,12 @@ massW 	 : 	 0.0
 nocrop 	 : 	 True 
 nogifs 	 : 	 False 
 nographics 	 : 	 False 
-noise_reg 	 : 	 0.0125 
+noise_reg 	 : 	 0.0 
 nproc 	 : 	 4 
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 ['circular', 'reflect'] 
-paths 	 : 	 {'master': 'train_logs/coeffE0', 'model': 'train_logs/coeffE0/model', 'png': 'train_logs/coeffE0/pngs', 'gif': 'train_logs/coeffE0/gifs', 'lossplot': 'train_logs/coeffE0/lossplot.png', 'trainloss': 'train_logs/coeffE0/train_loss.txt', 'validloss': 'train_logs/coeffE0/valid_loss.txt', 'vtk': None, 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/coeffE0_div_true', 'model': 'train_logs/coeffE0_div_true/model', 'png': 'train_logs/coeffE0_div_true/pngs', 'gif': 'train_logs/coeffE0_div_true/gifs', 'lossplot': 'train_logs/coeffE0_div_true/lossplot.png', 'trainloss': 'train_logs/coeffE0_div_true/train_loss.txt', 'validloss': 'train_logs/coeffE0_div_true/valid_loss.txt', 'vtk': None, 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 48 
 reflection 	 : 	 True 
