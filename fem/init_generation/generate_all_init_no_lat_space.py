@@ -282,5 +282,5 @@ def main():
     print(f"\nCSV scritto in: {csv_path}")
 
 
-if __name__ == \"__main__\":
+if __name__ == "__main__":
     main()
