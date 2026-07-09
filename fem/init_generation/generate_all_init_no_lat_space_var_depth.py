@@ -15,6 +15,11 @@ DEPTH_RATIO_MAX = 20.0
 N_PORES_MIN = 1
 N_PORES_MAX = 7
 
+SHOULDER_RATIO = 0.5
+# SHOULDER_RATIO = 1.0  -> spalle uguali al gap interno
+# SHOULDER_RATIO = 0.5  -> spalle larghe metà del gap interno
+# SHOULDER_RATIO = 2.0  -> spalle larghe il doppio del gap interno
+
 
 def load_pore2d(path: Path) -> str:
     if not path.is_file():
@@ -77,7 +82,6 @@ def generate_all_pores(
     width_max: float,
 ):
     L = x_max - x_min
-    x_mid = 0.5 * (x_min + x_max)
 
     k_spacing_sampled = random.uniform(K_SPACING_MIN, K_SPACING_MAX)
 
@@ -94,19 +98,52 @@ def generate_all_pores(
         w_max_final = min(w_target, width_max)
         w = max(4 * epsilon, w_max_final)
 
-        span_target = L - 10 * epsilon
-        g = span_target / n_pores - w
+        if n_pores == 1:
+            success = w > 0 and w <= L
+            if success:
+                x_center = 0.5 * (x_min + x_max)
 
-        success = w > 0 and g >= 0
+                blocks = []
+                pore_depth_ratios = []
+                pore_depths = []
+
+                depth_ratio_i = random.uniform(DEPTH_RATIO_MIN, DEPTH_RATIO_MAX)
+                Ly_i = 2 * depth_ratio_i * w
+                Ly_i = min(max(Ly_i, height_min), height_max)
+
+                block_i = generate_pore_rectangle(1, (w, Ly_i), x_center, y_center)
+                blocks.append(block_i)
+
+                pore_depth_ratios.append(depth_ratio_i)
+                pore_depths.append(0.5 * Ly_i - 0.1 * factor)
+
+                return (
+                    "\n".join(blocks),
+                    n_pores,
+                    k_spacing_sampled,
+                    0.0,
+                    w,
+                    pore_depth_ratios,
+                    pore_depths,
+                )
+
+            n_pores -= 1
+            continue
+
+        denom_spacing = (n_pores - 1) + 2.0 * SHOULDER_RATIO
+        s = (L - n_pores * w) / denom_spacing
+
+        left_margin = SHOULDER_RATIO * s
+        right_margin = SHOULDER_RATIO * s
+
+        success = w > 0 and s >= 0 and left_margin >= 0 and right_margin >= 0
 
         if success:
-            d_c = w + g
-            block_total = n_pores * d_c
-            margin = g / 2.0
-            first_center = x_mid - block_total / 2.0 + margin + w / 2.0
+            d_c = w + s
+            first_center = x_min + left_margin + 0.5 * w
             x_centers = [first_center + i * d_c for i in range(n_pores)]
 
-            k_spacing_real = g / w
+            k_spacing_real = s / w
 
             blocks = []
             pore_depth_ratios = []
@@ -205,6 +242,7 @@ def generate_phi_block(
         "pore_width": w,
         "pore_depth_ratios": pore_depth_ratios,
         "pore_depths": pore_depths,
+        "shoulder_ratio": SHOULDER_RATIO,
     }
 
     return "\n".join(lines), meta
@@ -234,6 +272,7 @@ def build_csv_row(tag: str, meta: dict, output_dir: str):
         "k_spacing_sampled": meta["k_spacing_sampled"],
         "k_spacing_real": meta["k_spacing_real"],
         "pore_width": meta["pore_width"],
+        "shoulder_ratio": meta["shoulder_ratio"],
         "output_dir": output_dir,
     }
 
@@ -268,6 +307,7 @@ def main():
         "k_spacing_sampled",
         "k_spacing_real",
         "pore_width",
+        "shoulder_ratio",
     ]
 
     for i in range(1, N_PORES_MAX + 1):
@@ -304,7 +344,8 @@ def main():
                 f"Creato {out_path} | "
                 f"n_pores={meta['n_pores']} | "
                 f"k_sampled={meta['k_spacing_sampled']:.4f}, "
-                f"k_real={meta['k_spacing_real']:.4f} | "
+                f"k_real={meta['k_spacing_real']:.4f}, "
+                f"shoulder_ratio={meta['shoulder_ratio']:.4f} | "
                 f"depths={[round(x, 4) for x in meta['pore_depths']]} | "
                 f"output={new_output_dir}"
             )
