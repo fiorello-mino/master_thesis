@@ -279,7 +279,7 @@ def main():
                 f"output={new_output_dir}"
             )
 
-    print(f\"\\nCSV scritto in: {csv_path}\")
+    print(f"\\nCSV scritto in: {csv_path}\")
 
 
 if __name__ == \"__main__\":
