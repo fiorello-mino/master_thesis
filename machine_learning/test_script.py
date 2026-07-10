@@ -495,7 +495,7 @@ def write_evo_file(
             "# 1: time | 2: MAE | 3: MSE | 4: avg_True | 5: avg_Pred | "
             "6: min_True | 7: min_Pred | 8: max_True | 9: max_Pred | "
             "10: E_True | 11: E_Pred "
-            "12: mass_True | 13: mass_Pred\n
+            "12: mass_True | 13: mass_Pred\n"
         )
 
         for t in range(jump):
