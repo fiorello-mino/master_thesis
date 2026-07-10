@@ -20,7 +20,7 @@ PROJECT_ROOT = Path("/home/fiorello/CRANE_bc")
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-TRAIN_LOGS_ROOT = Path("/home/machine_learning/train_pores/train_logs")
+TRAIN_LOGS_ROOT = Path("/home/fiorello/master_thesis/machine_learning/train_pores/train_logs")
 
 from src.classes import ConvGRU
 from src.utils import seq2npy, seq2png_treaded, seq2vtk
