@@ -394,6 +394,31 @@ def grad_2D(phi: np.ndarray, dx: float, grad_x: np.ndarray, grad_y: np.ndarray):
 
             grad_x[y, x] = (phi[y, x_right] - phi[y, x_left]) * dx2_inv
             grad_y[y, x] = (phi[y_up, x] - phi[y_down, x]) * dx2_inv
+            
+
+@njit(fastmath=True)
+def grad_2D_neumann_along_y(phi: np.ndarray, dx, grad_x: np.ndarray, grad_y: np.ndarray):
+    """
+    Calcola il gradiente del campo scalare 2D su griglia uniforme con BC di Neumann lungo y
+    e periodicità in y usando schema delle differenze centrate.
+    """
+    
+    ny, nx = phi.shape
+    dx2_inv = 1.0 / (2.0 * dx)
+    
+    for y in range(ny):
+        for x in range(nx):
+            xl = (x - 1) % nx
+            xr = (x + 1) % nx
+            
+            grad_x[y, x] = (phi[y, xr] - phi[y, xl]) * dx2_inv
+            
+            # Bordi superiore e inferiore
+            if y == 0 or y == ny - 1:
+                grad_y[y, x] = 0.0
+            # Punti interni
+            else:
+                grad_y[y, x] = (phi[y+1, x] - phi[y-1, x]) * dx2_inv
 
 
 @njit(fastmath=True)
@@ -418,7 +443,7 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
     gy = np.empty_like(phi)
 
     w_field(phi, epsilon, w_local)
-    grad_2D(phi, dx, gx, gy)
+    grad_2D_neumann_along_y(phi, dx, gx, gy)
 
     total_E = 0.0
     for y in range(ny):
@@ -469,7 +494,8 @@ def write_evo_file(
         file_evo.write(
             "# 1: time | 2: MAE | 3: MSE | 4: avg_True | 5: avg_Pred | "
             "6: min_True | 7: min_Pred | 8: max_True | 9: max_Pred | "
-            "10: E_True | 11: E_Pred\n"
+            "10: E_True | 11: E_Pred "
+            "12: mass_True | 13: mass_Pred\n
         )
 
         for t in range(jump):
@@ -477,12 +503,14 @@ def write_evo_file(
             true_2d = true[0, 0, :, :]
 
             e_true = total_free_energy(true_2d, epsilon, dx)
+            mass_true = true_2d.sum(axis=(-1,-2))* dx**2
             time = (t + starting_frame) * dt * steps_per_save
 
             file_evo.write(
                 f"{time}\tnan\tnan\t{true.mean()}\tnan\t"
                 f"{true.min()}\tnan\t{true.max()}\tnan\t"
-                f"{e_true}\tnan\n"
+                f"{e_true}\tnan"
+                f"{mass_true}\tnan\n"
             )
 
         for t in range(jump, pred_sequence.shape[1]):
@@ -495,13 +523,16 @@ def write_evo_file(
 
             e_true = total_free_energy(true_2d, epsilon, dx)
             e_pred = total_free_energy(pred_2d, epsilon, dx)
+            mass_true = true_2d.sum(axis=(-1,-2))* dx**2
+            mass_pred = pred_2d.sum(axis=(-1,-2))* dx**2
             time = (t + starting_frame) * dt * steps_per_save
 
             file_evo.write(
                 f"{time}\t{np.abs(diff).mean()}\t{np.square(diff).mean()}\t"
                 f"{true.mean()}\t{pred.mean()}\t"
                 f"{true.min()}\t{pred.min()}\t{true.max()}\t{pred.max()}\t"
-                f"{e_true}\t{e_pred}\n"
+                f"{e_true}\t{e_pred}\t"
+                f"{mass_true}\t{mass_pred}\n"
             )
 
 
@@ -530,6 +561,7 @@ def save_png_outputs(
         true_sequence[:, ::delta_png, ...].cpu(),
         name="snap",
         args=args_true,
+        delta=1
     )
 
     args_pred = SimpleNamespace(
@@ -543,6 +575,7 @@ def save_png_outputs(
         pred_sequence[:, ::delta_png, ...].cpu(),
         name="snap",
         args=args_pred,
+        delta=1
     )
 
     args_diff = SimpleNamespace(
@@ -557,6 +590,7 @@ def save_png_outputs(
         pred_sequence[:, ::delta_png, ...].cpu() - true_sequence[:, ::delta_png, ...].cpu(),
         name="snap",
         args=args_diff,
+        delta=1
     )
 
 
