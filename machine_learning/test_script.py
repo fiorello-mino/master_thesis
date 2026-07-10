@@ -454,6 +454,9 @@ def total_free_energy(phi: np.ndarray, epsilon: float, dx: float) -> float:
 
     return total_E * dx2
 
+@njit(fastmath=True)
+def compute_mass(phi: np.ndarray, dx: float):
+    return np.sum(phi, axis=(-1,-2)) * dx**2
 
 def compute_timestep_metrics(
     pred_sequence: torch.Tensor,
@@ -503,13 +506,13 @@ def write_evo_file(
             true_2d = true[0, 0, :, :]
 
             e_true = total_free_energy(true_2d, epsilon, dx)
-            mass_true = true_2d.sum(axis=(-1,-2))* dx**2
+            mass_true = compute_mass(true_2d, dx)
             time = (t + starting_frame) * dt * steps_per_save
 
             file_evo.write(
                 f"{time}\tnan\tnan\t{true.mean()}\tnan\t"
                 f"{true.min()}\tnan\t{true.max()}\tnan\t"
-                f"{e_true}\tnan"
+                f"{e_true}\tnan\t"
                 f"{mass_true}\tnan\n"
             )
 
@@ -523,8 +526,8 @@ def write_evo_file(
 
             e_true = total_free_energy(true_2d, epsilon, dx)
             e_pred = total_free_energy(pred_2d, epsilon, dx)
-            mass_true = true_2d.sum(axis=(-1,-2))* dx**2
-            mass_pred = pred_2d.sum(axis=(-1,-2))* dx**2
+            mass_true = compute_mass(true_2d, dx)
+            mass_pred = compute_mass(pred_2d, dx)
             time = (t + starting_frame) * dt * steps_per_save
 
             file_evo.write(
