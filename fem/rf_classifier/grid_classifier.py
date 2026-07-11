@@ -3,8 +3,8 @@ import csv
 
 from pore_evolution_classifier import count_blue_domains
 
-INPUT_CSV = Path("/home/fiorello/master_thesis/fem/grid_data.csv")
-VTU_ROOT = Path("/scratch/fiorello/mesoEvo_install_seq/dataset_pores_grid")
+INPUT_CSV = Path("/home/fiorello/init_files/test/pores_periodic_var_depth/summary.csv")
+VTU_ROOT = Path("/scratch/fiorello/data_test/pores_periodic_var_depth_vtu")
 FINAL_VTU_NAME = "surf_20.0.vtu"
 
 
@@ -30,7 +30,7 @@ def main():
         raise RuntimeError("Il CSV input è vuoto.")
 
     # aggiungi colonne se non ci sono già
-    extra_cols = ["final_vtu", "n_bubbles", "status"]
+    extra_cols = ["n_bubbles", "status"]
     fieldnames = original_fieldnames[:]
     for col in extra_cols:
         if col not in fieldnames:
@@ -42,11 +42,9 @@ def main():
         try:
             vtu_path = find_final_vtu_from_tag(tag)
             n_bubbles = count_blue_domains(vtu_path)
-            row["final_vtu"] = str(vtu_path)
             row["n_bubbles"] = int(n_bubbles)
             row["status"] = "ok"
         except Exception as e:
-            row["final_vtu"] = str(VTU_ROOT / str(tag).strip() / FINAL_VTU_NAME)
             row["n_bubbles"] = ""
             row["status"] = f"error: {e}"
 
