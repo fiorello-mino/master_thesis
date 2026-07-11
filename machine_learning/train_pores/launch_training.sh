@@ -13,10 +13,10 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--weightd 0e-5 \
 	--train_set 'train_set.txt' \
 	--valid_set 'valid_set.txt' \
-	--id 'coeffE5e-4' \
+	--id 'coeffE1e-3_hl3' \
 	--logfreq 1 \
 	--kernel_size 5 \
-	--hidden 2 \
+	--hidden 3 \
 	--channels 16 \
 	--divergence \
 	--nproc 4 \
@@ -26,7 +26,7 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--reflection \
 	--noise_reg 0.0 \
 	--massW 0.0 \
-	--coeffE 5e-4 \
+	--coeffE 1e-3 \
 	--coeffG 0e-2 \
         --eps 0.024739583333333334 \
 	--dx 0.014960629921259843 \
