@@ -23,7 +23,7 @@ Thumbs.db
 # --- Output di simulazioni / grafici ---
 #external_test/
 test_dataset_100_64/
-test/
+#test/
 gifs/
 model/
 pngs/
