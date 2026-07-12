@@ -24,15 +24,15 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--subseq_max 49 \
 	--reflection \
 	--noise_reg 0.0125 \
-	--dual \
 	--divergence \
 	--rotation90 \
 	--massW 0.0 \
-	--coeffE 0e-1 \
+	--coeffE 1e-1 \
 	--coeffG 0.0 \
         --eps 0.078125 \
 	--dx 0.015873015873 \
 	--ramp \
 	--ramp_length 48
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
+	#--dual \
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/bc_y2/model/epoch_20.pt'
