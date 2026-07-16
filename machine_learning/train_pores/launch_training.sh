@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--weightd 0e-5 \
 	--train_set 'train_set.txt' \
 	--valid_set 'valid_set.txt' \
-	--id 'coeffE1e-3_hl3' \
+	--id 'coeffE1e-3_hl3_reload_random' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -31,9 +31,9 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
         --eps 0.024739583333333334 \
 	--dx 0.014960629921259843 \
 	--ramp \
-	--ramp_length 48
+	--ramp_length 48 \
+	--reload_model '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/random/model/epoch_483.pt'
 	#--conservative \
-	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_mod/train_logs/coeffE1e-1/model/epoch_476.pt'
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/bc_y2/model/epoch_20.pt'
 	#--dual \
 	#--rotation90 \
