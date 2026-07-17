@@ -13,7 +13,7 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--weightd 0e-5 \
 	--train_set 'train_set.txt' \
 	--valid_set 'valid_set.txt' \
-	--id 'coeffE1e-3_hl3_reload_random' \
+	--id 'coeffE1e-3_coeffG3e-3_hl3_reload_random' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -27,7 +27,7 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--noise_reg 0.0 \
 	--massW 0.0 \
 	--coeffE 1e-3 \
-	--coeffG 0e-2 \
+	--coeffG 3e-3 \
         --eps 0.024739583333333334 \
 	--dx 0.014960629921259843 \
 	--ramp \

@@ -5,20 +5,20 @@ import re
 
 GLOB_DIR = Path("/data/fiorello/pores/ext_test/ext_test_var_depth")
 MODEL_DIR = "coeffE1e-3_hl3_reload_random"
-N_FOLDERS = 1
+N_FOLDERS = 100
 
-NPY_IDX = 150
+NPY_IDX = 190
 DT = 0.1
 
 output_txt = GLOB_DIR / MODEL_DIR / "nearest_npy.txt"
 
 
-def find_pred_npy(path: Path, npy_idx: int, dt: float) -> np.ndarray:
+def find_pred_npy(path: Path, npy_idx: int) -> np.ndarray:
     pred_dir = path / "pred_npy"
     if not pred_dir.is_dir():
         raise FileNotFoundError(f"La cartella pred_npy non esiste: {pred_dir}")
 
-    pred_npy = pred_dir / f"surf_{(npy_idx * dt):.1f}.npy"
+    pred_npy = pred_dir / f"snap_{npy_idx}.npy"
     if not pred_npy.is_file():
         raise FileNotFoundError(f"Il file npy non esiste: {pred_npy}")
 
@@ -66,7 +66,7 @@ def main() -> None:
             if not folder.is_dir():
                 raise FileNotFoundError(f"La cartella {folder} non esiste.")
 
-            pred_npy = find_pred_npy(folder, NPY_IDX, DT)
+            pred_npy = find_pred_npy(folder, NPY_IDX)
             nearest_file, nearest_npy, mae, t_diff = find_nearest_npy(folder, pred_npy, NPY_IDX, DT)
 
             f.write(
