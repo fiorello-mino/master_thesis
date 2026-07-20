@@ -3,7 +3,6 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from numba import njit
-from tqdm import tqdm
 
 PROJECT_ROOT = Path("/home/fiorello/CRANE_bc")
 if str(PROJECT_ROOT) not in sys.path:
@@ -155,7 +154,7 @@ def process_folder(
     pred_dir = folder / "pred_npy"
 
     pred_bin_dir = folder / "pred_bin_npy"
-    pred_png_dir = folder / "pred_bin_png"
+    pred_png_dir = folder / "pred_png_bin"
     diff_png_dir = folder / "diff_bin_png"
 
     pred_bin_dir.mkdir(exist_ok=True)
@@ -177,12 +176,7 @@ def process_folder(
             "10: E_True | 11: E_PredBin | 12: mass_True | 13: mass_PredBin\n"
         )
 
-        for t in tqdm(
-            range(N_NPY),
-            desc=f"{folder.name}",
-            leave=False,
-            unit="frame"
-        ):
+        for t in range(N_NPY):
             true_2d = load_true_frame(true_dir, t)
             pred_2d_bin = load_pred_bin_frame(pred_dir, t)
 
@@ -256,7 +250,7 @@ def main() -> None:
             "# 1: id | 2: maxMAE | 3: maxMSE | 4: overallMAE | 5: overallMSE\n"
         )
 
-        for folder_idx in tqdm(range(N_FOLDERS), desc="Folders", unit="folder"):
+        for folder_idx in range(N_FOLDERS):
             folder = root_dir / f"{folder_idx:03d}"
 
             if not folder.is_dir():
