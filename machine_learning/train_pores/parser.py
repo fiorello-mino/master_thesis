@@ -427,6 +427,13 @@ class TrainingParser( GeneralParser ):
             )
         
         self.parser.add_argument(
+            '--dy',
+            type        = float,
+            default     = 0.015625,
+            help        = 'dx value from Cahn-Hilliard solver'
+            )
+        
+        self.parser.add_argument(
             '--coeffE',
             type        = float,
             default     = 1e-2,
@@ -438,6 +445,27 @@ class TrainingParser( GeneralParser ):
             type        = float,
             default     = 1e-6,
             help        = 'Coefficient of the bulk gradient penalty term in the loss function'
+            )
+        
+        self.parser.add_argument(
+            '--coeffPDE',
+            type        = float,
+            default     = 1e-6,
+            help        = 'Coefficient of the PDE penalty term in the loss function'
+            )
+        
+        self.parser.add_argument(
+            '--dt',
+            type        = float,
+            default     = 1e-6,
+            help        = 'dt of the simulation'
+            )
+        
+        self.parser.add_argument(
+            '--mobility',
+            type        = float,
+            default     = 1e-6,
+            help        = 'Coefficient of the surface mobility'
             )
         
         
