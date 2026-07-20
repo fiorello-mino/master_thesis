@@ -14,7 +14,7 @@ from sklearn.metrics import (
     classification_report,
 )
 
-CSV_PATH = Path("grid_data.csv")
+CSV_PATH = Path("../csv/grid_data.csv")
 
 df = pd.read_csv(CSV_PATH)
 
