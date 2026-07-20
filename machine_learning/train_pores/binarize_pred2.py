@@ -13,7 +13,6 @@ GLOB_DIR = Path("/data/fiorello/pores/ext_test/ext_test_var_depth")
 MODEL_DIR = "coeffE1e-3_coeffG3e-4_hl3_reload_random"
 N_FOLDERS = 100
 N_NPY = 201
-THRESHOLD = 0.5
 DELTA_PNG = 1
 
 EPSILON = 0.024739583333333336
@@ -22,6 +21,9 @@ DT = 0.1
 STEPS_PER_SAVE = 1
 STARTING_FRAME = 0
 JUMP = 0
+
+THRESHOLD_LOW = 0.45
+THRESHOLD_HIGH = 0.55
 
 
 @njit(fastmath=True)
@@ -93,10 +95,18 @@ def compute_mass(phi: np.ndarray, dx: float) -> float:
     return mass * dx**2
 
 
-def bin_keep_half(arr: np.ndarray, threshold: float = THRESHOLD) -> np.ndarray:
+def rotate_180(arr: np.ndarray) -> np.ndarray:
+    return np.rot90(arr, 2)
+
+
+def bin_with_band(
+    arr: np.ndarray,
+    threshold_low: float = THRESHOLD_LOW,
+    threshold_high: float = THRESHOLD_HIGH
+) -> np.ndarray:
     out = arr.copy()
-    out[arr > threshold] = 1
-    out[arr < threshold] = 0
+    out[arr > threshold_high] = 1
+    out[arr < threshold_low] = 0
     return out
 
 
@@ -110,6 +120,7 @@ def load_true_frame(true_dir: Path, i: int) -> np.ndarray:
             f"Atteso array 2D dopo squeeze in {file_path}, trovato shape {arr.shape}"
         )
 
+    arr = rotate_180(arr)
     return arr
 
 
@@ -123,7 +134,9 @@ def load_pred_bin_frame(pred_dir: Path, i: int) -> np.ndarray:
             f"Atteso array 2D dopo squeeze in {file_path}, trovato shape {arr.shape}"
         )
 
-    return bin_keep_half(arr)
+    arr = rotate_180(arr)
+    arr = bin_with_band(arr)
+    return arr
 
 
 def save_frame_png(
@@ -154,7 +167,7 @@ def process_folder(
     pred_dir = folder / "pred_npy"
 
     pred_bin_dir = folder / "pred_bin_npy"
-    pred_png_dir = folder / "pred_png_bin"
+    pred_png_dir = folder / "pred_bin_png"
     diff_png_dir = folder / "diff_bin_png"
 
     pred_bin_dir.mkdir(exist_ok=True)
