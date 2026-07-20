@@ -95,8 +95,8 @@ def compute_mass(phi: np.ndarray, dx: float) -> float:
     return mass * dx**2
 
 
-def rotate_180(arr: np.ndarray) -> np.ndarray:
-    return np.rot90(arr, 2)
+def flip_vertical(arr: np.ndarray) -> np.ndarray:
+    return np.flipud(arr)
 
 
 def bin_with_band(
@@ -120,7 +120,7 @@ def load_true_frame(true_dir: Path, i: int) -> np.ndarray:
             f"Atteso array 2D dopo squeeze in {file_path}, trovato shape {arr.shape}"
         )
 
-    arr = rotate_180(arr)
+    arr = flip_vertical(arr)
     return arr
 
 
@@ -134,7 +134,7 @@ def load_pred_bin_frame(pred_dir: Path, i: int) -> np.ndarray:
             f"Atteso array 2D dopo squeeze in {file_path}, trovato shape {arr.shape}"
         )
 
-    arr = rotate_180(arr)
+    arr = flip_vertical(arr)
     arr = bin_with_band(arr)
     return arr
 
