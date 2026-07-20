@@ -232,14 +232,18 @@ def save_pred_bin_npy(
         np.save(out_path, pred_sequence_bin[i])
 
 
-def save_png_outputs_bin(
+def save_png_outputs_bin_and_diff(
     kk_path: Path,
-    pred_sequence_bin: np.ndarray,
+    true_sequence: np.ndarray,        # (T, H, W) continuo
+    pred_sequence_bin: np.ndarray,    # (T, H, W) binarizzato
     delta_png: int
 ) -> None:
-    pred_dir = kk_path / "pred_png_bin"
+    pred_dir = kk_path / "pred_bin_png"
+    diff_dir = kk_path / "diff_bin_png"
     pred_dir.mkdir(exist_ok=True)
+    diff_dir.mkdir(exist_ok=True)
 
+    # pred_png_bin
     args_pred = SimpleNamespace(
         nproc=4,
         cmap="RdBu_r",
@@ -247,11 +251,28 @@ def save_png_outputs_bin(
         vmin=0.0,
         vmax=1.0,
     )
-
     seq2png_treaded(
         pred_sequence_bin[None, ::delta_png, None, :, :],
         name="snap",
         args=args_pred,
+        delta=1
+    )
+
+    # diff_bin_png: pred_bin - true_raw
+    args_diff = SimpleNamespace(
+        nproc=4,
+        cmap="bwr",
+        clim=[-1.0, 1.0],
+        vmin=-1.0,
+        vmax=1.0,
+        paths={"png": str(diff_dir)},
+    )
+
+    diff_seq = pred_sequence_bin - true_sequence  # (T, H, W)
+    seq2png_treaded(
+        diff_seq[None, ::delta_png, None, :, :],
+        name="snap",
+        args=args_diff,
         delta=1
     )
 
@@ -306,8 +327,9 @@ def main() -> None:
                 pred_sequence_bin=pred_seq_bin,
             )
 
-            save_png_outputs_bin(
+            save_png_outputs_bin_and_diff(
                 kk_path=folder,
+                true_sequence=true_seq,
                 pred_sequence_bin=pred_seq_bin,
                 delta_png=DELTA_PNG,
             )
