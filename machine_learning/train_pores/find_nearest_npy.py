@@ -79,7 +79,7 @@ def main() -> None:
             # tempo pred dal nome snap_X.npy
             t_pred = time_from_name(nearest_file)
 
-            t_diff = t_pred - t_true
+            t_diff = t_pred/10 - t_true
 
             f.write(
                 f"{folder_idx:03d}\t{true_file.name}\t{nearest_file.name}\t{mae}\t{t_diff}\n"
