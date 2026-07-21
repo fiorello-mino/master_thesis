@@ -7,53 +7,56 @@ GLOB_DIR = Path("/data/fiorello/pores/ext_test/ext_test_var_depth")
 MODEL_DIR = "coeffE1e-3_coeffG3e-4_hl3_reload_random"
 N_FOLDERS = 100
 
-NPY_IDX = 150
+NPY_IDX = 150  # -> surf_15.0.npy
 DT = 0.1
 
 output_txt = GLOB_DIR / MODEL_DIR / "nearest_npy.txt"
 
 
-def find_true_npy(path: Path, npy_idx: int) -> np.ndarray:
+def time_from_name(p: Path) -> float:
+    # funziona sia per surf_X.npy che per snap_X.npy
+    return float(re.search(r"(surf|snap)_(.+)\.npy$", p.name).group(2))
+
+
+def find_true_npy(path: Path, npy_idx: int) -> tuple[np.ndarray, Path]:
     true_dir = path / "true_npy"
     if not true_dir.is_dir():
         raise FileNotFoundError(f"La cartella true_npy non esiste: {true_dir}")
 
-    true_npy = true_dir / f"surf_{npy_idx/10:.1f}.npy"
-    #pred_npy = pred_dir / f"snap_{npy_idx}.npy"
+    true_npy = true_dir / f"surf_{npy_idx/10:.1f}.npy"  # es: surf_15.0.npy
     if not true_npy.is_file():
         raise FileNotFoundError(f"Il file npy non esiste: {true_npy}")
-    arr = np.load(true_npy)
-    return np.flipud(arr)
+
+    arr = np.load(true_npy)   # <-- true NON flippato
+    return arr, true_npy
 
 
-def time_from_name(p: Path) -> float:
-    return float(re.search(r"surf_(.+)\.npy$", p.name).group(1))
-
-
-def find_nearest_npy(path: Path, pred_npy: np.ndarray, pred_npy_idx: int, dt: float):
-    true_dir = path / "true_npy"
-    if not true_dir.is_dir():
-        raise FileNotFoundError(f"La cartella true_npy non esiste: {true_dir}")
+def find_nearest_pred(path: Path, true_npy: np.ndarray) -> tuple[Path, np.ndarray, float]:
+    pred_dir = path / "pred_bin_npy"
+    if not pred_dir.is_dir():
+        raise FileNotFoundError(f"La cartella pred_bin_npy non esiste: {pred_dir}")
 
     mae_min = float("inf")
     nearest_npy = None
-    nearest_idx = -1
     nearest_file = None
 
-    true_files = sorted(true_dir.glob("surf_*.npy"), key=time_from_name)
+    pred_files = sorted(pred_dir.glob("snap_*.npy"), key=time_from_name)
 
-    for idx, file in enumerate(true_files):
-        true_npy = np.load(file)
-        mae = np.mean(np.abs(pred_npy - true_npy))
+    for file in pred_files:
+        pred_arr = np.load(file)
+        pred_arr = np.flipud(pred_arr)  # <-- flip SOLO i pred
+
+        mae = np.mean(np.abs(pred_arr - true_npy))
 
         if mae < mae_min:
             mae_min = mae
-            nearest_npy = true_npy
-            nearest_idx = idx
+            nearest_npy = pred_arr
             nearest_file = file
 
-    t_diff = (pred_npy_idx * dt) - time_from_name(nearest_file)
-    return nearest_file, nearest_npy, mae_min, t_diff
+    if nearest_file is None:
+        raise RuntimeError(f"Nessun file snap_*.npy trovato in {pred_dir}")
+
+    return nearest_file, nearest_npy, mae_min
 
 
 def main() -> None:
@@ -67,11 +70,19 @@ def main() -> None:
             if not folder.is_dir():
                 raise FileNotFoundError(f"La cartella {folder} non esiste.")
 
-            pred_npy = find_pred_npy(folder, NPY_IDX)
-            nearest_file, nearest_npy, mae, t_diff = find_nearest_npy(folder, pred_npy, NPY_IDX, DT)
+            true_arr, true_file = find_true_npy(folder, NPY_IDX)
+
+            nearest_file, nearest_pred, mae = find_nearest_pred(folder, true_arr)
+
+            # tempo true: NPY_IDX * DT (es 150 * 0.1 = 15.0)
+            t_true = NPY_IDX * DT
+            # tempo pred dal nome snap_X.npy
+            t_pred = time_from_name(nearest_file)
+
+            t_diff = t_pred - t_true
 
             f.write(
-                f"{folder_idx:03d}\t{nearest_file}\t{mae}\t{t_diff}\n"
+                f"{folder_idx:03d}\t{true_file.name}\t{nearest_file.name}\t{mae}\t{t_diff}\n"
             )
 
 
