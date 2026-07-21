@@ -13,15 +13,16 @@ DT = 0.1
 output_txt = GLOB_DIR / MODEL_DIR / "nearest_npy.txt"
 
 
-def find_pred_npy(path: Path, npy_idx: int) -> np.ndarray:
-    pred_dir = path / "pred_bin_npy"
-    if not pred_dir.is_dir():
-        raise FileNotFoundError(f"La cartella pred_npy non esiste: {pred_dir}")
+def find_true_npy(path: Path, npy_idx: int) -> np.ndarray:
+    true_dir = path / "true_npy"
+    if not true_dir.is_dir():
+        raise FileNotFoundError(f"La cartella true_npy non esiste: {true_dir}")
 
-    pred_npy = pred_dir / f"snap_{npy_idx}.npy"
-    if not pred_npy.is_file():
-        raise FileNotFoundError(f"Il file npy non esiste: {pred_npy}")
-    arr = np.load(pred_npy)
+    true_npy = true_dir / f"surf_{npy_idx/10:.1f}.npy"
+    #pred_npy = pred_dir / f"snap_{npy_idx}.npy"
+    if not true_npy.is_file():
+        raise FileNotFoundError(f"Il file npy non esiste: {true_npy}")
+    arr = np.load(true_npy)
     return np.flipud(arr)
 
 
