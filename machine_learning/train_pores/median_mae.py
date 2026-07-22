@@ -1,9 +1,9 @@
 from pathlib import Path
 import numpy as np
 
-BASE_DIR = Path("/data/fiorello/pores/ext_test/ext_test_var_depth/coeffE1e-3_coeffG3e-4_hl3_reload_random")
-ERRORS_PATH = BASE_DIR / "errors_bin.txt"
-OUTPUT_PATH = BASE_DIR / "median_mae_bin.txt"
+BASE_DIR = Path("/data/fiorello/random/ext_test_64_2/lr5e-5_hl3_2_tr10")
+ERRORS_PATH = BASE_DIR / "errors.txt"
+OUTPUT_PATH = BASE_DIR / "median_mae.txt"
 
 
 def main() -> None:
