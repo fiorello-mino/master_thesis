@@ -11,7 +11,7 @@ set title 'Training and validation loss (semilogy) for all models'
 BaseDir = "/home/fiorello/master_thesis/machine_learning/train_pores/train_logs"
 
 # lista dei modelli (cartelle) da plottare
-Models = "coeffE1e-3_hl3 coeffE1e-3_hl3_reload_random coeffE1e-3_coeffG3e-4_hl3_reload_random coeffE1e-3_coeffG3e-4_hl3_reload_random_bin"
+Models = "coeffE1e-3_hl3 coeffE1e-3_hl3_reload_random coeffE1e-3_coeffG3e-4_hl3_reload_random"
 
 # stile colori, uno per modello
 set style line 1 lc rgb '#1f77b4' lw 2
