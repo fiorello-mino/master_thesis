@@ -1,7 +1,7 @@
 # gnuplot_lossplot_per_model.gnu
 
-BaseDir = "/home/fiorello/master_thesis/machine_learning/train_pores/train_logs"
-Models  = "coeffE1e-3_hl3 coeffE1e-3_hl3_reload_random coeffE1e-3_coeffG3e-4_hl3_reload_random"
+BaseDir = "/home/fiorello/master_thesis/machine_learning/train_mod/train_logs"
+Models  = "coeffE1e-1"
 
 set terminal pngcairo size 900,800 enhanced font ',12'
 
