@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 
-BASE_DIR = Path("/data/fiorello/random/ext_test_64_2/lr5e-5_hl3_2_tr10")
+BASE_DIR = Path("/data/fiorello/random/ext_test_64_2/coeffE1e-1")
 ERRORS_PATH = BASE_DIR / "errors.txt"
 OUTPUT_PATH = BASE_DIR / "median_mae.txt"
 
