@@ -4,11 +4,22 @@ import random
 import subprocess
 import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+
+# Permette di importare il package presente in src/cahn_hilliard.
+sys.path.insert(0, str(SRC_DIR))
+
 import cahn_hilliard.parameters as p
+
 
 N_RUNS = 50
 BASE_DIR = "/data/fiorello/dataset_mix"
 MAX_WORKERS = 25
+
 
 def save_params_txt(base_dir):
     lines = [
@@ -30,18 +41,21 @@ def save_params_txt(base_dir):
     ]
 
     txt_path = os.path.join(base_dir, "params.txt")
+
     with open(txt_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
+        f.write("\n".join(lines) + "\n")
+
 
 def run_single(i):
     run_dir = os.path.join(BASE_DIR, f"{i:03d}")
     done_file = os.path.join(run_dir, "0200.npy")
 
-    # se la run è completa, saltala
+    # Se la run è completa, saltala.
     if os.path.exists(done_file):
         return i, "SKIPPED", f"{done_file} already exists"
 
-    # se la cartella esiste ma 0200.npy manca, ricomincia da zero
+    # Se la cartella esiste ma la run è incompleta,
+    # ricomincia da zero.
     if os.path.exists(run_dir):
         shutil.rmtree(run_dir)
 
@@ -49,42 +63,78 @@ def run_single(i):
 
     seed = random.randint(0, 2**32 - 1)
 
+    main_script = PROJECT_ROOT / "scripts" / "main_mix.py"
+
     cmd = [
         sys.executable,
-        "scripts/main_mix.py",
-        "--seed", str(seed),
-        "--out_dir", run_dir,
+        str(main_script),
+        "--seed",
+        str(seed),
+        "--out_dir",
+        run_dir,
     ]
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = "src"
 
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    # Mantiene un eventuale PYTHONPATH già esistente
+    # e aggiunge la directory src.
+    old_pythonpath = env.get("PYTHONPATH", "")
+
+    env["PYTHONPATH"] = os.pathsep.join(
+        filter(None, [str(SRC_DIR), old_pythonpath])
+    )
+
+    result = subprocess.run(
+        cmd,
+        cwd=str(PROJECT_ROOT),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
 
     if result.returncode == 0:
-        return i, "OK", f"seed={seed}\n" + result.stdout.strip()
-    else:
-        return i, "ERROR", f"seed={seed}\n" + result.stderr.strip()
+        return i, "OK", f"seed={seed}\n{result.stdout.strip()}"
+
+    error_message = result.stderr.strip()
+
+    if result.stdout.strip():
+        error_message += (
+            f"\nSTDOUT:\n{result.stdout.strip()}"
+        )
+
+    return i, "ERROR", f"seed={seed}\n{error_message}"
+
 
 def main():
     os.makedirs(BASE_DIR, exist_ok=True)
     save_params_txt(BASE_DIR)
 
-    print(f"Lancio {N_RUNS} run in parallelo con MAX_WORKERS = {MAX_WORKERS}")
+    print(
+        f"Lancio {N_RUNS} run in parallelo "
+        f"con MAX_WORKERS = {MAX_WORKERS}"
+    )
 
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [executor.submit(run_single, i) for i in range(N_RUNS)]
+    with ProcessPoolExecutor(
+        max_workers=MAX_WORKERS
+    ) as executor:
+        futures = [
+            executor.submit(run_single, i)
+            for i in range(N_RUNS)
+        ]
 
         for future in as_completed(futures):
             run_id, status, message = future.result()
 
             if status == "OK":
                 print(f"[OK] run {run_id:03d}")
+
             elif status == "SKIPPED":
                 print(f"[SKIP] run {run_id:03d}")
+
             else:
                 print(f"[ERROR] run {run_id:03d}")
                 print(message)
+
 
 if __name__ == "__main__":
     main()
