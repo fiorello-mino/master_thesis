@@ -74,6 +74,7 @@ def evolve_ch_surf_mob_with_snapshots(
     epsilon: float,
     M0: float,
     dx: float,
+    dy: float.
     out_dir,
     live_plot: bool = False,
     cmap: str = "RdBu_r",
