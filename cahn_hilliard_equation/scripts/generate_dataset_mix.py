@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import cahn_hilliard.parameters as p
 
 N_RUNS = 50
-BASE_DIR = "/scratch/fiorello/dataset_mix"
+BASE_DIR = "/data/fiorello/dataset_mix"
 MAX_WORKERS = 25
 
 def save_params_txt(base_dir):
