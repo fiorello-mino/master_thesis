@@ -3,14 +3,14 @@
 from pathlib import Path
 
 # Numero di box in x, y e z
-NX = 20
-NY = 20
-NZ = 140
+NX = 10
+NY = 10
+NZ = 70
 
 # Dimensione dei box lungo x, y e z
-BOX_SIZE_X = 0.02
-BOX_SIZE_Y = 0.02
-BOX_SIZE_Z = 0.02
+BOX_SIZE_X = 0.04
+BOX_SIZE_Y = 0.04
+BOX_SIZE_Z = 0.04
 
 # Valore assegnato a ogni box
 BOX_VALUE = 1
