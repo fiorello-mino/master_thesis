@@ -3,19 +3,19 @@
 from pathlib import Path
 
 # Numero di box in x, y e z
-NX = 10
-NY = 10
-NZ = 70
+NX = 8
+NY = 8
+NZ = 56
 
 # Dimensione dei box lungo x, y e z
-BOX_SIZE_X = 0.04
-BOX_SIZE_Y = 0.04
-BOX_SIZE_Z = 0.04
+BOX_SIZE_X = 0.05
+BOX_SIZE_Y = 0.05
+BOX_SIZE_Z = 0.05
 
 # Valore assegnato a ogni box
 BOX_VALUE = 1
 
-OUTPUT_FILE = Path("poro_04_04_28.bt3")
+OUTPUT_FILE = Path("pore_04_04_28_C.bt3")
 
 
 def generate_bt3():
