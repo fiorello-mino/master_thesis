@@ -9,5 +9,5 @@ print("Forma:", surf.shape)
 #surf_norm = (surf - surf.min()) / (surf.max() - surf.min())
 
 # Salva come PNG (scala di grigi)
-plt.imsave('surf_000.png', surf_norm, cmap='gray')
+plt.imsave('surf_000.png', cmap='RdBu_r')
 print("Salvato: surf_000.png")
