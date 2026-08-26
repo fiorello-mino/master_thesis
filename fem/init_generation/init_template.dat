@@ -128,8 +128,8 @@ surf->output->AMDiS format:                             0
 #	MESH
 surf->space->mesh:					surfMesh
 
-surfMesh->macro file name:				./macro/macro.stand.per.2d_rescaled_1.9
-surfMesh->periodic file:				./macro/macro.stand.per
+surfMesh->macro file name:				./macro/pores_deep.per.2d
+surfMesh->periodic file:				./macro/pores_deep.per
 
 surfMesh->refinement->initial->coarsen allow:         1
 surfMesh->refinement->initial->repartition allow:     1

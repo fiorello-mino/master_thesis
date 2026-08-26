@@ -167,7 +167,7 @@ def generate_phi_block(
     n_pores = random.randint(1, 7)
     y_center = 0.0
     height_min = L_base_y + 0.2 * factor
-    height_max = 2*2.0 * factor - 2 * epsilon
+    height_max = 2*2.0 * factor - 6 * epsilon
 
     base_block = generate_base_rectangle(base_sides, base_center)
 
@@ -261,7 +261,7 @@ def main():
         writer.writeheader()
 
         for idx in range(N_FILES):
-            tag = f"{idx:03d}"
+            tag = f"{idx:02d}"
             distance, depth = random_case()
 
             new_phi_block, meta = generate_phi_block(
