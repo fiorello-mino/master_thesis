@@ -179,7 +179,7 @@ surf->space->estimator[3]:				0
 #	ADAPT
 surf->adapt->timestep:					2.5e-3
 surf->adapt->start time:				0.0
-surf->adapt->end time:					20.0
+surf->adapt->end time:					40.0
 
 
 surf->adapt->strategy:					3  % 0=explicit, 1=implicit, 3=energy controlled
