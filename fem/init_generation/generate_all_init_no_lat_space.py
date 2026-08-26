@@ -4,7 +4,7 @@ import csv
 
 
 factor = 1.9
-N_FILES = 100
+N_FILES = 20
 
 K_SPACING_MIN = 1.5
 K_SPACING_MAX = 8.0
@@ -12,7 +12,7 @@ K_SPACING_MAX = 8.0
 DEPTH_RATIO_MIN = 4.0
 DEPTH_RATIO_MAX = 20.0
 
-SHOULDER_RATIO = 1.0
+SHOULDER_RATIO = 0.5
 # SHOULDER_RATIO = 1.0  -> spalle uguali al gap interno
 # SHOULDER_RATIO = 0.5  -> spalle larghe metà del gap interno
 # SHOULDER_RATIO = 2.0  -> spalle larghe il doppio del gap interno
@@ -258,7 +258,7 @@ def main():
     path = Path("init_template.dat")
     before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/pores_periodic/")
+    out_dir = Path("/home/fiorello/init_files/pores_periodic0.5/")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out_dir / "summary.csv"
@@ -292,7 +292,7 @@ def main():
 
             new_text = before + new_phi_block + after
 
-            new_output_dir = f"/scratch/fiorello/data_test/pores_periodic_vtu/{tag}"
+            new_output_dir = f"/scratch/fiorello/data_test/pores_periodic0.5_vtu/{tag}"
             new_text = replace_output_directory(new_text, new_output_dir)
 
             filename = f"{tag}.dat"
