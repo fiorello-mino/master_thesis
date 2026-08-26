@@ -260,7 +260,7 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        for idx in range(N_FILES):
+        for idx in range(0,20):
             tag = f"{idx:02d}"
             distance, depth = random_case()
 

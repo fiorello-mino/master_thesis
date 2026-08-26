@@ -293,7 +293,7 @@ def main():
     path = Path("init_template.dat")
     before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/pores_periodic0.5_var_depth")
+    out_dir = Path("/home/fiorello/init_files/test/pores_periodic0.5_var_depth")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out_dir / "summary.csv"
@@ -320,7 +320,7 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        for idx in range(N_FILES):
+        for idx in range(20,40):
             tag = f"{idx:03d}"
 
             new_phi_block, meta = generate_phi_block(

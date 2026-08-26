@@ -258,12 +258,12 @@ def main():
     path = Path("init_template.dat")
     before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/pores_periodic0.5/")
+    out_dir = Path("/home/fiorello/init_files/data_test/pores_periodic0.5/")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out_dir / "summary.csv"
 
-    epsilon = 0.0130208 * factor
+    epsilon = 0.0130208 * 2
     width_max = 0.055 * factor
 
     fieldnames = [
@@ -282,7 +282,7 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        for idx in range(N_FILES):
+        for idx in range(0,20):
             tag = f"{idx:03d}"
 
             new_phi_block, meta = generate_phi_block(
