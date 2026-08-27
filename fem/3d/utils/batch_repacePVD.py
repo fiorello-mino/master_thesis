@@ -12,7 +12,7 @@ from pathlib import Path
 #           PARAMETRI
 # ===============================
 root_folder = Path('/home/fiorello/prova_pp')
-filename_root = 'surf' 
+filename_root = 'surf_' 
 dt = 0.005
 delete_files = 'y'  # 'y' per cancellare, 'n' per mantenere
 # ===============================
@@ -41,6 +41,10 @@ for i, folder in enumerate(subfolders):
             capture_output=True,
             timeout=300
         )
+        
+        print(f"  Return code: {proc.returncode}")
+        print(f"  stdout:\n{proc.stdout}")
+        print(f"  stderr:\n{proc.stderr}")
         
         if proc.returncode == 0:
             print("OK")
