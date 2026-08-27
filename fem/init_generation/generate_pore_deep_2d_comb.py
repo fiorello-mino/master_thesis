@@ -233,7 +233,7 @@ def replace_output_directory(text: str, new_output_dir: str) -> str:
 
 
 def main():
-    path = Path("init_template.dat")
+    path = Path("init_template_deep.dat")
     before, _, after = get_phi_block(path)
 
     out_dir = Path("/home/fiorello/init_files/test/pores_deep")
@@ -273,7 +273,7 @@ def main():
 
             new_text = before + new_phi_block + after
 
-            new_output_dir = f"/scratch/fiorello/data_test/pores_deep/{tag}"
+            new_output_dir = f"/scratch/fiorello/data_test/pores_deep_vtu/{tag}"
             new_text = replace_output_directory(new_text, new_output_dir)
 
             filename = f"{tag}.dat"

@@ -258,7 +258,7 @@ def main():
     path = Path("init_template.dat")
     before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/data_test/pores_periodic0.5/")
+    out_dir = Path("/home/fiorello/init_files/test/pores_periodic0.5/")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out_dir / "summary.csv"

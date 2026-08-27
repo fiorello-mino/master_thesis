@@ -4,9 +4,9 @@ from pathlib import Path
 
 # Definizione delle cartelle sorgente e destinazione
 folders_map = {
-    '/scratch/fiorello/data_test/data_test_npy': range(0, 10),      
-    '/scratch/fiorello/data_test/pores_periodic_npy': range(10, 20),
-    '/scratch/fiorello/data_test/pores_periodic_var_depth_npy': range(20, 30) 
+    '/scratch/fiorello/data_test/pores_periodic0.5_npy': range(0, 20),
+    '/scratch/fiorello/data_test/pores_periodic0.5_var_depth_npy': range(20, 40), 
+    '/scratch/fiorello/data_test/data_test_npy': range(40, 60),      
 }
 
 output_base = Path('/scratch/fiorello/data_test/pores_replicated_npy')
@@ -33,4 +33,4 @@ for source_folder, indices in folders_map.items():
         
         print(f"Processato: {src_path} -> {dst_path} (forma: {surf.shape} -> {surf_tiled.shape})")
 
-print("\nFatto! Tutte le cartelle 000-029 create")
+print("\nFatto! Tutte le cartelle 000-059 create")
