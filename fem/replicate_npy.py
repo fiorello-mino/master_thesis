@@ -28,7 +28,7 @@ for source_folder, indices in folders_map.items():
         
         # Carica, replica e salva
         surf = np.load(src_path)
-        surf_tiled = np.tile(surf, (1, 10))  # 10 repliche lungo x (asse 0)
+        surf_tiled = np.tile(surf, (1, 8))  # 10 repliche lungo x (asse 0)
         np.save(dst_path, surf_tiled)
         
         print(f"Processato: {src_path} -> {dst_path} (forma: {surf.shape} -> {surf_tiled.shape})")
