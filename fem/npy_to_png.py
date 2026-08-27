@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Carica il file allungato
-surf = np.load('/scratch/fiorello/data_test/pores_deep_npy/01/surf_40.0.npy')
+surf = np.load('/scratch/fiorello/data_test/pores_deep_npy/02/surf_40.0.npy')
 print("Forma:", surf.shape)
 
 # Normalizza tra 0 e 1 per il salvataggio come immagine
