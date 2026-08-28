@@ -1,17 +1,16 @@
 from pathlib import Path
 import numpy as np
-base_dir = Path("/data/fiorello/pores/dataset_pores_ext_test/pores_periodic_var_depth_npy")
-#base_dir = Path("/data/fiorello/pores/dataset_pores_npy")
-output_txt = "/data/fiorello/pores/ext_test/ext_test_var_depth/test_set.txt"
+base_dir = Path("/data/fiorello/pores/dataset_pores_ext_test/pores_deep_npy")
+output_txt = "/data/fiorello/pores/ext_test/ext_test_pores_deep/test_set.txt"
 
-n_folders = 100
+n_folders = 20
 
 with open(output_txt, "w") as f:
     for folder_idx in range(n_folders):
         folder = base_dir / f"{folder_idx:03d}"
         start_idx = 0
         # indice → tempo in step da 0.1
-        times = [start_idx * 0.1 + k * 0.1 for k in range(201)]
+        times = [start_idx * 0.1 + k * 0.1 for k in range(601)]
         # formattazione 1 decimale: 0.0, 0.1, ..., 20.0
         file_names = [f"surf_{t:.1f}.npy" for t in times]
 
