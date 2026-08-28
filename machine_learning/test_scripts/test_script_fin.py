@@ -1,20 +1,15 @@
 # <<< import external modules <<<
 from sys import path
-path.append('/home/fiorello/CRANE_bc/')
+path.append('/home/fiorello/CRANE/')
 
 import numpy as np
-
 import torch
 import torch.nn as nn
-#from torchvision import transforms
-
+from pathlib import Path
 import os
-
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-
 from typing import Union
-
 from PIL import Image
 # === import external modules ===
 
@@ -25,16 +20,16 @@ from src.utils import *
 
 
 
-NUM_PNG : int = 100
-DELTA_PNG       : int   = 1  # output frequency for png. DO NOT SET TO < 1
+NUM_PNG     : int = 100
+DELTA_PNG   : int   = 10  # output frequency for png. DO NOT SET TO < 1
 
-NUM_NPY : int = 100
+NUM_NPY     : int = 100
 DELTA_NPY   : int = 10
 
 PRED_FRAMES : int = 200    # 0 for predicting same frames of true sequence
 
 # <<< SCRIPT VARIABLES <<<
-MODEL_PATH      : str   = '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/coeffE1e-3_coeffG3e-4_hl3_reload_random/model/epoch_454.pt' # model
+LOG_DIR         = Path('/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/coeffE1e-3_coeffG3e-4_hl3_reload_random') # model
 SEQUENCE_TABLE  : str   = '/data/fiorello/pores/ext_test/ext_test_var_depth/test_set.txt'
 OUTPUT_FOLDER   : str   = '/data/fiorello/test_del_test'#' # output folder name
 CUDA            : bool  = True # cuda control variable
@@ -162,6 +157,49 @@ class OutputMan():
         fileSTAT.write("{seq_name} {self.maxMae} {self.maxMse} {self.sumMae/self.niter} {self.sumMse/self.niter} {self.maxSymDiff} {self.sumSymDiff/self.niter}\n")
 
 
+def best_model_path(log_dir_name: str) -> Path:
+    valid_loss_file = LOG_DIR / "valid_loss.txt"
+
+    if not LOG_DIR.is_dir():
+        raise FileNotFoundError(f"La cartella di log non esiste: {log_dir_path}")
+
+    if not valid_loss_file.is_file():
+        raise FileNotFoundError(f"File valid_loss.txt non trovato: {valid_loss_file}")
+
+    min_loss = None
+    best_epoch = None
+
+    with valid_loss_file.open("r") as f:
+        for epoch, line in enumerate(f):
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                value = float(line)
+            except ValueError as e:
+                raise ValueError(
+                    f"Valore non valido in {valid_loss_file} alla riga {epoch + 1}: {line!r}"
+                ) from e
+
+            if min_loss is None or value < min_loss:
+                min_loss = value
+                best_epoch = epoch
+
+    if best_epoch is None:
+        raise ValueError(f"Il file {valid_loss_file} è vuoto o contiene solo righe vuote")
+
+    model_path = LOG_DIR / "model" / f"epoch_{best_epoch}.pt"
+
+    if not model_path.is_file():
+        raise FileNotFoundError(f"Il miglior modello atteso non esiste: {model_path}")
+
+    print(f"Best model trovato in {LOG_DIR}: \n 
+          epoch={best_epoch}, valid_loss={min_loss}")
+
+    return model_path
+
+
 def main() -> None:
     '''
     This is the main function entrypoint
@@ -209,7 +247,8 @@ def main() -> None:
         )
 
     # reload model
-    model.load_state_dict( torch.load(MODEL_PATH, map_location=device) )
+    model_path = best_model_path(LOG_DIR)
+    model.load_state_dict( torch.load(model_path, map_location=device) )
     model.eval() # better safe than sorry
 
     model.to(device)
