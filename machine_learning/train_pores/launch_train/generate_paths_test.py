@@ -7,7 +7,7 @@ n_folders = 20
 
 with open(output_txt, "w") as f:
     for folder_idx in range(n_folders):
-        folder = base_dir / f"{folder_idx:03d}"
+        folder = base_dir / f"{folder_idx:02d}"
         start_idx = 0
         # indice → tempo in step da 0.1
         times = [start_idx * 0.1 + k * 0.1 for k in range(601)]
