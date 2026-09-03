@@ -14,7 +14,7 @@ print("Min:", grid.min())
 print("Max:", grid.max())
 
 # Vista YZ a x=x_max.
-yz = grid[-1, :, :]
+yz = grid[0, :, :]
 
 print("Min YZ:", yz.min())
 print("Max YZ:", yz.max())
