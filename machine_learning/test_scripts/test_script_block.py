@@ -1,6 +1,6 @@
 # <<< import external modules <<<
 from sys import path
-path.append('/home/fiorello/CRANE/')
+path.append('/home/fiorello/CRANE_bc/')
 
 import os
 import shutil
@@ -42,18 +42,18 @@ DELTA_NPY   : int = 10
 #   The sequence table contains exactly MIN_SEQ input frames per sequence.
 #   The model generates PRED_FRAMES future frames autoregressively.
 #   No ground-truth metrics can be computed.
-PRED_FRAMES : int = 0
+PRED_FRAMES : int = 200
 # === PREDICTION VARIABLES ===
 
 
 # <<< SCRIPT VARIABLES <<<
 LOG_DIR = Path(
-    '/home/fiorello/master_thesis/machine_learning/train/train_logs/'
-    'lr5e-5_hl3_2_tr10'
+    '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/'
+    'coeffE1e-3_coeffG3e-4_hl3_reload_random'
 )
 
-SEQUENCE_TABLE  : str = '/data/fiorello/testtest/test_set_random.txt'
-OUTPUT_FOLDER   : str = '/data/fiorello/test_del_test2'
+SEQUENCE_TABLE  : str = '/data/fiorello/pores/ext_test/ext_test_pores_x8/test_set.txt'
+OUTPUT_FOLDER   : str = '/data/fiorello/pores/ext_test/ext_test_pores_x8/coeffE1e-3_coeffG3e-4_hl3_reload_random'
 CUDA            : bool = True
 # === SCRIPT VARIABLES ===
 
@@ -66,7 +66,7 @@ INPUT_CHANNELS  : int = 1
 OUTPUT_CHANNELS : int = 1
 HIDDEN_CHANNELS : int = 16
 KERNEL_SIZE     : int = 5
-PADDING_MODE    : str = 'circular'
+PADDING_MODE    : str = ['circular', 'reflect']
 
 SEPARABLE       : bool = False
 BIAS            : bool = True
