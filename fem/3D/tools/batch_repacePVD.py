@@ -31,7 +31,7 @@ for i, folder in enumerate(subfolders):
     
     os.chdir(folder)
     
-    cmd = [sys.executable, '/home/fiorello/master_thesis/fem/3d/utils/repacePVD.py', filename_root]
+    cmd = [sys.executable, '/home/fiorello/master_thesis/fem/3D/tools/repacePVD.py', filename_root]
     
     try:
         proc = subprocess.run(

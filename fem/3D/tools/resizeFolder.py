@@ -13,28 +13,20 @@ from scipy.interpolate import griddata
 # CONFIGURAZIONE
 # ============================================================
 
-# Root contenente le cartelle iso2_R..._H..._P...
-INPUT_ROOT = Path("/home/fiorello/iso_P09")
-
-# Root di output: la struttura delle cartelle viene mantenuta.
+INPUT_ROOT = Path("/archive/roberto/poresAMDIS/iso_P09")
 OUTPUT_ROOT = Path("/data/fiorello/iso_P09")
 
-# Campo scalare salvato nei point_data dei VTU.
 FIELD_NAME = "phi"
 
-# "nearest" per test veloci; "linear" per il dataset finale.
-METHOD = "nearest"
+METHOD = "linear"
 
-# Se False, un .npy già esistente non viene ricalcolato.
-OVERWRITE = False
+OVERWRITE = True
 
-# Geometria fisica nominale in x e y.
 LX = 0.45
 LY = 0.45
 EPS = 0.1
 
 # Passo isotropo richiesto nella griglia finale.
-# Con LX=LY=0.45 e H=1.0, 1.1, ..., 4.9 è esattamente compatibile.
 VOXEL_SIZE = 0.0125
 
 # Tolleranza per le coordinate floating point lette dal VTU.
