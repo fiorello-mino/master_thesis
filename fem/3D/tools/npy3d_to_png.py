@@ -24,6 +24,7 @@ def save_yz_at_xmax(
 
     # x = x_max -> ultima slice lungo x
     x_index = nx - 1
+    x_index = 0
     slice_yz = grid[x_index, :, :]  # shape (ny, nz)
 
     if vmin is None:

@@ -14,7 +14,7 @@ Lz          : float = 6.0
 
 offset      : float = 0.5   # da z=0.5 a z=0
 height      : float = 1.0   # poro da z=0 a z=-1
-total_height = offset + height + 2*eps
+total_height = height + 4*eps
 
 Nx     = round(( TOTAL_POINTS * Lx / total_height ) ** (1/3))
 Nz     = round(( TOTAL_POINTS * total_height * total_height / Lx ) ** (1/3))
@@ -75,7 +75,7 @@ def vtu_to_npy_pore(
     
 if __name__ == "__main__":
     
-    vtu_path = Path("/archive/roberto/poreAMDIS/iso_P09/iso2_R0.2_H1.0_P0.9/surf_0.000000.vtu")
+    vtu_path = Path("/home/fiorello/surf_0.000000.vtu")
     out_path = Path("/home/fiorello/output.npy")
 
     field_name = "phi"  # nome del campo nel VTU, es. "pressure", "phi", ecc.
