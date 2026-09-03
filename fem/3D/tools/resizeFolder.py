@@ -13,39 +13,56 @@ from scipy.interpolate import griddata
 # CONFIGURAZIONE
 # ============================================================
 
-INPUT_ROOT = Path("/archive/roberto/poreAMDIS/iso_P09")
+# Root contenente le cartelle iso2_R..._H..._P...
+INPUT_ROOT = Path("/home/fiorello/iso_P09")
+
+# Root di output: la struttura delle cartelle viene mantenuta.
 OUTPUT_ROOT = Path("/data/fiorello/iso_P09")
 
+# Campo scalare salvato nei point_data dei VTU.
 FIELD_NAME = "phi"
-METHOD = "nearest"  # "linear" per output finale; "nearest" per un test rapido
+
+# "nearest" per test veloci; "linear" per il dataset finale.
+METHOD = "nearest"
+
+# Se False, un .npy già esistente non viene ricalcolato.
 OVERWRITE = False
 
-# Geometria fisica
+# Geometria fisica nominale in x e y.
 LX = 0.45
 LY = 0.45
 EPS = 0.1
 
-# Passo isotropo della griglia finale.
-# È compatibile esattamente con LX=LY=0.45 e H=1.0, 1.1, ..., 4.9.
-DX_SIZE = 0.0125
+# Passo isotropo richiesto nella griglia finale.
+# Con LX=LY=0.45 e H=1.0, 1.1, ..., 4.9 è esattamente compatibile.
+VOXEL_SIZE = 0.0125
 
-# Tutte le cartelle di input sono ricercate ricorsivamente;
-# i file da convertire devono chiamarsi surf_*.vtu.
+# Tolleranza per le coordinate floating point lette dal VTU.
+# Esempio reale: 0.4499999988079 invece di 0.45.
+GEOMETRY_TOL = 1e-6
+
 VTU_GLOB = "surf_*.vtu"
 ERROR_LOG_NAME = "conversion_errors.log"
 
 
 # ============================================================
-# GEOMETRIA E PATH
+# FUNZIONI AUSILIARIE
 # ============================================================
 
 def extract_height(folder_name: str) -> float:
-    """Estrae H dal nome della cartella, ad esempio H1.0 -> 1.0."""
+    """
+    Estrae l'altezza dal nome della cartella.
+
+    Esempio:
+        iso2_R0.2_H1.0_P0.9 -> 1.0
+    """
     match = re.search(r"(?:^|_)H(-?\d+(?:\.\d+)?)", folder_name)
+
     if match is None:
         raise ValueError(
-            f"Impossibile trovare il parametro H nel nome: {folder_name}"
+            f"Impossibile estrarre il parametro H dal nome: {folder_name}"
         )
+
     return float(match.group(1))
 
 
@@ -57,62 +74,85 @@ def make_isotropic_grid(
     y_max: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Costruisce la griglia del crop con passo isotropo DX_SIZE.
+    Costruisce una griglia finale isotropa, con endpoint inclusi.
 
-    Regione mantenuta:
-        x in [x_min, x_max]
-        y in [y_min, y_max]
-        z in [-height - 2*EPS, 2*EPS]
+    Regione z salvata:
+        [-height - 2*EPS, 2*EPS]
 
-    La geometria nominale richiede:
-        x_max - x_min = LX
-        y_max - y_min = LY
+    La sua estensione è:
+        height + 4*EPS
 
-    Gli endpoint sono inclusi; quindi N = intervalli + 1.
+    La shape della griglia è:
+        (Nx, Ny, Nz)
+
+    e verifica dx = dy = dz = VOXEL_SIZE.
     """
     mesh_lx = x_max - x_min
     mesh_ly = y_max - y_min
 
-    if not np.isclose(mesh_lx, LX, rtol=0.0, atol=1e-8):
+    # Il VTU può memorizzare 0.45 come 0.4499999988: è normale.
+    if not np.isclose(mesh_lx, LX, rtol=0.0, atol=GEOMETRY_TOL):
         raise ValueError(
-            f"Estensione x del VTU inattesa: {mesh_lx:.12g}; attesa {LX:.12g}"
+            f"Estensione x del VTU inattesa: {mesh_lx:.12g}; "
+            f"attesa {LX:.12g}"
         )
-    if not np.isclose(mesh_ly, LY, rtol=0.0, atol=1e-8):
+
+    if not np.isclose(mesh_ly, LY, rtol=0.0, atol=GEOMETRY_TOL):
         raise ValueError(
-            f"Estensione y del VTU inattesa: {mesh_ly:.12g}; attesa {LY:.12g}"
+            f"Estensione y del VTU inattesa: {mesh_ly:.12g}; "
+            f"attesa {LY:.12g}"
         )
 
     z_start = -height - 2.0 * EPS
     z_end = 2.0 * EPS
-    crop_height = z_end - z_start  # height + 4*EPS
+    crop_height = z_end - z_start
 
-    n_intervals_x = int(round(LX / DX_SIZE))
-    n_intervals_y = int(round(LY / DX_SIZE))
-    n_intervals_z = int(round(crop_height / DX_SIZE))
+    # Numero di intervalli, non di punti. Gli endpoint sono inclusi,
+    # quindi il numero di punti finale sarà n_intervals + 1.
+    n_intervals_x = int(round(LX / VOXEL_SIZE))
+    n_intervals_y = int(round(LY / VOXEL_SIZE))
+    n_intervals_z = int(round(crop_height / VOXEL_SIZE))
 
-    # Impedisce arrotondamenti silenziosi: la griglia deve essere isotropa
-    # esattamente, non solo circa.
-    if not np.isclose(n_intervals_x * DX_SIZE, LX, rtol=0.0, atol=1e-12):
-        raise ValueError(f"LX={LX} non è multiplo di DX_SIZE={DX_SIZE}")
-    if not np.isclose(n_intervals_y * DX_SIZE, LY, rtol=0.0, atol=1e-12):
-        raise ValueError(f"LY={LY} non è multiplo di DX_SIZE={DX_SIZE}")
+    # Non accetta una griglia solo approssimativamente isotropa.
     if not np.isclose(
-        n_intervals_z * DX_SIZE,
+        n_intervals_x * VOXEL_SIZE,
+        LX,
+        rtol=0.0,
+        atol=1e-12,
+    ):
+        raise ValueError(
+            f"LX={LX} non è multiplo esatto di VOXEL_SIZE={VOXEL_SIZE}"
+        )
+
+    if not np.isclose(
+        n_intervals_y * VOXEL_SIZE,
+        LY,
+        rtol=0.0,
+        atol=1e-12,
+    ):
+        raise ValueError(
+            f"LY={LY} non è multiplo esatto di VOXEL_SIZE={VOXEL_SIZE}"
+        )
+
+    if not np.isclose(
+        n_intervals_z * VOXEL_SIZE,
         crop_height,
         rtol=0.0,
         atol=1e-12,
     ):
         raise ValueError(
-            f"height={height}: crop_height={crop_height} non è multiplo "
-            f"di DX_SIZE={DX_SIZE}"
+            f"Per height={height}, crop_height={crop_height} non è "
+            f"multiplo esatto di VOXEL_SIZE={VOXEL_SIZE}"
         )
 
     nx = n_intervals_x + 1
     ny = n_intervals_y + 1
     nz = n_intervals_z + 1
 
-    xi = np.linspace(x_min, x_max, nx, dtype=np.float64)
-    yi = np.linspace(y_min, y_max, ny, dtype=np.float64)
+    # Usiamo gli estremi nominali LX e LY, non x_max/y_max direttamente,
+    # per evitare che l'errore floating point del VTU alteri dx/dy.
+    xi = np.linspace(x_min, x_min + LX, nx, dtype=np.float64)
+    yi = np.linspace(y_min, y_min + LY, ny, dtype=np.float64)
     zi = np.linspace(z_start, z_end, nz, dtype=np.float64)
 
     dx = xi[1] - xi[0]
@@ -120,13 +160,14 @@ def make_isotropic_grid(
     dz = zi[1] - zi[0]
 
     if not (
-        np.isclose(dx, DX_SIZE, rtol=0.0, atol=1e-12)
-        and np.isclose(dy, DX_SIZE, rtol=0.0, atol=1e-12)
-        and np.isclose(dz, DX_SIZE, rtol=0.0, atol=1e-12)
+        np.isclose(dx, VOXEL_SIZE, rtol=0.0, atol=1e-12)
+        and np.isclose(dy, VOXEL_SIZE, rtol=0.0, atol=1e-12)
+        and np.isclose(dz, VOXEL_SIZE, rtol=0.0, atol=1e-12)
     ):
         raise RuntimeError(
-            f"Griglia non isotropa: dx={dx}, dy={dy}, dz={dz}, "
-            f"target={DX_SIZE}"
+            "La griglia finale non è isotropa: "
+            f"dx={dx:.16g}, dy={dy:.16g}, dz={dz:.16g}, "
+            f"target={VOXEL_SIZE:.16g}"
         )
 
     return xi, yi, zi
@@ -137,33 +178,33 @@ def make_query_points(
     yi: np.ndarray,
     zi: np.ndarray,
 ) -> np.ndarray:
-    """Restituisce i punti della griglia in ordine compatibile con reshape(nx, ny, nz)."""
+    """
+    Crea i punti della griglia in un ordine compatibile con:
+        values.reshape(len(xi), len(yi), len(zi))
+    """
     X, Y, Z = np.meshgrid(xi, yi, zi, indexing="ij")
     return np.column_stack((X.ravel(), Y.ravel(), Z.ravel()))
 
 
 def output_path_for(vtu_path: Path) -> Path:
-    """Mantiene la struttura relativa a INPUT_ROOT e sostituisce .vtu con .npy."""
-    return (OUTPUT_ROOT / vtu_path.relative_to(INPUT_ROOT)).with_suffix(".npy")
+    """Replica sotto OUTPUT_ROOT il percorso relativo del file VTU."""
+    relative = vtu_path.relative_to(INPUT_ROOT)
+    return (OUTPUT_ROOT / relative).with_suffix(".npy")
 
 
-# ============================================================
-# CONVERSIONE
-# ============================================================
-
-def convert_vtu_to_npy(
+def convert_one_vtu(
     vtu_path: Path,
     out_path: Path,
     query_points: np.ndarray,
     output_shape: tuple[int, int, int],
 ) -> None:
-    """Interpola il campo FIELD_NAME del VTU direttamente sulla griglia finale."""
+    """Legge un VTU, interpola phi e salva l'array (Nx, Ny, Nz) in float32."""
     mesh = pv.read(vtu_path)
 
     if FIELD_NAME not in mesh.point_data:
         raise KeyError(
             f"Campo '{FIELD_NAME}' non presente in {vtu_path}. "
-            f"Disponibili: {list(mesh.point_data.keys())}"
+            f"Campi disponibili: {list(mesh.point_data.keys())}"
         )
 
     points = np.asarray(mesh.points[:, :3], dtype=np.float64)
@@ -171,11 +212,14 @@ def convert_vtu_to_npy(
 
     if values.ndim != 1:
         raise ValueError(
-            f"Il campo '{FIELD_NAME}' deve essere scalare, ma ha shape {values.shape}"
+            f"Il campo '{FIELD_NAME}' deve essere scalare, "
+            f"ma ha shape {values.shape}"
         )
+
     if len(values) != len(points):
         raise ValueError(
-            f"Numero di valori ({len(values)}) diverso dal numero di punti ({len(points)})"
+            f"Numero valori ({len(values)}) diverso dal numero di punti "
+            f"({len(points)}) in {vtu_path}"
         )
 
     sampled = griddata(
@@ -199,27 +243,24 @@ def convert_vtu_to_npy(
     np.save(out_path, grid)
 
 
-# ============================================================
-# PROCESSAMENTO DI UNA CARTELLA / TRAIETTORIA
-# ============================================================
-
 def process_folder(folder_path: Path) -> tuple[int, int]:
     """
-    Processa tutti i surf_*.vtu contenuti direttamente in una cartella.
-    Restituisce (numero_convertiti, numero_saltati).
+    Converte tutti i surf_*.vtu presenti direttamente dentro folder_path.
+    Ritorna: (numero_convertiti, numero_saltati).
     """
     vtu_files = sorted(folder_path.glob(VTU_GLOB))
+
     if not vtu_files:
         return 0, 0
 
     height = extract_height(folder_path.name)
 
-    # Si legge il primo frame soltanto per ricavare gli estremi fisici in x/y.
-    reference_mesh = pv.read(vtu_files[0])
-    reference_points = np.asarray(reference_mesh.points[:, :3], dtype=np.float64)
+    # Il primo frame serve solo per conoscere origine ed estensione del mesh.
+    first_mesh = pv.read(vtu_files[0])
+    first_points = np.asarray(first_mesh.points[:, :3], dtype=np.float64)
 
-    x_min, y_min, z_min = reference_points.min(axis=0)
-    x_max, y_max, z_max = reference_points.max(axis=0)
+    x_min, y_min, z_min = first_points.min(axis=0)
+    x_max, y_max, z_max = first_points.max(axis=0)
 
     xi, yi, zi = make_isotropic_grid(
         height=height,
@@ -232,10 +273,11 @@ def process_folder(folder_path: Path) -> tuple[int, int]:
     z_start = float(zi[0])
     z_end = float(zi[-1])
 
-    if z_start < z_min - 1e-8 or z_end > z_max + 1e-8:
+    # Controllo che il crop richiesto sia nel dominio del VTU.
+    if z_start < z_min - GEOMETRY_TOL or z_end > z_max + GEOMETRY_TOL:
         raise ValueError(
-            f"Regione z richiesta [{z_start}, {z_end}] fuori dal dominio "
-            f"del primo VTU [{z_min}, {z_max}]"
+            f"Regione z richiesta [{z_start:.8f}, {z_end:.8f}] fuori "
+            f"dal dominio VTU [{z_min:.8f}, {z_max:.8f}]"
         )
 
     query_points = make_query_points(xi, yi, zi)
@@ -244,57 +286,60 @@ def process_folder(folder_path: Path) -> tuple[int, int]:
     output_folder = OUTPUT_ROOT / folder_path.relative_to(INPUT_ROOT)
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    # Metadata: viene creato una sola volta e documenta la geometria fisica.
+    # Salva le coordinate fisiche e i metadati una volta per traiettoria.
     metadata_path = output_folder / "grid_metadata.npz"
-    if not metadata_path.exists() or OVERWRITE:
+    if OVERWRITE or not metadata_path.exists():
         np.savez(
             metadata_path,
             xi=xi,
             yi=yi,
             zi=zi,
+            shape=np.array(output_shape, dtype=np.int32),
             height=np.float64(height),
             eps=np.float64(EPS),
-            voxel_size=np.float64(DX_SIZE),
+            voxel_size=np.float64(VOXEL_SIZE),
             dx=np.float64(xi[1] - xi[0]),
             dy=np.float64(yi[1] - yi[0]),
             dz=np.float64(zi[1] - zi[0]),
-            shape=np.array(output_shape, dtype=np.int32),
         )
 
     print("\n" + "=" * 72)
     print(f"Folder input : {folder_path}")
     print(f"Folder output: {output_folder}")
-    print(f"height       : {height}")
-    print(f"shape        : {output_shape}")
+    print(f"Height       : {height}")
+    print(f"Frame trovati: {len(vtu_files)}")
+    print(f"Shape output : {output_shape}")
     print(
-        f"spacing      : dx={xi[1] - xi[0]:.8f}, "
-        f"dy={yi[1] - yi[0]:.8f}, dz={zi[1] - zi[0]:.8f}"
+        "Spacing      : "
+        f"dx={xi[1] - xi[0]:.8f}, "
+        f"dy={yi[1] - yi[0]:.8f}, "
+        f"dz={zi[1] - zi[0]:.8f}"
     )
-    print(f"region z     : [{z_start:.8f}, {z_end:.8f}]")
-    print(f"frame trovati: {len(vtu_files)}")
+    print(f"Regione z    : [{z_start:.8f}, {z_end:.8f}]")
 
     converted = 0
     skipped = 0
 
-    for index, vtu_path in enumerate(vtu_files, start=1):
+    for i, vtu_path in enumerate(vtu_files, start=1):
         out_path = output_path_for(vtu_path)
 
         if out_path.exists() and not OVERWRITE:
-            print(f"[{index:04d}/{len(vtu_files):04d}] SKIP {out_path.name}")
+            print(f"[{i:04d}/{len(vtu_files):04d}] SKIP {out_path.name}")
             skipped += 1
             continue
 
         t0 = time.perf_counter()
-        convert_vtu_to_npy(
+
+        convert_one_vtu(
             vtu_path=vtu_path,
             out_path=out_path,
             query_points=query_points,
             output_shape=output_shape,
         )
-        elapsed = time.perf_counter() - t0
 
+        elapsed = time.perf_counter() - t0
         print(
-            f"[{index:04d}/{len(vtu_files):04d}] DONE {out_path.name} "
+            f"[{i:04d}/{len(vtu_files):04d}] DONE {out_path.name} "
             f"({elapsed:.2f} s)"
         )
         converted += 1
@@ -308,11 +353,11 @@ def process_folder(folder_path: Path) -> tuple[int, int]:
 
 def main() -> None:
     if not INPUT_ROOT.is_dir():
-        raise FileNotFoundError(f"INPUT_ROOT non trovata: {INPUT_ROOT}")
+        raise FileNotFoundError(f"Input root non trovata: {INPUT_ROOT}")
 
     OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
-    # Trova tutte le directory che contengono direttamente surf_*.vtu.
+    # Trova tutte le cartelle che contengono almeno un surf_*.vtu.
     folders = sorted({vtu_path.parent for vtu_path in INPUT_ROOT.rglob(VTU_GLOB)})
 
     if not folders:
@@ -324,7 +369,7 @@ def main() -> None:
     print(f"Output root: {OUTPUT_ROOT}")
     print(f"Campo      : {FIELD_NAME}")
     print(f"Metodo     : {METHOD}")
-    print(f"Voxel size : {DX_SIZE}")
+    print(f"Voxel size : {VOXEL_SIZE}")
     print(f"Cartelle   : {len(folders)}")
 
     total_converted = 0
