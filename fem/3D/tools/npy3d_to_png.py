@@ -1,79 +1,90 @@
 from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def save_yz_at_xmax(
-    npy_path,
-    out_png,
-    vmin=None,
-    vmax=None,
-    cmap="viridis",
-    aspect="equal",  # "equal" mantiene le proporzioni fisiche y-z
-):
-    """
-    Salva la vista YZ (piano y-z) a x = x_max di un array 3D salvato come .npy.
-    
-    npy_path: percorso del file .npy (array shape (nx, ny, nz))
-    out_png:  percorso del file PNG da salvare
-    aspect:   parametro aspect per imshow ("equal", "auto", o float)
-    """
-    grid = np.load(npy_path)
-    if grid.ndim != 3:
-        raise ValueError(f"L'array deve essere 3D, trovato ndim={grid.ndim}")
+npy_path = Path(
+    "/data/fiorello/iso_P09/"
+    "iso2_R0.2_H1.0_P0.9/"
+    "surf_0.000000.npy"
+)
 
-    nx, ny, nz = grid.shape
+metadata_path = Path(
+    "/data/fiorello/iso_P09/"
+    "iso2_R0.2_H1.0_P0.9/"
+    "grid_metadata.npz"
+)
 
-    print(grid.shape)
-    print(grid[0, :, 0])
+output_png = Path(
+    "/home/fiorello/pore_yz_xmax_correct.png"
+)
 
-    # x = x_max -> ultima slice lungo x
-    x_index = nx - 1
-    x_index = 0  # se vuoi x = 0, togli il commento e usa questo
-    slice_yz = grid[x_index, :, :]  # shape (ny, nz)
 
-    if vmin is None:
-        vmin = float(grid.min())
-    if vmax is None:
-        vmax = float(grid.max())
+grid = np.load(npy_path)
+metadata = np.load(metadata_path)
 
-    # Calcolo dimensioni figura in modo proporzionale a ny, nz
-    base_height = 6  # in pollici, puoi cambiare
-    aspect_ratio = ny / nz  # altezza / larghezza in pixel dell'array
-    figsize = (base_height / aspect_ratio, base_height)
+xi = metadata["xi"]
+yi = metadata["yi"]
+zi = metadata["zi"]
 
-    plt.figure(figsize=figsize)
-    im = plt.imshow(
-        slice_yz,
-        origin="lower",
-        aspect=aspect,
-        cmap=cmap,
-        vmin=vmin,
-        vmax=vmax,
+if grid.shape != (len(xi), len(yi), len(zi)):
+    raise ValueError(
+        f"Shape incompatibile:\n"
+        f"NPY: {grid.shape}\n"
+        f"Metadata: {(len(xi), len(yi), len(zi))}"
     )
-    plt.colorbar(im, label="valore")
-    plt.xlabel("y (index)")
-    plt.ylabel("z (index)")
-    plt.title(f"Vista YZ, x = x_max (idx={x_index})")
-    plt.tight_layout()
 
-    out_png = Path(out_png)
-    out_png.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(out_png, dpi=200)
-    plt.close()
+# x=x_max -> ultima slice lungo x.
+x_index = grid.shape[0] - 1
+slice_yz = grid[x_index, :, :]
 
-    print(f"Salvata vista YZ a x_max: {out_png}")
+print("Grid shape:", grid.shape)
+print("x-index:", x_index)
+print("x physical:", xi[x_index])
+print("phi min/max:", slice_yz.min(), slice_yz.max())
+print("zero fraction:", np.mean(slice_yz == 0.0))
 
+# slice_yz shape = (Ny, Nz)
+# Trasponendo:
+# slice_yz.T shape = (Nz, Ny)
+#
+# imshow:
+# asse orizzontale = y
+# asse verticale   = z
+image = slice_yz.T
 
-if __name__ == "__main__":
-    npy_path = Path("/data/fiorello/iso_P09/iso2_R0.2_H2.3_P0.9/surf_0.000000.npy")
-    out_png  = Path("/home/fiorello/pore_yz_xmax.png")
+extent = [
+    yi[0],
+    yi[-1],
+    zi[0],
+    zi[-1],
+]
 
-    save_yz_at_xmax(
-        npy_path=npy_path,
-        out_png=out_png,
-        vmin=0.0,
-        vmax=1.0,
-        cmap="coolwarm",
-        aspect="equal",  # mantiene proporzioni y-z
-    )
+fig, ax = plt.subplots(figsize=(7, 10))
+
+im = ax.imshow(
+    image,
+    origin="lower",
+    extent=extent,
+    aspect="equal",
+    cmap="coolwarm",
+    vmin=-1.0,
+    vmax=1.0,
+    interpolation="nearest",
+)
+
+colorbar = fig.colorbar(im, ax=ax)
+colorbar.set_label("phi")
+
+ax.set_xlabel("y")
+ax.set_ylabel("z")
+ax.set_title(f"Vista YZ a x = x_max = {xi[x_index]:.6f}")
+
+fig.tight_layout()
+
+output_png.parent.mkdir(parents=True, exist_ok=True)
+fig.savefig(output_png, dpi=200)
+plt.close(fig)
+
+print(f"Salvato: {output_png}")
