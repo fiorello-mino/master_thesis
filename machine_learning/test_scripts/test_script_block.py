@@ -23,12 +23,12 @@ from src.utils import *
 
 
 # <<< OUTPUT VARIABLES <<<
-NUM_PNG: int = 100
-DELTA_PNG: int = 1
+NUM_PNG     : int = 100
+DELTA_PNG   : int = 1
 # Do not set DELTA_PNG < 1 if PNG output is enabled.
 
-NUM_NPY: int = 100
-DELTA_NPY: int = 10
+NUM_NPY     : int = 100
+DELTA_NPY   : int = 10
 # === OUTPUT VARIABLES ===
 
 
@@ -42,39 +42,39 @@ DELTA_NPY: int = 10
 #   The sequence table contains exactly MIN_SEQ input frames per sequence.
 #   The model generates PRED_FRAMES future frames autoregressively.
 #   No ground-truth metrics can be computed.
-PRED_FRAMES: int = 0
+PRED_FRAMES : int = 0
 # === PREDICTION VARIABLES ===
 
 
 # <<< SCRIPT VARIABLES <<<
 LOG_DIR = Path(
-    '/home/fiorello/master_thesis/machine_learning/train/'
-    'train_logs/lr5e-5_hl3_2_tr10'
+    '/home/fiorello/master_thesis/machine_learning/train/train_logs/'
+    'lr5e-5_hl3_2_tr10'
 )
 
-SEQUENCE_TABLE: str = '/data/fiorello/testtest/test_set_random.txt'
-OUTPUT_FOLDER: str = '/data/fiorello/test_del_test2'
-CUDA: bool = True
+SEQUENCE_TABLE  : str = '/data/fiorello/testtest/test_set_random.txt'
+OUTPUT_FOLDER   : str = '/data/fiorello/test_del_test2'
+CUDA            : bool = True
 # === SCRIPT VARIABLES ===
 
 
 # <<< MODEL VARIABLES <<<
-MIN_SEQ: int = 1
+MIN_SEQ         : int = 1
 
-HIDDEN_UNITS: int = 3
-INPUT_CHANNELS: int = 1
-OUTPUT_CHANNELS: int = 1
-HIDDEN_CHANNELS: int = 16
-KERNEL_SIZE: int = 5
-PADDING_MODE: str = 'circular'
+HIDDEN_UNITS    : int = 3
+INPUT_CHANNELS  : int = 1
+OUTPUT_CHANNELS : int = 1
+HIDDEN_CHANNELS : int = 16
+KERNEL_SIZE     : int = 5
+PADDING_MODE    : str = 'circular'
 
-SEPARABLE: bool = False
-BIAS: bool = True
-DIVERGENCE: bool = True
-NUM_PARAMS: int = 0
-DROPOUT: bool = False
-DROPOUT_PROB: Union[float, None] = None
-CONSERVATIVE: bool = False
+SEPARABLE       : bool = False
+BIAS            : bool = True
+DIVERGENCE      : bool = True
+NUM_PARAMS      : int = 0
+DROPOUT         : bool = False
+DROPOUT_PROB    : Union[float, None] = None
+CONSERVATIVE    : bool = False
 # === MODEL VARIABLES ===
 
 
@@ -117,8 +117,8 @@ class OutputMan:
             (self.path / 'diff_png').mkdir()
 
             self.cmap = LinearSegmentedColormap.from_list(
-                'cwr',
-                ['cyan', 'white', 'red'],
+                'bwr',
+                ['blue', 'white', 'red'],
             )
 
         self.fileEVO = open(self.path / 'evo.txt', 'w')
