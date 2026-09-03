@@ -32,7 +32,7 @@ def save_yz_at_xmax(
     if vmax is None:
         vmax = float(grid.max())
 
-    plt.figure(figsize=(6, 5))
+    plt.figure(figsize=(9, 3))
     im = plt.imshow(
         slice_yz,
         origin="lower",
