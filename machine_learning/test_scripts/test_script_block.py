@@ -24,7 +24,8 @@ from src.utils import *
 
 # <<< OUTPUT VARIABLES <<<
 NUM_PNG: int = 100
-DELTA_PNG: int = 1      # Non impostare < 1 se vuoi produrre PNG.
+DELTA_PNG: int = 1
+# Do not set DELTA_PNG < 1 if PNG output is enabled.
 
 NUM_NPY: int = 100
 DELTA_NPY: int = 10
@@ -33,17 +34,15 @@ DELTA_NPY: int = 10
 
 # <<< PREDICTION VARIABLES <<<
 # PRED_FRAMES == 0:
-#   table con ground truth completo;
-#   predici fino a raggiungere la stessa lunghezza di trueSeq.
+#   The sequence table contains the complete ground truth.
+#   The model predicts from t=MIN_SEQ up to t=len(trueSeq)-1,
+#   then computes error metrics at every predicted timestep.
 #
 # PRED_FRAMES > 0:
-#   table con solo MIN_SEQ frame iniziali;
-#   genera PRED_FRAMES frame futuri senza metriche.
+#   The sequence table contains exactly MIN_SEQ input frames per sequence.
+#   The model generates PRED_FRAMES future frames autoregressively.
+#   No ground-truth metrics can be computed.
 PRED_FRAMES: int = 0
-
-# Scrive una riga in evo.txt una volta ogni FRAME_BLOCK frame.
-# Nota: il modello continua a predire ogni frame, anche se FRAME_BLOCK > 1.
-FRAME_BLOCK: int = 1
 # === PREDICTION VARIABLES ===
 
 
@@ -81,25 +80,23 @@ CONSERVATIVE: bool = False
 
 class CustomNameSpace:
     """
-    Dummy class, mantenuta per compatibilità con eventuali moduli CRANE.
+    Dummy class retained for compatibility with CRANE utilities,
+    if they require this interface.
     """
     pass
 
 
 class OutputMan:
     """
-    Gestisce gli output relativi a una singola sequenza.
+    Handles outputs for one sequence.
 
-    Casi gestiti da writeEVO:
-    - true != None, pred == None:
-      frame iniziale noto; non è una predizione e non entra nelle metriche.
+    `writeEVO()` supports:
+    - Initial frames: `true` is available, `pred=None`.
+    - Inference-only prediction: `true=None`, `pred` is available.
+    - Evaluation prediction: both `true` and `pred` are available.
 
-    - true == None, pred != None:
-      rollout puro senza ground truth; vengono salvati gli output, mentre
-      MAE/MSE/symDiff vengono scritti come NaN.
-
-    - true != None, pred != None:
-      rollout con truth disponibile; salva output e calcola metriche.
+    Only frames that have both `true` and `pred` contribute to
+    aggregate error statistics.
     """
 
     def __init__(
@@ -147,11 +144,10 @@ class OutputMan:
         self.maxSymDiff = 0.0
         self.sumSymDiff = 0.0
 
-        # Conta soltanto i frame con true e pred entrambi disponibili.
         self.niter_eval = 0
 
     def close(self) -> None:
-        """Chiude esplicitamente evo.txt."""
+        """Explicitly closes evo.txt."""
         if not self.fileEVO.closed:
             self.fileEVO.close()
 
@@ -160,7 +156,10 @@ class OutputMan:
 
     @staticmethod
     def savePNG(fname: Union[str, Path], phi: np.ndarray) -> None:
-        """Salva phi come PNG greyscale, dopo clipping in [0, 1]."""
+        """
+        Saves a phase field as an 8-bit grayscale PNG after clipping
+        its values to the interval [0, 1].
+        """
         phiclip = np.clip(phi, 0.0, 1.0)
         pix = (phiclip * 255.0).astype(np.uint8)
 
@@ -169,9 +168,7 @@ class OutputMan:
 
     def _save_prediction(self, time: int, pred: np.ndarray) -> None:
         """
-        Salva NPY e/o PNG della predizione secondo i rispettivi delta.
-
-        Questa funzione viene chiamata solo se pred è un ndarray valido.
+        Saves prediction outputs according to DELTA_NPY and DELTA_PNG.
         """
         if self.deltaNPY > 0 and time % self.deltaNPY == 0:
             np.save(
@@ -192,7 +189,7 @@ class OutputMan:
         pred: np.ndarray,
     ) -> None:
         """
-        Salva una mappa colorata pred - true, solo se il ground truth esiste.
+        Saves the clipped signed difference pred - true as a PNG.
         """
         if self.deltaPNG <= 0:
             return
@@ -217,19 +214,17 @@ class OutputMan:
         pred: Union[np.ndarray, None] = None,
     ) -> None:
         """
-        Registra un frame nel file evo.txt.
+        Writes a single frame entry to evo.txt.
 
-        Non tenta mai di salvare un PNG o NPY se pred è None.
+        A prediction is saved only when `pred` exists. Thus, initial
+        frames for which `pred=None` can never trigger `np.clip(None, ...)`.
         """
         if true is None and pred is None:
             raise ValueError(
-                'writeEVO: true e pred non possono essere entrambi None.'
+                'writeEVO: both true and pred cannot be None.'
             )
 
-        # =============================================================
-        # Caso A: frame iniziale fornito al modello.
-        # È noto, ma non è generato dal modello.
-        # =============================================================
+        # Initial/input frame: true exists, pred does not.
         if pred is None:
             self.fileEVO.write(
                 f'{time}\t'
@@ -246,12 +241,10 @@ class OutputMan:
             self.fileEVO.flush()
             return
 
-        # Da qui in poi pred è sempre un ndarray valido.
+        # A real prediction exists: save it according to output cadence.
         self._save_prediction(time, pred)
 
-        # =============================================================
-        # Caso B: rollout senza ground truth.
-        # =============================================================
+        # Prediction-only mode: no corresponding ground truth.
         if true is None:
             self.fileEVO.write(
                 f'{time}\t'
@@ -268,16 +261,11 @@ class OutputMan:
             self.fileEVO.flush()
             return
 
-        # =============================================================
-        # Caso C: rollout con ground truth.
-        # =============================================================
+        # Ground truth and prediction both exist: compute statistics.
         difference = pred - true
 
         mae = np.abs(difference).mean()
         mse = (difference ** 2.0).mean()
-
-        # Per phi binaria o quasi-binarizzata:
-        # mismatch medio tra i due campi dopo round a 0/1.
         symDiff = np.abs(pred.round() - true.round()).mean()
 
         self.maxMae = max(self.maxMae, mae)
@@ -308,12 +296,9 @@ class OutputMan:
 
     def writeSTAT(self, fileSTAT, seq_name: str) -> None:
         """
-        Scrive le statistiche aggregate in errors.txt.
+        Writes sequence-level aggregate statistics.
 
-        Le medie sono calcolate solo sui frame per cui è disponibile
-        una predizione e il rispettivo ground truth.
-
-        In inference-only mode, niter_eval=0 e tutte le metriche sono NaN.
+        If no ground-truth/prediction pair exists, all metrics are NaN.
         """
         if self.niter_eval == 0:
             fileSTAT.write(
@@ -340,11 +325,7 @@ class OutputMan:
 
 def best_model_path(log_dir_path: Union[str, Path]) -> Path:
     """
-    Cerca il checkpoint con il valore minimo in valid_loss.txt.
-
-    Si assume che:
-    - valid_loss.txt abbia una loss per riga;
-    - il checkpoint dell'epoch i sia model/epoch_i.pt.
+    Returns the checkpoint path associated with the lowest validation loss.
     """
     log_dir_path = Path(log_dir_path)
     valid_loss_file = log_dir_path / 'valid_loss.txt'
@@ -404,7 +385,8 @@ def best_model_path(log_dir_path: Union[str, Path]) -> Path:
 
 def prepare_output_directory(output_folder: Union[str, Path]) -> None:
     """
-    Crea OUTPUT_FOLDER; se esiste, chiede se eliminarla oppure interrompere.
+    Creates the output directory. If it exists, asks the user whether
+    to delete it or abort the program.
     """
     output_folder = Path(output_folder)
 
@@ -431,7 +413,7 @@ def prepare_output_directory(output_folder: Union[str, Path]) -> None:
 
 
 def get_device(use_cuda: bool) -> str:
-    """Restituisce 'cuda' se richiesto e disponibile, altrimenti 'cpu'."""
+    """Uses CUDA when requested and available; otherwise returns CPU."""
     if use_cuda and torch.cuda.is_available():
         return 'cuda'
 
@@ -446,14 +428,14 @@ def load_sequence(
     output_manager: OutputMan,
 ) -> tuple[torch.Tensor, list[np.ndarray]]:
     """
-    Carica la sequenza specificata da una riga della sequence table.
+    Loads a sequence-table row.
 
-    Ritorna:
-    - iniSeq: primi MIN_SEQ frame con shape [B, T, C, H, W];
-    - trueSeq: tutti i frame contenuti nella riga, come ndarray.
+    Returns:
+    - iniSeq: first MIN_SEQ frames with shape [B, T, C, H, W];
+    - trueSeq: every frame listed on the row as NumPy arrays.
 
-    I primi MIN_SEQ frame vengono scritti in evo.txt come frame iniziali:
-    true=phi, pred=None.
+    The initial frames are logged with pred=None and do not contribute
+    to MAE/MSE/symDiff.
     """
     frame_paths = sequence_line.strip().split()
 
@@ -479,41 +461,38 @@ def load_sequence(
 
             phi_tensor = torch.from_numpy(phi).float()
 
-            # Trasforma, ad esempio, [H, W] in [1, 1, H, W].
+            # Example: [H, W] -> [1, 1, H, W].
             while phi_tensor.ndim < 4:
                 phi_tensor = phi_tensor.unsqueeze(0)
 
             iniSeq.append(phi_tensor)
 
-    # Lista di frame [B, C, H, W] -> [B, T, C, H, W].
-    iniSeq = torch.stack(iniSeq, dim=1)
+    # [B, C, H, W] frames -> [B, T, C, H, W].
+    iniSeq_tensor = torch.stack(iniSeq, dim=1)
 
-    return iniSeq, trueSeq
+    return iniSeq_tensor, trueSeq
 
 
-def get_rollout_last_time(
+def get_last_prediction_time(
     true_seq_length: int,
     has_ground_truth: bool,
 ) -> int:
     """
-    Restituisce l'ultimo indice temporale che deve essere predetto.
+    Returns the final time index to predict.
 
-    Ground-truth mode:
-        PRED_FRAMES == 0
-        I frame disponibili hanno indici 0, ..., len(trueSeq)-1.
-        I primi MIN_SEQ sono input; quindi l'ultima predizione utile è
-        len(trueSeq)-1.
+    Evaluation mode:
+        PRED_FRAMES == 0.
+        The table contains t=0, ..., t=len(trueSeq)-1.
+        First MIN_SEQ frames are inputs, hence prediction ends at
+        t=len(trueSeq)-1.
 
     Inference-only mode:
-        PRED_FRAMES > 0
-        PRED_FRAMES indica il numero di frame FUTURI da generare.
-        Con MIN_SEQ=1, essi hanno indici 1, ..., PRED_FRAMES.
+        PRED_FRAMES > 0.
+        Generates exactly PRED_FRAMES future frames after the input.
 
-    Esempio:
-        MIN_SEQ = 1, PRED_FRAMES = 200:
-        input reale: t=0
-        predizioni: t=1, ..., t=200
-        totale output predetti: 200.
+        With MIN_SEQ=1 and PRED_FRAMES=200:
+        - Input: t=0.
+        - Predictions: t=1, ..., 200.
     """
     if has_ground_truth:
         return true_seq_length - 1
@@ -523,23 +502,14 @@ def get_rollout_last_time(
 
 def main() -> None:
     """
-    Esegue un rollout autoregressivo frame-by-frame.
+    Autoregressive one-frame-at-a-time rollout.
 
-    Convenzione:
-
-    PRED_FRAMES == 0
-        La table deve contenere il ground truth completo.
-        Il modello predice ogni frame da MIN_SEQ fino a len(trueSeq)-1.
-        Per ciascuna predizione vengono calcolate le metriche.
-
-    PRED_FRAMES > 0
-        La table deve contenere soltanto MIN_SEQ input frame.
-        Il modello genera PRED_FRAMES frame futuri autoregressivamente.
-        Nessuna metrica può essere calcolata.
+    Modes:
+    - PRED_FRAMES == 0: full ground truth; predict and evaluate all
+      timesteps after the initial MIN_SEQ input frames.
+    - PRED_FRAMES > 0: input-only table; generate exactly PRED_FRAMES
+      future frames without evaluation metrics.
     """
-    if FRAME_BLOCK < 1:
-        raise ValueError('FRAME_BLOCK deve essere maggiore o uguale a 1.')
-
     if PRED_FRAMES < 0:
         raise ValueError(
             'PRED_FRAMES deve essere 0 oppure un intero positivo.'
@@ -568,9 +538,6 @@ def main() -> None:
 
     model_path = best_model_path(LOG_DIR)
 
-    # Se la tua versione di PyTorch non supporta weights_only=True,
-    # sostituisci questa chiamata con:
-    # checkpoint = torch.load(model_path, map_location=device)
     checkpoint = torch.load(
         model_path,
         map_location=device,
@@ -581,7 +548,7 @@ def main() -> None:
     model.eval()
     model.to(device)
 
-    # Mantiene il nome della funzione del tuo script originale.
+    # This preserves the method name from your original code.
     model.make_div_filters(torch.zeros(1, device=device))
 
     with open(SEQUENCE_TABLE, 'r') as intable:
@@ -601,28 +568,27 @@ def main() -> None:
     if has_ground_truth:
         if first_num_frames <= MIN_SEQ:
             raise ValueError(
-                'PRED_FRAMES=0 richiede una sequence table con ground truth '
-                f'completo, ma la prima sequenza ha {first_num_frames} frame '
-                f'e MIN_SEQ={MIN_SEQ}.'
+                'PRED_FRAMES=0 richiede il ground truth completo, ma la '
+                f'prima sequenza contiene {first_num_frames} frame con '
+                f'MIN_SEQ={MIN_SEQ}.'
             )
 
         print(
             'Modalità evaluation: PRED_FRAMES=0. '
-            'Predizione fino alla lunghezza di trueSeq con ground truth.'
+            'Predizione fino alla lunghezza completa di trueSeq.'
         )
 
     else:
         if first_num_frames != MIN_SEQ:
             raise ValueError(
-                f'PRED_FRAMES={PRED_FRAMES} richiede una sequence table con '
-                f'esattamente MIN_SEQ={MIN_SEQ} frame per sequenza, ma la '
-                f'prima sequenza ne contiene {first_num_frames}.'
+                f'PRED_FRAMES={PRED_FRAMES} richiede esattamente '
+                f'MIN_SEQ={MIN_SEQ} frame per riga, ma la prima sequenza '
+                f'ne contiene {first_num_frames}.'
             )
 
         print(
-            'Modalità inference-only: '
-            f'generazione autoregressiva di {PRED_FRAMES} frame futuri '
-            'senza ground truth.'
+            f'Modalità inference-only: {PRED_FRAMES} frame futuri '
+            'autoregressivi senza ground truth.'
         )
 
     countNPYout = 0
@@ -643,18 +609,18 @@ def main() -> None:
             for seq_index, seq in enumerate(listseq):
                 frame_paths = seq.split()
 
-                # Controllo di coerenza per tutte le righe, non solo la prima.
                 if has_ground_truth and len(frame_paths) <= MIN_SEQ:
                     raise ValueError(
-                        f'Sequenza {seq_index} non contiene ground truth '
-                        f'completo: {len(frame_paths)} frame.'
+                        f'Sequenza {seq_index}: ground truth insufficiente. '
+                        f'Frame trovati={len(frame_paths)}, '
+                        f'MIN_SEQ={MIN_SEQ}.'
                     )
 
                 if not has_ground_truth and len(frame_paths) != MIN_SEQ:
                     raise ValueError(
-                        f'Sequenza {seq_index} contiene {len(frame_paths)} '
-                        f'frame, ma in inference-only mode ne sono attesi '
-                        f'esattamente MIN_SEQ={MIN_SEQ}.'
+                        f'Sequenza {seq_index}: in inference-only mode sono '
+                        f'attesi esattamente MIN_SEQ={MIN_SEQ} frame, ma ne '
+                        f'sono presenti {len(frame_paths)}.'
                     )
 
                 seq_name = Path(frame_paths[0]).parent.name
@@ -667,7 +633,6 @@ def main() -> None:
 
                 seq_path.mkdir()
 
-                # Link simbolico alla directory contenente i frame input/true.
                 original_data_dir = Path(frame_paths[0]).parent
 
                 os.symlink(
@@ -678,15 +643,8 @@ def main() -> None:
 
                 model.zero_grad(set_to_none=True)
 
-                if countNPYout < NUM_NPY:
-                    dNPY = DELTA_NPY
-                else:
-                    dNPY = -1
-
-                if countPNGout < NUM_PNG:
-                    dPNG = DELTA_PNG
-                else:
-                    dPNG = -1
+                dNPY = DELTA_NPY if countNPYout < NUM_NPY else -1
+                dPNG = DELTA_PNG if countPNGout < NUM_PNG else -1
 
                 countNPYout += 1
                 countPNGout += 1
@@ -704,15 +662,14 @@ def main() -> None:
 
                 iniSeq = iniSeq.to(device)
 
-                # Inizializza lo stato persistente usando il primo input frame.
+                # Initializes the persistent state from the first input.
                 model.set_hidden(iniSeq[:, 0:1, ...])
 
                 params = None
-
                 if params is not None:
                     params = params.to(device)
 
-                last_time = get_rollout_last_time(
+                last_time = get_last_prediction_time(
                     true_seq_length=len(trueSeq),
                     has_ground_truth=has_ground_truth,
                 )
@@ -722,18 +679,13 @@ def main() -> None:
                     f'(t={MIN_SEQ} ... t={last_time})...'
                 )
 
-                # Se non ci sono frame da predire, scrive comunque le statistiche.
-                # In pratica ciò può accadere solo con una sequenza anomala.
+                # This should only happen for malformed or degenerate input.
                 if last_time < MIN_SEQ:
                     out.writeSTAT(fileSTAT, seq_name)
                     out.close()
                     continue
 
-                # =====================================================
-                # Prima predizione:
-                # input: iniSeq contenente MIN_SEQ frame iniziali.
-                # output: primo frame dopo l'input, associato a t=MIN_SEQ.
-                # =====================================================
+                # First model-generated future frame: t=MIN_SEQ.
                 predSeq = model(
                     iniSeq,
                     future=0,
@@ -741,31 +693,25 @@ def main() -> None:
                     approx_inference=False,
                 )
 
-                # Conserva soltanto l'ultimo output corrispondente al
-                # primo frame futuro generato.
                 predSeq = predSeq[:, MIN_SEQ - 1:MIN_SEQ, ...]
 
                 time = MIN_SEQ
                 pred_frame = predSeq[0, 0, 0, ...].cpu().numpy()
 
-                if time % FRAME_BLOCK == 0:
-                    if has_ground_truth:
-                        out.writeEVO(
-                            time=time,
-                            true=trueSeq[time],
-                            pred=pred_frame,
-                        )
-                    else:
-                        out.writeEVO(
-                            time=time,
-                            true=None,
-                            pred=pred_frame,
-                        )
+                if has_ground_truth:
+                    out.writeEVO(
+                        time=time,
+                        true=trueSeq[time],
+                        pred=pred_frame,
+                    )
+                else:
+                    out.writeEVO(
+                        time=time,
+                        true=None,
+                        pred=pred_frame,
+                    )
 
-                # =====================================================
-                # Rollout autoregressivo:
-                # predSeq di t-1 diventa l'input per produrre t.
-                # =====================================================
+                # Every iteration predicts exactly one new frame.
                 while time < last_time:
                     if time % 50 == 0:
                         print(time, end='...', flush=True)
@@ -778,13 +724,7 @@ def main() -> None:
                     )
 
                     time += 1
-
                     pred_frame = predSeq[0, 0, 0, ...].cpu().numpy()
-
-                    # FRAME_BLOCK influenza soltanto la scrittura,
-                    # non l'avanzamento autoregressivo del modello.
-                    if time % FRAME_BLOCK != 0:
-                        continue
 
                     if has_ground_truth:
                         out.writeEVO(
