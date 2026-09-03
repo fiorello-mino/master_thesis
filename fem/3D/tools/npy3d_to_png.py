@@ -24,12 +24,12 @@ MASK_PATH = FOLDER / "surf_0.000000_linear_nan_mask.npy"
 METADATA_PATH = FOLDER / "grid_metadata.npz"
 
 # PNG di output.
-OUTPUT_PNG = FOLDER / "surf_0.000000_yz_xmax.png"
-OUTPUT_MASK_PNG = FOLDER / "surf_0.000000_yz_xmax_fallback_mask.png"
+OUTPUT_PNG = "/home/fiorello/surf_0.000000_yz_xmax.png"
+OUTPUT_MASK_PNG = "/home/fiorello/surf_0.000000_yz_xmax_fallback_mask.png"
 
 # Colormap e range del campo phi.
 CMAP = "coolwarm"
-VMIN = -1.0
+VMIN = 0.0
 VMAX = 1.0
 
 # Se True, prende la faccia x=x_max; se False, usa una slice subito interna.
@@ -70,7 +70,7 @@ x_value = float(xi[x_index])
 
 # Array originale: shape (Nx, Ny, Nz).
 # Fissando x ottieni shape (Ny, Nz).
-slice_yz = grid[x_index, :, :]
+slice_yz = grid[0, :, :]
 
 # Per imshow, la prima dimensione è verticale e la seconda orizzontale.
 # Trasponendo (Ny, Nz) -> (Nz, Ny), visualizzi:
