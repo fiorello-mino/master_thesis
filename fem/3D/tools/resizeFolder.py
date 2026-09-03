@@ -20,14 +20,14 @@ FIELD_NAME = "phi"
 
 METHOD = "linear"
 
-OVERWRITE = True
+OVERWRITE = False
 
 LX = 0.45
 LY = 0.45
 EPS = 0.1
 
 # Passo isotropo richiesto nella griglia finale.
-VOXEL_SIZE = 0.0125
+VOXEL_SIZE = 0.025
 
 # Tolleranza per le coordinate floating point lette dal VTU.
 # Esempio reale: 0.4499999988079 invece di 0.45.

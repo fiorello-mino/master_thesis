@@ -21,7 +21,7 @@ from src.utils import *
 
 
 NUM_PNG     : int = 100
-DELTA_PNG   : int   = 10  # output frequency for png. DO NOT SET TO < 1
+DELTA_PNG   : int   = 1  # output frequency for png. DO NOT SET TO < 1
 
 NUM_NPY     : int = 100
 DELTA_NPY   : int = 10
@@ -31,9 +31,9 @@ PRED_FRAMES : int = 200    # 0 for predicting same frames of true sequence
 # <<< SCRIPT VARIABLES <<<
 LOG_DIR         = Path('/home/fiorello/master_thesis/machine_learning/train/train_logs/lr5e-5_hl3_2_tr10') # model
 SEQUENCE_TABLE  : str   = '/data/fiorello/testtest/test_set_random.txt'
-OUTPUT_FOLDER   : str   = '/data/fiorello/test_del_test'#' # output folder name
+OUTPUT_FOLDER   : str   = '/data/fiorello/test_del_test2'#' # output folder name
 CUDA            : bool  = True # cuda control variable
-FRAME_BLOCK     : int   = 5 # 0 for full sequence
+FRAME_BLOCK     : int   = 1 # 0 for full sequence
 
 # === SCRIPT VARIABLES ===
 
@@ -154,7 +154,7 @@ class OutputMan():
                 self.writeEVO(time,true[time],pred[0,t,0,...].cpu().numpy())
 
     def writeSTAT(self,fileSTAT,seq_name):
-        fileSTAT.write("{seq_name} {self.maxMae} {self.maxMse} {self.sumMae/self.niter} {self.sumMse/self.niter} {self.maxSymDiff} {self.sumSymDiff/self.niter}\n")
+        fileSTAT.write(f"{seq_name} {self.maxMae} {self.maxMse} {self.sumMae/self.niter} {self.sumMse/self.niter} {self.maxSymDiff} {self.sumSymDiff/self.niter}\n")
 
 
 def best_model_path(log_dir_path: str) -> Path:
@@ -223,11 +223,6 @@ def main() -> None:
     else:
         device = 'cpu'
 
-#    transform = transforms.Compose(
-#            [
-#                transforms.Grayscale( num_output_channels=1 ), # ensure that images have a single field channel
-#            ]
-#        )
 
     model = PersistentModel(
             hidden_units        = HIDDEN_UNITS,
@@ -267,7 +262,7 @@ def main() -> None:
         with open(SEQUENCE_TABLE,"r") as intable:
             listseq=intable.readlines()
 
-        for seq in listseq:     #/home/0000/000.npy
+        for seq in listseq:     #/home/0000/000.npy ... /home/0000/200.npy
             seq_name = seq.split()[0].split("/")[-2]    #0000
             seq_path = f'{OUTPUT_FOLDER}/{seq_name}'
             if os.path.isdir(seq_path):
@@ -290,7 +285,8 @@ def main() -> None:
             countPNGout += 1
  
             out=OutputMan(seq_path, dNPY, dPNG)
-
+            
+            # Load the first MIN_SEQ frames in iniSeq, and load the full sequence in trueSeq 
             iniSeq = []
             trueSeq = []
             for frame_path in seq.split():
@@ -306,41 +302,37 @@ def main() -> None:
                     iniSeq.append(phi)
             iniSeq = torch.stack( iniSeq, dim=1 )
             iniSeq = iniSeq.to(device)
+            model.set_hidden(iniSeq[:,0:1,...])
 
             params = None
             if params is not None:
                 params = params.to(device)
 
-            time=len(iniSeq)-1
-            if(PRED_FRAMES>0):
-                pred_frames = PRED_FRAMES
-            else:
-                pred_frames = len(trueSeq)
-
-            if(FRAME_BLOCK>MIN_SEQ):
-                frame_block=FRAME_BLOCK-MIN_SEQ
-            else:
-                frame_block=pred_frames
-
             print(f'Predicting sequence {seq_name}...')
             predSeq = model(
                     iniSeq,
-                    future = frame_block,
+                    future = 0,
                     params = params,
                     approx_inference = False
                     )
-            out.writeBlock(time,trueSeq,predSeq)
-            time += frame_block
+            time = MIN_SEQ
 
-            while time < pred_frames:
+            predSeq = predSeq[:,MIN_SEQ-1:MIN_SEQ,...]
+            out.writeEVO(time, true=None, pred=predSeq[0,0,0,...].cpu().numpy())
+
+            while time < PRED_FRAMES:
+                if(time % 50 == 0):
+                    print(time,end="...",flush=True)
                 predSeq = model(
                         predSeq,
                         future = 0,
                         params = params,
                         approx_inference = False
                         )
-                out.writeBlock(time,trueSeq,predSeq)
-                time += frame_block
+                time += 1
+                if(time % FRAME_BLOCK == 0):
+                    out.writeEVO(time, true=None, pred=predSeq[0,0,0,...].cpu().numpy())
+
 
             out.writeSTAT(fileSTAT, seq_name)
 
@@ -354,7 +346,7 @@ def main() -> None:
             del predSeq
 
     file_path = open(OUTPUT_FOLDER + '/model_path.txt', 'a')
-    print(MODEL_PATH, file=file_path)
+    print(best_model_path, file=file_path)
     file_path.close()
 
     fileSTAT.close()

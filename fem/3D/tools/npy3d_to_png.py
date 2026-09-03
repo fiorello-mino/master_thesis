@@ -56,7 +56,7 @@ def save_yz_at_xmax(
 
 
 if __name__ == "__main__":
-    npy_path = Path("/home/fiorello/output.npy")
+    npy_path = Path("/data/fiorello/iso_P09/iso2_R0.2_H2.1_P0.9/surf_0.000000.npy")
     out_png  = Path("/home/fiorello/pore_yz_xmax.png")
 
     save_yz_at_xmax(
