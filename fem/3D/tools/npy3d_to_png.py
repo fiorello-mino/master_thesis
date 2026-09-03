@@ -9,12 +9,14 @@ def save_yz_at_xmax(
     vmin=None,
     vmax=None,
     cmap="viridis",
+    aspect="equal",  # "equal" mantiene le proporzioni fisiche y-z
 ):
     """
     Salva la vista YZ (piano y-z) a x = x_max di un array 3D salvato come .npy.
     
     npy_path: percorso del file .npy (array shape (nx, ny, nz))
     out_png:  percorso del file PNG da salvare
+    aspect:   parametro aspect per imshow ("equal", "auto", o float)
     """
     grid = np.load(npy_path)
     if grid.ndim != 3:
@@ -24,7 +26,7 @@ def save_yz_at_xmax(
 
     # x = x_max -> ultima slice lungo x
     x_index = nx - 1
-    x_index = 0
+    # x_index = 0  # se vuoi x = 0, togli il commento e usa questo
     slice_yz = grid[x_index, :, :]  # shape (ny, nz)
 
     if vmin is None:
@@ -32,11 +34,16 @@ def save_yz_at_xmax(
     if vmax is None:
         vmax = float(grid.max())
 
-    plt.figure(figsize=(9, 3))
+    # Calcolo dimensioni figura in modo proporzionale a ny, nz
+    base_height = 6  # in pollici, puoi cambiare
+    aspect_ratio = ny / nz  # altezza / larghezza in pixel dell'array
+    figsize = (base_height / aspect_ratio, base_height)
+
+    plt.figure(figsize=figsize)
     im = plt.imshow(
         slice_yz,
         origin="lower",
-        aspect="auto",
+        aspect=aspect,
         cmap=cmap,
         vmin=vmin,
         vmax=vmax,
@@ -62,7 +69,8 @@ if __name__ == "__main__":
     save_yz_at_xmax(
         npy_path=npy_path,
         out_png=out_png,
-        vmin=0.0,   
-        vmax=1.0,   
+        vmin=0.0,
+        vmax=1.0,
         cmap="coolwarm",
+        aspect="equal",  # mantiene proporzioni y-z
     )
