@@ -30,8 +30,6 @@ PRIMARY_METHOD = "linear"
 FALLBACK_METHOD = "nearest"
 
 # True: rigenera tutti gli NPY anche se esistono già.
-# Devi lasciarlo True almeno una volta per sostituire gli NPY
-# creati in precedenza con nan -> 0.0.
 OVERWRITE = True
 
 # Salva per ogni frame una maschera:
