@@ -418,7 +418,6 @@ def process_folder(folder_path: Path) -> tuple[int, int]:
     tutti i frame della traiettoria avranno stessa shape.
     """
     vtu_files = sorted(folder_path.glob(VTU_GLOB))
-    vtu_files = vtu_files[:1] ## temporaneo
 
     if not vtu_files:
         return 0, 0
