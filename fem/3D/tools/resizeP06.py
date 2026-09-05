@@ -14,10 +14,10 @@ from scipy.interpolate import NearestNDInterpolator
 # ============================================================
 
 # Root che contiene le cartelle iso2_R..._H..._P...
-INPUT_ROOT = Path("/archive/roberto/poresAMDIS/iso_P09")
+INPUT_ROOT = Path("/archive/roberto/poresAMDIS/iso_P06")
 
 # Root che riceve gli NPY.
-OUTPUT_ROOT = Path("/data/fiorello/poresAMDIS/iso_P09")
+OUTPUT_ROOT = Path("/data/fiorello/poresAMDIS/iso_P06")
 
 # Campo scalare nel point_data del VTU.
 FIELD_NAME = "phi"
@@ -30,11 +30,11 @@ OVERWRITE = True
 # Salva una maschera diagnostica:
 # 0 = campionamento VTK riuscito nella cella FEM
 # 1 = punto non contenuto in una cella FEM, quindi fallback nearest
-SAVE_FALLBACK_MASK = True
+SAVE_FALLBACK_MASK = False
 
 # Geometria fisica nominale.
-LX = 0.45
-LY = 0.45
+LX = 0.3
+LY = 0.3
 EPS = 0.1
 
 # Passo isotropo della griglia NPY.

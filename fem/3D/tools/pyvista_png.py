@@ -11,7 +11,7 @@ import numpy as np
 # ============================================================
 
 # Root contenente le cartelle convertite con resizeFolder.py/PyVista.
-INPUT_ROOT = Path("/data/fiorello/iso_P09")
+INPUT_ROOT = Path("/data/fiorello/iso_P09_pyvista")
 
 # Root separata dove salvare i PNG; mantiene la struttura delle sottocartelle.
 OUTPUT_ROOT = Path("/data/fiorello/iso_P09_png_yz_x0")
@@ -25,7 +25,7 @@ X_TARGET = 0.0
 
 # Colormap e range di phi. Modifica vmin/vmax se il tuo phi non è in [-1, 1].
 CMAP = "coolwarm"
-VMIN = -1.0
+VMIN = 0.0
 VMAX = 1.0
 
 # Per una visualizzazione fedele ai voxel isotropi.

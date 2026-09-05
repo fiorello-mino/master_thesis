@@ -11,7 +11,7 @@ from pathlib import Path
 # ===============================
 #           PARAMETRI
 # ===============================
-root_folder = Path('/archive/roberto/poresAMDIS/iso_P09')
+root_folder = Path('/archive/roberto/poresAMDIS/iso_P10')
 filename_root = 'surf_' 
 dt = 0.005
 delete_files = 'y'  # 'y' per cancellare, 'n' per mantenere

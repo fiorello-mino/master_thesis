@@ -14,10 +14,10 @@ from scipy.interpolate import NearestNDInterpolator
 # ============================================================
 
 # Root che contiene le cartelle iso2_R..._H..._P...
-INPUT_ROOT = Path("/archive/roberto/poresAMDIS/iso_P09")
+INPUT_ROOT = Path("/archive/roberto/poresAMDIS/iso_P10")
 
 # Root che riceve gli NPY.
-OUTPUT_ROOT = Path("/data/fiorello/iso_P09_pyvista")
+OUTPUT_ROOT = Path("/data/fiorello/poresAMDIS/iso_P10")
 
 # Campo scalare nel point_data del VTU.
 FIELD_NAME = "phi"
@@ -33,8 +33,8 @@ OVERWRITE = True
 SAVE_FALLBACK_MASK = True
 
 # Geometria fisica nominale.
-LX = 0.45
-LY = 0.45
+LX = 0.50
+LY = 0.50
 EPS = 0.1
 
 # Passo isotropo della griglia NPY.
