@@ -13,7 +13,7 @@ FRAME_GLOB = "surf_*.npy"
 
 # Soglia scelta da te.
 # Verranno contate tutte le simulazioni con meno di questo numero di frame.
-N_FRAMES = 100
+N_FRAMES = 20
 
 
 # ============================================================
