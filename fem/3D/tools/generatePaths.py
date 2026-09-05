@@ -13,8 +13,8 @@ from pathlib import Path
 ROOT_DIR = Path("/data/fiorello/poresAMDIS")
 
 # File TXT di output: una sequenza di N_SEQ path per riga.
-TRAIN_TXT = "/home/fiorello/master_thesis/machine_learning/train3D/train_set.txt"
-VALID_TXT = "/home/fiorello/master_thesis/machine_learning/train3D/valid_set.txt"
+TRAIN_TXT = ROOT_DIR / "train_set.txt"
+VALID_TXT = ROOT_DIR / "valid_set.txt"
 
 # Numero di frame consecutivi in ogni sequenza.
 N_SEQ = 20
@@ -26,7 +26,9 @@ TRAIN_FRACTION = 0.8
 # Metti None se vuoi uno split diverso a ogni esecuzione.
 RANDOM_SEED = 42
 
+# Cerca solo i veri frame phi.
 FRAME_GLOB = "surf_*.npy"
+VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 
 # Se True, richiede anche che i tempi consecutivi differiscano esattamente di DT.
 # Consigliato se hai già ripulito il dataset con lo script degli intervalli.
@@ -44,6 +46,7 @@ def is_data_frame(path: Path) -> bool:
         path.is_file()
         and path.name.startswith("surf_")
         and path.suffix == ".npy"
+        and not path.name.endswith(VTK_MASK_SUFFIX)
     )
 
 
