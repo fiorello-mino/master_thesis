@@ -16,7 +16,7 @@ FOLDER = Path(
 NPY_PATH = FOLDER / "surf_0.000000.npy"
 METADATA_PATH = FOLDER / "grid_metadata.npz"
 
-OUTPUT_PNG = FOLDER / "surf_0.000000_yz_xmax.png"
+OUTPUT_PNG = "/home/fiorello/surf_0.000000_yz_xmax.png"
 
 
 # ============================================================
@@ -41,7 +41,7 @@ zi = metadata["zi"]
 # asse 2 = z
 
 x_index = grid.shape[0] - 1
-slice_yz = grid[x_index, :, :]  # shape (Ny, Nz)
+slice_yz = grid[0, :, :]  # shape (Ny, Nz)
 
 # Trasposizione necessaria:
 # imshow vede righe = verticale, colonne = orizzontale.
@@ -70,7 +70,7 @@ im = ax.imshow(
     aspect="equal",
     interpolation="nearest",
     cmap="coolwarm",
-    vmin=-1.0,
+    vmin=0,
     vmax=1.0,
 )
 
@@ -82,7 +82,6 @@ ax.set_title(f"Vista YZ a x = x_max = {xi[x_index]:.6f}")
 
 fig.tight_layout()
 
-OUTPUT_PNG.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(OUTPUT_PNG, dpi=250)
 
 plt.close(fig)

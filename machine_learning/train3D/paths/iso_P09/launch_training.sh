@@ -1,8 +1,9 @@
 # !/bin/bash
 
-python3 /home/fiorello/CRANE_bc/train_bc.py \
+python3 /home/fiorello/CRANE/train.py \
 	--device  'cuda:0' \
-	--padding  'reflect' 'reflect' 'reflect' \
+	--threeD \
+	--padding  'reflect' \
 	--seed 666 \
 	--epochs 500 \
 	--nocrop \
@@ -15,10 +16,10 @@ python3 /home/fiorello/CRANE_bc/train_bc.py \
 	--id 'prova3D' \
 	--logfreq 1 \
 	--kernel_size 5 \
-	--hidden 3 \
+	--hidden 2 \
 	--channels 16 \
-	--divergence \
 	--nproc 4 \
+	--divergence \
 	--num_params 0 \
 	--subseq_min 1 \
 	--subseq_max 19 \
