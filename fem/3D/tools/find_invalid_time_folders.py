@@ -9,7 +9,7 @@ from pathlib import Path
 # ============================================================
 
 # Root contenente le cartelle con i frame surf_<time>.npy.
-ROOT_DIR = Path("/data/fiorello/iso_P06")
+ROOT_DIR = Path("/data/fiorello/poresAMDIS/iso_P10")
 
 # Passo temporale richiesto, confrontato in modo esatto con Decimal.
 EXPECTED_DT = Decimal("0.005000")
@@ -21,7 +21,7 @@ VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 
 # Sicurezza: prima esegui con False.
 # Lo script crea solo il report e NON cancella nulla.
-DELETE_INVALID_FOLDERS = False
+DELETE_INVALID_FOLDERS = True
 
 # Se True, anche una cartella con meno di due frame viene considerata invalida.
 REQUIRE_AT_LEAST_TWO_FRAMES = True

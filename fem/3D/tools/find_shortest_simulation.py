@@ -7,10 +7,8 @@ from pathlib import Path
 # CONFIGURAZIONE
 # ============================================================
 
-# Root principale contenente iso_P06, iso_P07, ..., iso_P10.
-ROOT_DIR = Path("/data/fiorello/poreAMDIS")
+ROOT_DIR = Path("/data/fiorello/poresAMDIS")
 
-# Cerca solo i veri frame phi e ignora le mask PyVista/VTK.
 FRAME_GLOB = "surf_*.npy"
 
 
@@ -25,8 +23,6 @@ def is_data_frame(path: Path) -> bool:
     Include:
         surf_0.000000.npy
 
-    Esclude:
-        surf_0.000000_vtk_fallback_mask.npy
     """
     return (
         path.is_file()
