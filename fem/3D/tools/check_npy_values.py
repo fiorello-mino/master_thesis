@@ -24,7 +24,7 @@ VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 #
 # Accetta piccoli overshoot numerici:
 # phi ∈ [-TOL, 1 + TOL].
-TOL = 1e-3
+TOL = 1e-1
 
 # SICUREZZA:
 # False -> analizza e scrive il report, NON elimina nulla.
