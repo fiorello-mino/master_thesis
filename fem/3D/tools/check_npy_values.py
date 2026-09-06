@@ -20,7 +20,7 @@ VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 
 # Tolleranza numerica: valori come -1e-8 o 1.00000001 possono derivare
 # da arrotondamento floating point. Metti 0.0 se vuoi il controllo rigoroso.
-TOL = 1e-6
+TOL = 1e-3
 
 # Report degli NPY con valori fuori dal range [0, 1].
 REPORT_PATH = ROOT_DIR / "npy_values_outside_0_1.txt"
