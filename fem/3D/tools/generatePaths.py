@@ -13,8 +13,8 @@ from pathlib import Path
 ROOT_DIR = Path("/data/fiorello/poresAMDIS")
 
 # File TXT di output: una sequenza di N_SEQ path per riga.
-TRAIN_TXT = ROOT_DIR / "/home/fiorello/master_thesis/machine_learning/train3D/train_set.txt"
-VALID_TXT = ROOT_DIR / "/home/fiorello/master_thesis/machine_learning/train3D/valid_set.txt"
+TRAIN_TXT = ROOT_DIR / "train_set.txt"
+VALID_TXT = ROOT_DIR / "valid_set.txt"
 
 # Numero di frame consecutivi in ogni sequenza.
 N_SEQ = 20
