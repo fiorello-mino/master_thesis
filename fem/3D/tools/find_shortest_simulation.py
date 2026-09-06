@@ -19,7 +19,7 @@ VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 
 # Numero minimo di frame che una simulazione deve contenere per essere mantenuta.
 # Le cartelle con n_frames < N_FRAMES sono considerate invalide.
-N_FRAMES = 20
+N_FRAMES = 50
 
 # SICUREZZA:
 # False -> stampa e crea solo il report, NON elimina nulla.

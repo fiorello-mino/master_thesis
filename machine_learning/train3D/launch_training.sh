@@ -3,6 +3,7 @@
 python3 /home/fiorello/CRANE/train.py \
 	--device  'cuda:0' \
 	--threeD \
+	--vtk \
 	--padding  'reflect' \
 	--seed 666 \
 	--epochs 500 \
@@ -11,12 +12,12 @@ python3 /home/fiorello/CRANE/train.py \
 	--lr 5e-5 \
 	--batch 1 \
 	--weightd 0e-5 \
-	--train_set 'paths.txt' \
-	--valid_set 'paths.txt' \
+	--train_set 'train_set.txt' \
+	--valid_set 'valid_set.txt' \
 	--id 'prova3D' \
 	--logfreq 1 \
 	--kernel_size 5 \
-	--hidden 2 \
+	--hidden 3 \
 	--channels 16 \
 	--nproc 4 \
 	--divergence \
@@ -24,7 +25,7 @@ python3 /home/fiorello/CRANE/train.py \
 	--subseq_min 1 \
 	--subseq_max 19 \
 	--reflection \
-	--noise_reg 0.0 \
+	--noise_reg 0.025 \
 	--massW 0.0 \
 	--ramp \
 	--ramp_length 18 \

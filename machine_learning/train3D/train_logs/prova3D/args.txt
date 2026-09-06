@@ -16,8 +16,8 @@ epochs 	 : 	 500
 extract_param 	 : 	 False 
 gifs 	 : 	 True 
 graphics 	 : 	 True 
-hidden 	 : 	 2 
-id 	 : 	 prova3D_6 
+hidden 	 : 	 3 
+id 	 : 	 prova3D 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
@@ -25,12 +25,12 @@ massW 	 : 	 0.0
 nocrop 	 : 	 True 
 nogifs 	 : 	 False 
 nographics 	 : 	 False 
-noise_reg 	 : 	 0.0 
+noise_reg 	 : 	 0.025 
 nproc 	 : 	 4 
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 reflect 
-paths 	 : 	 {'master': 'train_logs/prova3D_6', 'model': 'train_logs/prova3D_6/model', 'png': 'train_logs/prova3D_6/pngs', 'gif': 'train_logs/prova3D_6/gifs', 'lossplot': 'train_logs/prova3D_6/lossplot.png', 'trainloss': 'train_logs/prova3D_6/train_loss.txt', 'validloss': 'train_logs/prova3D_6/valid_loss.txt', 'vtk': None, 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/prova3D', 'model': 'train_logs/prova3D/model', 'png': 'train_logs/prova3D/pngs', 'gif': 'train_logs/prova3D/gifs', 'lossplot': 'train_logs/prova3D/lossplot.png', 'trainloss': 'train_logs/prova3D/train_loss.txt', 'validloss': 'train_logs/prova3D/valid_loss.txt', 'vtk': 'train_logs/prova3D/vtk', 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 18 
 reflection 	 : 	 True 
@@ -50,9 +50,9 @@ subseq_min 	 : 	 1
 superbatch 	 : 	 1 
 symm_kernel 	 : 	 False 
 threeD 	 : 	 True 
-train_set 	 : 	 paths.txt 
+train_set 	 : 	 train_set.txt 
 translation 	 : 	 False 
 twin_image 	 : 	 False 
-valid_set 	 : 	 paths.txt 
-vtk 	 : 	 False 
+valid_set 	 : 	 valid_set.txt 
+vtk 	 : 	 True 
 weightd 	 : 	 0.0 
