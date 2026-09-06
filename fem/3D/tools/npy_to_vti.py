@@ -14,7 +14,7 @@ import pyvista as pv
 SIMULATION_DIR = Path(
     "/data/fiorello/poresAMDIS/"
     "iso_P07/"
-    "iso2_R0.2_H2.7_P0.7"
+    "iso2_R0.2_H4.9_P0.7"
 )
 
 # Cartella dove salvare i file VTK/XML.
