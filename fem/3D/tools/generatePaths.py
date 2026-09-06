@@ -31,14 +31,28 @@ FRAME_GLOB = "surf_*.npy"
 VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 
 # Se True, richiede anche che i tempi consecutivi differiscano esattamente di DT.
-# Consigliato se hai già ripulito il dataset con lo script degli intervalli.
 CHECK_TIME_SPACING = True
 EXPECTED_DT = Decimal("0.005000")
+
+# ----------------------------------------------------------------
+# REGOLA SULL'INIZIO DELLA SEQUENZA
+# ----------------------------------------------------------------
+# Se una simulazione contiene PIU' DI 50 frame, la sequenza estratta
+# deve iniziare entro il 30esimo frame (contando da 1).
+#
+# Quindi gli start consentiti sono: frame 1, 2, ..., 30
+# ovvero gli indici Python: 0, 1, ..., 29.
+#
+# Se la simulazione contiene 50 frame o meno, restano consentiti tutti
+# gli start validi disponibili.
+LIMIT_START_ONLY_IF_MORE_THAN_FRAMES = 50
+MAX_START_FRAME_NUMBER = 30
 
 
 # ============================================================
 # FUNZIONI
 # ============================================================
+
 
 def is_data_frame(path: Path) -> bool:
     """Accetta solo surf_<time>.npy ed esclude le mask VTK."""
@@ -118,17 +132,42 @@ def valid_sequence_start_indices(
     return valid_starts
 
 
+def apply_start_limit(
+    frames: list[Path],
+    valid_starts: list[int],
+) -> list[int]:
+    """
+    Applica la regola richiesta dall'utente.
+
+    Se len(frames) > LIMIT_START_ONLY_IF_MORE_THAN_FRAMES, mantiene solo
+    gli start entro MAX_START_FRAME_NUMBER (numerazione umana 1-based).
+    """
+    if len(frames) <= LIMIT_START_ONLY_IF_MORE_THAN_FRAMES:
+        return valid_starts
+
+    max_start_index = MAX_START_FRAME_NUMBER - 1
+
+    return [
+        start_index
+        for start_index in valid_starts
+        if start_index <= max_start_index
+    ]
+
+
+def eligible_start_indices(
+    frames: list[Path],
+) -> list[int]:
+    """Calcola gli start validi nel tempo e applica l'eventuale limite."""
+    valid_starts = valid_sequence_start_indices(frames, N_SEQ)
+
+    return apply_start_limit(frames, valid_starts)
+
+
 def split_simulations(
     folders: list[Path],
     rng: random.Random,
 ) -> tuple[list[Path], list[Path]]:
-    """
-    Divide per simulazione, non per frame.
-
-    Con 93 simulazioni e TRAIN_FRACTION=0.8:
-        n_train = int(0.8 * 93) = 74
-        n_valid = 19
-    """
+    """Divide per simulazione, non per frame."""
     shuffled_folders = folders.copy()
     rng.shuffle(shuffled_folders)
 
@@ -138,6 +177,35 @@ def split_simulations(
     valid_folders = sorted(shuffled_folders[n_train:])
 
     return train_folders, valid_folders
+
+
+def sequence_skip_reason(frames: list[Path]) -> str:
+    """Genera un motivo chiaro se non si può estrarre una sequenza."""
+    if len(frames) < N_SEQ:
+        return (
+            f"solo {len(frames)} frame; "
+            f"ne servono almeno {N_SEQ}"
+        )
+
+    time_valid_starts = valid_sequence_start_indices(frames, N_SEQ)
+
+    if not time_valid_starts:
+        if CHECK_TIME_SPACING:
+            return (
+                f"nessuna finestra di {N_SEQ} frame con "
+                f"dt={EXPECTED_DT}"
+            )
+
+        return f"nessuna finestra di {N_SEQ} frame valida"
+
+    if len(frames) > LIMIT_START_ONLY_IF_MORE_THAN_FRAMES:
+        return (
+            f"nessuno start valido entro il frame "
+            f"{MAX_START_FRAME_NUMBER}; "
+            f"la simulazione contiene {len(frames)} frame"
+        )
+
+    return "nessuna sequenza valida"
 
 
 def write_sequences(
@@ -159,24 +227,13 @@ def write_sequences(
     with output_txt.open("w", encoding="utf-8") as file:
         for folder in folders:
             frames = get_data_frames(folder)
-            valid_starts = valid_sequence_start_indices(frames, N_SEQ)
+            allowed_starts = eligible_start_indices(frames)
 
-            if not valid_starts:
-                if len(frames) < N_SEQ:
-                    reason = (
-                        f"solo {len(frames)} frame; "
-                        f"ne servono almeno {N_SEQ}"
-                    )
-                else:
-                    reason = (
-                        f"nessuna finestra di {N_SEQ} frame con "
-                        f"dt={EXPECTED_DT}"
-                    )
-
-                skipped.append((folder, reason))
+            if not allowed_starts:
+                skipped.append((folder, sequence_skip_reason(frames)))
                 continue
 
-            start_index = rng.choice(valid_starts)
+            start_index = rng.choice(allowed_starts)
             sequence = frames[start_index : start_index + N_SEQ]
 
             file.write(" ".join(str(path) for path in sequence) + "\n")
@@ -188,6 +245,7 @@ def write_sequences(
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main() -> None:
     if not ROOT_DIR.is_dir():
@@ -201,6 +259,12 @@ def main() -> None:
             f"TRAIN_FRACTION deve stare tra 0 e 1, trovato {TRAIN_FRACTION}"
         )
 
+    if MAX_START_FRAME_NUMBER <= 0:
+        raise ValueError(
+            "MAX_START_FRAME_NUMBER deve essere positivo, "
+            f"trovato {MAX_START_FRAME_NUMBER}"
+        )
+
     rng = random.Random(RANDOM_SEED)
 
     all_folders = find_simulation_folders(ROOT_DIR)
@@ -211,24 +275,18 @@ def main() -> None:
         )
 
     # Tiene solo le simulazioni che possono effettivamente fornire
-    # almeno una sequenza valida di N_SEQ frame.
+    # almeno una sequenza valida di N_SEQ frame rispettando il limite start.
     eligible_folders: list[Path] = []
     ineligible_folders: list[tuple[Path, str]] = []
 
     for folder in all_folders:
         frames = get_data_frames(folder)
-        valid_starts = valid_sequence_start_indices(frames, N_SEQ)
+        allowed_starts = eligible_start_indices(frames)
 
-        if valid_starts:
+        if allowed_starts:
             eligible_folders.append(folder)
-        elif len(frames) < N_SEQ:
-            ineligible_folders.append(
-                (folder, f"solo {len(frames)} frame")
-            )
         else:
-            ineligible_folders.append(
-                (folder, f"nessuna finestra valida con dt={EXPECTED_DT}")
-            )
+            ineligible_folders.append((folder, sequence_skip_reason(frames)))
 
     if not eligible_folders:
         raise RuntimeError(
@@ -260,6 +318,12 @@ def main() -> None:
 
     if CHECK_TIME_SPACING:
         print(f"Passo temporale richiesto : {EXPECTED_DT}")
+
+    print(
+        "Limite start per sequenze : "
+        f"se frame > {LIMIT_START_ONLY_IF_MORE_THAN_FRAMES}, "
+        f"inizio entro frame {MAX_START_FRAME_NUMBER}"
+    )
 
     print(f"\nSimulazioni trovate      : {len(all_folders)}")
     print(f"Simulazioni utilizzabili  : {len(eligible_folders)}")
