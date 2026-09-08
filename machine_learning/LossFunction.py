@@ -3,28 +3,29 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class CahnHilliarLoss(nn.Module):
+class CahnHilliardLoss(nn.Module):
     """
-    Loss composita coerente con:
+    Quantità fisiche:
     - W(phi) = (18/epsilon) * phi^2 * (1-phi)^2
     - E = int [ W(phi) + epsilon^2 * |grad phi|^2 ] dx
     - M(phi) = M0 * (36/epsilon) * phi^2 * (1-phi)^2
-    - BC: periodiche in x, Neumann omogenee in y
+    - BC: Neumann in x, y, z
 
-    pred, target: (B, T, C, H, W)
+    pred, target: (B, T, C, x, y, z)
     """
 
     def __init__(
         self,
         w_mse=1.0,
-        w_energy=0.05,
-        w_grad=0.1,
+        w_energy=1e-3,
+        w_grad=0.0,
         w_pde=0.0,
-        epsilon=1.0,
+        epsilon=0.1,
         M0=1.0,
-        dx=1.0,
-        dy=1.0,
-        dt=1.0,
+        dx=0.025,
+        dy=0.025,
+        dz=0.025,
+        dt=5e-3,
     ):
         super().__init__()
         self.w_mse = w_mse
@@ -35,52 +36,78 @@ class CahnHilliarLoss(nn.Module):
         self.M0 = M0
         self.dx = dx
         self.dy = dy
+        self.dz = dz
         self.dt = dt
 
-    def _reshape_spatial(self, c):
-        return c.reshape(-1, 1, c.shape[-2], c.shape[-1])
+    def _reshape_spatial_3d(self, c):
+        # c: (B, T, C, x, y, z)
+        return c.reshape(-1, 1, c.shape[-3], c.shape[-2], c.shape[-1])
 
-    def pad_mixed_bc(self, c):
-        c_ = self._reshape_spatial(c)
-        c_pad_x = F.pad(c_, (1, 1, 0, 0), mode="circular")
-        c_pad = F.pad(c_pad_x, (0, 0, 1, 1), mode="replicate")
+    def pad_neumann(self, c):
+        c_ = self._reshape_spatial_3d(c)  # -> (N, 1, x, y, z)
+        c_pad = F.pad(c_, (1, 1, 1, 1, 1, 1), mode="replicate")
         return c_pad
 
     def gradient(self, c):
-        c_pad = self.pad_mixed_bc(c)
-        gx = (c_pad[:, :, 1:-1, 2:] - c_pad[:, :, 1:-1, 0:-2]) / (2.0 * self.dx)
-        gy = (c_pad[:, :, 2:, 1:-1] - c_pad[:, :, 0:-2, 1:-1]) / (2.0 * self.dy)
-        return gx.reshape(c.shape), gy.reshape(c.shape)
+        c_ = self._reshape_spatial_3d(c)  # (N, 1, x, y, z)
+        c_pad = F.pad(c_, (1, 1, 1, 1, 1, 1), mode="replicate")
 
-    def divergence(self, jx, jy):
-        jx_pad = self.pad_mixed_bc(jx)
-        jy_pad = self.pad_mixed_bc(jy)
+        gx = (
+            c_pad[:, :, 2:, 1:-1, 1:-1]
+            - c_pad[:, :, :-2, 1:-1, 1:-1]
+        ) / (2.0 * self.dx)
 
-        djx_dx = (jx_pad[:, :, 1:-1, 2:] - jx_pad[:, :, 1:-1, 0:-2]) / (2.0 * self.dx)
-        djy_dy = (jy_pad[:, :, 2:, 1:-1] - jy_pad[:, :, 0:-2, 1:-1]) / (2.0 * self.dy)
+        gy = (
+            c_pad[:, :, 1:-1, 2:, 1:-1]
+            - c_pad[:, :, 1:-1, :-2, 1:-1]
+        ) / (2.0 * self.dy)
 
-        div = djx_dx + djy_dy
+        gz = (
+            c_pad[:, :, 1:-1, 1:-1, 2:]
+            - c_pad[:, :, 1:-1, 1:-1, :-2]
+        ) / (2.0 * self.dz)
+
+        return (
+            gx.reshape(c.shape),
+            gy.reshape(c.shape),
+            gz.reshape(c.shape),
+        )
+
+    def divergence(self, jx, jy, jz):
+        jx_pad = F.pad(jx, (1, 1, 1, 1, 1, 1), mode="replicate")
+        jy_pad = F.pad(jy, (1, 1, 1, 1, 1, 1), mode="replicate")
+        jz_pad = F.pad(jz, (1, 1, 1, 1, 1, 1), mode="replicate")
+
+        djx_dx = (jx_pad[:, :, 2:, 1:-1, 1:-1] - jx_pad[:, :, :-2, 1:-1, 1:-1]) / (2.0 * self.dx)
+        djy_dy = (jy_pad[:, :, 1:-1, 2:, 1:-1] - jy_pad[:, :, 1:-1, :-2, 1:-1]) / (2.0 * self.dy)
+        djz_dz = (jz_pad[:, :, 1:-1, 1:-1, 2:] - jz_pad[:, :, 1:-1, 1:-1, :-2]) / (2.0 * self.dz)
+
+        div = djx_dx + djy_dy + djz_dz
         return div.reshape(jx.shape)
 
     def laplacian(self, c):
-        c_pad = self.pad_mixed_bc(c)
+        c_ = self._reshape_spatial_3d(c)
+        c_pad = F.pad(c_, (1, 1, 1, 1, 1, 1), mode="replicate")
 
-        center = c_pad[:, :, 1:-1, 1:-1]
-        left   = c_pad[:, :, 1:-1, 0:-2]
-        right  = c_pad[:, :, 1:-1, 2:]
-        up     = c_pad[:, :, 0:-2, 1:-1]
-        down   = c_pad[:, :, 2:, 1:-1]
+        center  = c_pad[:, :, 1:-1, 1:-1, 1:-1]
+        x_plus  = c_pad[:, :, 2:, 1:-1, 1:-1]
+        x_minus = c_pad[:, :, :-2, 1:-1, 1:-1]
+        y_plus  = c_pad[:, :, 1:-1, 2:, 1:-1]
+        y_minus = c_pad[:, :, 1:-1, :-2, 1:-1]
+        z_plus  = c_pad[:, :, 1:-1, 1:-1, 2:]
+        z_minus = c_pad[:, :, 1:-1, 1:-1, :-2]
 
-        lap = (left - 2.0 * center + right) / (self.dx ** 2) + \
-              (up   - 2.0 * center + down)  / (self.dy ** 2)
-
+        lap = (
+            (x_plus - 2.0 * center + x_minus) / (self.dx ** 2) +
+            (y_plus - 2.0 * center + y_minus) / (self.dy ** 2) +
+            (z_plus - 2.0 * center + z_minus) / (self.dz ** 2)
+        )
         return lap.reshape(c.shape)
 
     def W(self, phi):
         return (18.0 / self.epsilon) * phi**2 * (1.0 - phi)**2
 
     def dW_dphi(self, phi):
-        # derivata di (18/eps) * phi^2 * (1-phi)^2
         return (36.0 / self.epsilon) * phi * (1.0 - phi) * (1.0 - 2.0 * phi)
 
     def M(self, phi):
@@ -88,14 +115,12 @@ class CahnHilliarLoss(nn.Module):
 
     def free_energy(self, phi):
         w_local = self.W(phi)
-        gx, gy = self.gradient(phi)
-        grad2 = gx**2 + gy**2
+        gx, gy, gz = self.gradient(phi)
+        grad2 = gx**2 + gy**2 + gz**2
         density = w_local + (self.epsilon ** 2) * grad2
-        return density.sum(dim=(-1, -2)) * (self.dx * self.dy)
+        return density.sum(dim=(-3, -2, -1)) * (self.dx * self.dy * self.dz)
 
     def chemical_potential(self, phi):
-        # Coerente con E = int [W(phi) + eps^2 |grad phi|^2] dx
-        # delta/delta phi [eps^2 |grad phi|^2] = -2 eps^2 Delta phi
         return self.dW_dphi(phi) - 2.0 * (self.epsilon ** 2) * self.laplacian(phi)
 
     def pde_residual_loss(self, pred):
@@ -104,13 +129,14 @@ class CahnHilliarLoss(nn.Module):
         phi_t = pred[:, :-1]
         mu = self.chemical_potential(phi_t)
 
-        gx_mu, gy_mu = self.gradient(mu)
+        gx_mu, gy_mu, gz_mu = self.gradient(mu)
         mobility = self.M(phi_t)
 
         jx = mobility * gx_mu
         jy = mobility * gy_mu
+        jz = mobility * gz_mu
 
-        rhs = self.divergence(jx, jy)
+        rhs = self.divergence(jx, jy, jz)
 
         residual = dphi_dt - rhs
         return torch.mean(residual ** 2)
@@ -119,13 +145,13 @@ class CahnHilliarLoss(nn.Module):
         return F.mse_loss(pred, target)
 
     def gradient_loss(self, pred, target):
-        gx_p, gy_p = self.gradient(pred)
-        gx_t, gy_t = self.gradient(target)
-        return F.l1_loss(gx_p, gx_t) + F.l1_loss(gy_p, gy_t)
+        gx_p, gy_p, gz_p = self.gradient(pred)
+        gx_t, gy_t, gz_t = self.gradient(target)
+        return F.l1_loss(gx_p, gx_t) + F.l1_loss(gy_p, gy_t) + F.l1_loss(gz_p, gz_t)
 
     def mass_conservation_loss(self, pred, target):
-        mass_pred = pred.sum(dim=(-1, -2)) * (self.dx * self.dy)
-        mass_true = target.sum(dim=(-1, -2)) * (self.dx * self.dy)
+        mass_pred = pred.sum(dim=(-3, -2, -1)) * (self.dx * self.dy * self.dz)
+        mass_true = target.sum(dim=(-3, -2, -1)) * (self.dx * self.dy * self.dz)
         return F.mse_loss(mass_pred, mass_true)
 
     def free_energy_loss(self, pred):
@@ -139,6 +165,7 @@ class CahnHilliarLoss(nn.Module):
         l_energy = self.free_energy_loss(pred)
         l_grad = self.gradient_loss(pred, target)
         l_pde = self.pde_residual_loss(pred)
+        l_mass = self.mass_conservation_loss(pred, target)
 
         total = (
             self.w_mse * l_mse +
@@ -147,4 +174,13 @@ class CahnHilliarLoss(nn.Module):
             self.w_pde * l_pde
         )
 
-        return total, l_mse, l_energy, l_grad, l_mass
+        metrics = {
+            "loss_total": total.detach(),
+            "loss_mse": l_mse.detach(),
+            "loss_energy": l_energy.detach(),
+            "loss_grad": l_grad.detach(),
+            "loss_pde": l_pde.detach(),
+            "loss_mass": l_mass.detach(),
+        }
+
+        return total, metrics
