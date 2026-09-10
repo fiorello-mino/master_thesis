@@ -21,7 +21,7 @@ OUTPUT_DIR = Path(
 #
 # True:
 #   cancella completamente square_reflected e la ricrea.
-OVERWRITE = False
+OVERWRITE = True
 # =====================================================================
 
 
