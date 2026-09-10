@@ -8,7 +8,7 @@ from pathlib import Path
 # ============================================================
 
 # Cartella che contiene i nuovi NPY convertiti.
-ROOT_DIR = Path("/data/fiorello/test_pores3D")
+ROOT_DIR = Path("/data/fiorello/pores3D/dataset_ext_test/conformal")
 
 # File TXT generato: un path assoluto per ogni riga.
 OUTPUT_TXT = ROOT_DIR / "test_set.txt"
