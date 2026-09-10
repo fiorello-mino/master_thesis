@@ -17,7 +17,7 @@ extract_param 	 : 	 False
 gifs 	 : 	 True 
 graphics 	 : 	 True 
 hidden 	 : 	 3 
-id 	 : 	 provaLoss_2 
+id 	 : 	 E5e-3_eTrue 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
@@ -30,7 +30,7 @@ nproc 	 : 	 4
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 reflect 
-paths 	 : 	 {'master': 'train_logs/provaLoss_2', 'model': 'train_logs/provaLoss_2/model', 'png': 'train_logs/provaLoss_2/pngs', 'gif': 'train_logs/provaLoss_2/gifs', 'lossplot': 'train_logs/provaLoss_2/lossplot.png', 'trainloss': 'train_logs/provaLoss_2/train_loss.txt', 'validloss': 'train_logs/provaLoss_2/valid_loss.txt', 'vtk': 'train_logs/provaLoss_2/vtk', 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/E5e-3_eTrue', 'model': 'train_logs/E5e-3_eTrue/model', 'png': 'train_logs/E5e-3_eTrue/pngs', 'gif': 'train_logs/E5e-3_eTrue/gifs', 'lossplot': 'train_logs/E5e-3_eTrue/lossplot.png', 'trainloss': 'train_logs/E5e-3_eTrue/train_loss.txt', 'validloss': 'train_logs/E5e-3_eTrue/valid_loss.txt', 'vtk': 'train_logs/E5e-3_eTrue/vtk', 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 18 
 reflection 	 : 	 True 

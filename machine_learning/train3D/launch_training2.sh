@@ -1,6 +1,6 @@
 # !/bin/bash
 
-python3 /home/fiorello/CRANE/train_with_loss.py \
+python3 /home/fiorello/CRANE/train_with_loss2.py \
 	--device  'cuda:0' \
 	--threeD \
 	--vtk \
@@ -14,7 +14,7 @@ python3 /home/fiorello/CRANE/train_with_loss.py \
 	--weightd 0e-5 \
 	--train_set 'train_set.txt' \
 	--valid_set 'valid_set.txt' \
-	--id 'E5e-3_eTrue' \
+	--id 'E1e-2' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \

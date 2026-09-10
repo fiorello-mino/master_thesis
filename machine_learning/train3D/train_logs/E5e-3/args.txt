@@ -17,7 +17,7 @@ extract_param 	 : 	 False
 gifs 	 : 	 True 
 graphics 	 : 	 True 
 hidden 	 : 	 3 
-id 	 : 	 prova3D_3 
+id 	 : 	 E5e-3 
 kernel_size 	 : 	 5 
 logfreq 	 : 	 1 
 lr 	 : 	 5e-05 
@@ -30,7 +30,7 @@ nproc 	 : 	 4
 npy 	 : 	 False 
 num_params 	 : 	 0 
 padding 	 : 	 reflect 
-paths 	 : 	 {'master': 'train_logs/prova3D_3', 'model': 'train_logs/prova3D_3/model', 'png': 'train_logs/prova3D_3/pngs', 'gif': 'train_logs/prova3D_3/gifs', 'lossplot': 'train_logs/prova3D_3/lossplot.png', 'trainloss': 'train_logs/prova3D_3/train_loss.txt', 'validloss': 'train_logs/prova3D_3/valid_loss.txt', 'vtk': 'train_logs/prova3D_3/vtk', 'npy': None} 
+paths 	 : 	 {'master': 'train_logs/E5e-3', 'model': 'train_logs/E5e-3/model', 'png': 'train_logs/E5e-3/pngs', 'gif': 'train_logs/E5e-3/gifs', 'lossplot': 'train_logs/E5e-3/lossplot.png', 'trainloss': 'train_logs/E5e-3/train_loss.txt', 'validloss': 'train_logs/E5e-3/valid_loss.txt', 'vtk': 'train_logs/E5e-3/vtk', 'npy': None} 
 ramp 	 : 	 True 
 ramp_length 	 : 	 18 
 reflection 	 : 	 True 
