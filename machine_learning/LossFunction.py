@@ -10,12 +10,12 @@ class CahnHilliardLoss(nn.Module):
     Convenzione degli input:
         pred, target: (B, T, C, Nx, Ny, Nz)
 
-    Le coordinate fisiche sono le ultime tre dimensioni:
+    Coordinate fisiche:
         asse -3 -> x
         asse -2 -> y
         asse -1 -> z
 
-    Il reshape per gli operatori 3D conserva i canali:
+    Gli operatori spaziali usano il layout PyTorch 3D:
         (B, T, C, Nx, Ny, Nz) -> (B*T, C, Nx, Ny, Nz)
 
     Energia:
@@ -28,7 +28,7 @@ class CahnHilliardLoss(nn.Module):
         M(phi) = M0 (36 / epsilon) phi^2 (1 - phi)^2
 
     Boundary conditions:
-        Neumann omogenee in x, y, z, implementate con padding replicate.
+        Neumann omogenee in x, y, z, approssimate con padding replicate.
     """
 
     def __init__(
@@ -38,6 +38,7 @@ class CahnHilliardLoss(nn.Module):
         w_grad=0.0,
         w_pde=0.0,
         w_mass=0.0,
+        w_bounds=0.0,
         epsilon=0.1,
         M0=1.0,
         dx=0.025,
@@ -52,6 +53,7 @@ class CahnHilliardLoss(nn.Module):
         self.w_grad = w_grad
         self.w_pde = w_pde
         self.w_mass = w_mass
+        self.w_bounds = w_bounds
 
         self.epsilon = epsilon
         self.M0 = M0
@@ -62,15 +64,15 @@ class CahnHilliardLoss(nn.Module):
 
     def _reshape_spatial_3d(self, c):
         """
-        (B, T, C, Nx, Ny, Nz) -> (B*T, C, Nx, Ny, Nz).
+        Trasforma:
+            (B, T, C, Nx, Ny, Nz) -> (B*T, C, Nx, Ny, Nz)
 
-        Non fonde i canali: ogni canale resta un canale separato per F.pad
-        e per gli operatori differenziali.
+        La dimensione C viene conservata e non fusa nel batch.
         """
         if c.ndim != 6:
             raise ValueError(
-                "Expected a 6D tensor with shape (B, T, C, Nx, Ny, Nz), "
-                f"but received shape {tuple(c.shape)}."
+                "Expected c to have shape (B, T, C, Nx, Ny, Nz), "
+                f"but got {tuple(c.shape)}."
             )
 
         B, T, C, Nx, Ny, Nz = c.shape
@@ -78,28 +80,28 @@ class CahnHilliardLoss(nn.Module):
 
     @staticmethod
     def _restore_spatial_3d(c_reshaped, original_shape):
-        """(B*T, C, Nx, Ny, Nz) -> (B, T, C, Nx, Ny, Nz)."""
+        """Trasforma (B*T, C, Nx, Ny, Nz) -> (B, T, C, Nx, Ny, Nz)."""
         return c_reshaped.reshape(original_shape)
 
     def pad_neumann(self, c):
         """
-        Applica un ghost layer per lato con estensione replicate.
-
-        Input:  (B, T, C, Nx, Ny, Nz)
-        Output: (B*T, C, Nx+2, Ny+2, Nz+2)
-        """
-        c_ = self._reshape_spatial_3d(c)
-        return F.pad(c_, (1, 1, 1, 1, 1, 1), mode="replicate")
-
-    def gradient(self, c):
-        """
-        Gradiente centrale del secondo ordine con BC di Neumann.
+        Aggiunge un ghost layer per lato lungo x, y e z.
 
         Input:
             c: (B, T, C, Nx, Ny, Nz)
 
         Output:
-            gx, gy, gz: ciascuno con shape (B, T, C, Nx, Ny, Nz)
+            (B*T, C, Nx+2, Ny+2, Nz+2)
+        """
+        c_reshaped = self._reshape_spatial_3d(c)
+        return F.pad(c_reshaped, (1, 1, 1, 1, 1, 1), mode="replicate")
+
+    def gradient(self, c):
+        """
+        Calcola gradiente 3D con differenze centrali del secondo ordine.
+
+        Output:
+            gx, gy, gz con shape uguale a c.
         """
         original_shape = c.shape
         c_pad = self.pad_neumann(c)
@@ -127,22 +129,19 @@ class CahnHilliardLoss(nn.Module):
 
     def divergence(self, jx, jy, jz):
         """
-        Divergenza centrale del secondo ordine con BC di Neumann.
+        Calcola div(j) = d(jx)/dx + d(jy)/dy + d(jz)/dz
+        con differenze centrali del secondo ordine e BC di Neumann.
 
-        Input:
-            jx, jy, jz: (B, T, C, Nx, Ny, Nz)
-
-        Output:
-            div(j): (B, T, C, Nx, Ny, Nz)
+        Input/output:
+            jx, jy, jz e div hanno shape (B, T, C, Nx, Ny, Nz).
         """
         if jx.shape != jy.shape or jx.shape != jz.shape:
             raise ValueError(
-                "jx, jy and jz must have identical shapes; received "
+                "jx, jy and jz must have identical shapes; got "
                 f"{tuple(jx.shape)}, {tuple(jy.shape)}, {tuple(jz.shape)}."
             )
 
         original_shape = jx.shape
-
         jx_pad = self.pad_neumann(jx)
         jy_pad = self.pad_neumann(jy)
         jz_pad = self.pad_neumann(jz)
@@ -167,7 +166,7 @@ class CahnHilliardLoss(nn.Module):
 
     def laplacian(self, c):
         """
-        Laplaciano 3D con stencil centrale a 7 punti e BC di Neumann.
+        Calcola Laplaciano 3D con stencil a 7 punti e BC di Neumann.
 
         Input/output:
             (B, T, C, Nx, Ny, Nz)
@@ -199,7 +198,7 @@ class CahnHilliardLoss(nn.Module):
         return (18.0 / self.epsilon) * phi.square() * (1.0 - phi).square()
 
     def dW_dphi(self, phi):
-        """Derivata dW/dphi."""
+        """Derivata del potenziale: dW/dphi."""
         return (
             (36.0 / self.epsilon)
             * phi
@@ -209,13 +208,19 @@ class CahnHilliardLoss(nn.Module):
 
     def M(self, phi):
         """Mobilità degenere M(phi)."""
-        return self.M0 * (36.0 / self.epsilon) * phi.square() * (1.0 - phi).square()
+        return (
+            self.M0
+            * (36.0 / self.epsilon)
+            * phi.square()
+            * (1.0 - phi).square()
+        )
 
     def free_energy(self, phi):
         """
-        Energia libera integrata per batch, timestep e canale.
+        Calcola E(phi) per ogni batch, frame temporale e canale.
 
-        Output shape: (B, T, C)
+        Output:
+            (B, T, C)
         """
         w_local = self.W(phi)
         gx, gy, gz = self.gradient(phi)
@@ -230,8 +235,8 @@ class CahnHilliardLoss(nn.Module):
         """
         mu = dW/dphi - 2 epsilon^2 Laplacian(phi).
 
-        Il fattore 2 è coerente con una densità energetica
-        epsilon^2 |grad phi|^2, senza il prefattore 1/2.
+        Il fattore 2 è coerente con:
+            E = integral [W(phi) + epsilon^2 |grad phi|^2] dV
         """
         return self.dW_dphi(phi) - 2.0 * (self.epsilon ** 2) * self.laplacian(phi)
 
@@ -239,6 +244,7 @@ class CahnHilliardLoss(nn.Module):
         return F.mse_loss(pred, target)
 
     def gradient_loss(self, pred, target):
+        """Errore L1 tra i gradienti predetti e target."""
         gx_pred, gy_pred, gz_pred = self.gradient(pred)
         gx_true, gy_true, gz_true = self.gradient(target)
 
@@ -250,10 +256,7 @@ class CahnHilliardLoss(nn.Module):
 
     def mass_conservation_loss(self, pred, target):
         """
-        Errore nella massa totale predetta rispetto al target.
-
-        Non è direttamente il drift temporale della sola predizione:
-        confronta M_pred(t) con M_target(t), per ogni B, T, C.
+        Confronta la massa totale di predizione e target per ogni B, T, C.
         """
         dV = self.dx * self.dy * self.dz
 
@@ -262,26 +265,46 @@ class CahnHilliardLoss(nn.Module):
 
         return F.mse_loss(mass_pred, mass_true)
 
+    def bounds_loss(self, pred):
+        """
+        Penalizza solamente i valori esterni al range fisico [0, 1].
+
+        Per ogni voxel:
+            phi < 0: penalità phi^2
+            0 <= phi <= 1: penalità 0
+            phi > 1: penalità (phi - 1)^2
+        """
+        below_zero = F.relu(-pred)
+        above_one = F.relu(pred - 1.0)
+
+        return torch.mean(below_zero.square() + above_one.square())
+
     def free_energy_loss(self, pred):
         """
-        Penalizza esclusivamente gli incrementi temporali dell'energia:
-        max(E(t + dt) - E(t), 0)^2.
+        Penalizza aumenti di energia libera tra frame consecutivi:
+            mean(max(E(t+dt) - E(t), 0)^2).
         """
+        if pred.shape[1] < 2:
+            raise ValueError(
+                "free_energy_loss requires at least T=2 time frames, "
+                f"but got T={pred.shape[1]}."
+            )
+
         energy = self.free_energy(pred)
         delta_energy = energy[:, 1:] - energy[:, :-1]
-        return torch.mean(torch.relu(delta_energy).square())
+        return torch.mean(F.relu(delta_energy).square())
 
     def pde_residual_loss(self, pred):
         """
-        Residuo della PDE:
+        Residuo della PDE di Cahn-Hilliard:
             dphi/dt - div(M(phi) grad(mu)) = 0.
 
-        Usa una differenza temporale in avanti tra frame consecutivi.
+        La derivata temporale è una differenza in avanti tra frame consecutivi.
         """
         if pred.shape[1] < 2:
             raise ValueError(
                 "pde_residual_loss requires at least T=2 time frames, "
-                f"but received T={pred.shape[1]}."
+                f"but got T={pred.shape[1]}."
             )
 
         dphi_dt = (pred[:, 1:] - pred[:, :-1]) / self.dt
@@ -304,12 +327,12 @@ class CahnHilliardLoss(nn.Module):
     def forward(self, pred, target):
         """
         Returns:
-            total: scalare differenziabile su cui chiamare backward().
-            metrics: dizionario di scalari detached, per logging.
+            total: loss scalare differenziabile su cui chiamare backward().
+            metrics: dizionario detached per logging.
         """
         if pred.shape != target.shape:
             raise ValueError(
-                "pred and target must have identical shapes; received "
+                "pred and target must have identical shapes; got "
                 f"{tuple(pred.shape)} and {tuple(target.shape)}."
             )
 
@@ -318,6 +341,7 @@ class CahnHilliardLoss(nn.Module):
         l_grad = self.gradient_loss(pred, target)
         l_pde = self.pde_residual_loss(pred)
         l_mass = self.mass_conservation_loss(pred, target)
+        l_bounds = self.bounds_loss(pred)
 
         total = (
             self.w_mse * l_mse
@@ -325,6 +349,7 @@ class CahnHilliardLoss(nn.Module):
             + self.w_grad * l_grad
             + self.w_pde * l_pde
             + self.w_mass * l_mass
+            + self.w_bounds * l_bounds
         )
 
         metrics = {
@@ -334,6 +359,7 @@ class CahnHilliardLoss(nn.Module):
             "loss_grad": l_grad.detach(),
             "loss_pde": l_pde.detach(),
             "loss_mass": l_mass.detach(),
+            "loss_bounds": l_bounds.detach(),
         }
 
         return total, metrics
