@@ -9,10 +9,6 @@ from typing import Union
 
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-
-from matplotlib.colors import LinearSegmentedColormap
-from PIL import Image
 # === import external modules ===
 
 
@@ -23,25 +19,29 @@ from src.utils import *
 
 
 # <<< OUTPUT VARIABLES <<<
-NUM_PNG: int = 100
-DELTA_PNG: int = 1
-# Do not set DELTA_PNG < 1 if PNG output is enabled.
-
+# Salva NPY solo per le prime NUM_NPY sequenze.
 NUM_NPY: int = 100
 DELTA_NPY: int = 10
+
+# Salva VTK solo per le prime NUM_VTK sequenze.
+NUM_VTK: int = 100
+DELTA_VTK: int = 1
+
+# Nome del campo scalare visibile in ParaView.
+VTK_FIELD_NAME: str = 'phi'
 # === OUTPUT VARIABLES ===
 
 
 # <<< PREDICTION VARIABLES <<<
 # PRED_FRAMES == 0:
-#   The sequence table contains the complete ground truth.
-#   The model predicts from t=MIN_SEQ up to t=len(trueSeq)-1,
-#   then computes error metrics at every predicted timestep.
+#   sequence_table con ground truth completo.
+#   Il modello predice da t=MIN_SEQ a t=len(trueSeq)-1 e calcola
+#   le metriche confrontando predizione e target a ogni tempo.
 #
 # PRED_FRAMES > 0:
-#   The sequence table contains exactly MIN_SEQ input frames per sequence.
-#   The model generates PRED_FRAMES future frames autoregressively.
-#   No ground-truth metrics can be computed.
+#   sequence_table con esattamente MIN_SEQ frame iniziali per riga.
+#   Il modello genera PRED_FRAMES frame futuri autoregressivamente.
+#   Non vengono calcolate metriche, perché non esiste ground truth.
 PRED_FRAMES: int = 1
 # === PREDICTION VARIABLES ===
 
@@ -80,46 +80,46 @@ CONSERVATIVE: bool = False
 
 class CustomNameSpace:
     """
-    Dummy class retained for compatibility with CRANE utilities,
-    if they require this interface.
+    Dummy class maintained for compatibility with CRANE utilities.
     """
     pass
 
 
 class OutputMan:
     """
-    Handles outputs for one sequence.
+    Gestisce gli output per una singola sequenza 3D.
 
-    `writeEVO()` supports:
-    - Initial frames: `true` is available, `pred=None`.
-    - Inference-only prediction: `true=None`, `pred` is available.
-    - Evaluation prediction: both `true` and `pred` are available.
+    Convenzione di ogni volume:
+        phi.shape == (nx, ny, nz)
 
-    Only frames that have both `true` and `pred` contribute to
-    aggregate error statistics.
+    Output possibili:
+    - evo.txt: statistiche frame per frame;
+    - pred_npy/: predizioni in formato NumPy;
+    - pred_vtk/: predizioni 3D in legacy ASCII VTK.
+
+    writeEVO gestisce:
+    - true disponibile e pred=None: frame iniziale, non predetto;
+    - true=None e pred disponibile: rollout senza ground truth;
+    - true e pred disponibili: rollout valutato con metriche.
     """
 
     def __init__(
         self,
         path: Union[str, Path],
         deltaNPY: int = -1,
-        deltaPNG: int = -1,
+        deltaVTK: int = -1,
+        vtk_field_name: str = VTK_FIELD_NAME,
     ) -> None:
         self.path = Path(path)
         self.deltaNPY = deltaNPY
-        self.deltaPNG = deltaPNG
+        self.deltaVTK = deltaVTK
+        self.vtk_field_name = vtk_field_name
 
         if self.deltaNPY > 0:
             (self.path / 'pred_npy').mkdir()
 
-        if self.deltaPNG > 0:
-            (self.path / 'pred_png').mkdir()
-            (self.path / 'diff_png').mkdir()
-
-            self.cmap = LinearSegmentedColormap.from_list(
-                'cwr',
-                ['cyan', 'white', 'red'],
-            )
+        if self.deltaVTK > 0:
+            (self.path / 'pred_vtk').mkdir()
 
         self.fileEVO = open(self.path / 'evo.txt', 'w')
 
@@ -144,10 +144,11 @@ class OutputMan:
         self.maxSymDiff = 0.0
         self.sumSymDiff = 0.0
 
+        # Numero di frame su cui sono state effettivamente calcolate metriche.
         self.niter_eval = 0
 
     def close(self) -> None:
-        """Explicitly closes evo.txt."""
+        """Chiude esplicitamente evo.txt."""
         if not self.fileEVO.closed:
             self.fileEVO.close()
 
@@ -155,20 +156,83 @@ class OutputMan:
         self.close()
 
     @staticmethod
-    def savePNG(fname: Union[str, Path], phi: np.ndarray) -> None:
+    def _as_3d_array(phi: np.ndarray) -> np.ndarray:
         """
-        Saves a phase field as an 8-bit grayscale PNG after clipping
-        its values to the interval [0, 1].
-        """
-        phiclip = np.clip(phi, 0.0, 1.0)
-        pix = (phiclip * 255.0).astype(np.uint8)
+        Converte phi in un ndarray 3D e controlla la convenzione attesa.
 
-        img = Image.fromarray(pix, mode='L')
-        img.save(fname)
+        Input atteso:
+            phi.shape == (nx, ny, nz)
+
+        Eventuali dimensioni singleton vengono eliminate con squeeze.
+        """
+        phi = np.asarray(phi)
+        phi = np.squeeze(phi)
+
+        if phi.ndim != 3:
+            raise ValueError(
+                'L output VTK richiede un volume 3D con shape '
+                f'(nx, ny, nz), ma è stata ricevuta shape {phi.shape}.'
+            )
+
+        return phi
+
+    @staticmethod
+    def saveVTK(
+        fname: Union[str, Path],
+        phi: np.ndarray,
+        field_name: str = 'phi',
+    ) -> None:
+        """
+        Scrive un volume 3D in legacy ASCII VTK.
+
+        Convenzione dell'array di ingresso:
+            phi[ix, iy, iz]
+            phi.shape == (nx, ny, nz)
+
+        Il file VTK dichiara:
+            DIMENSIONS nx ny nz
+
+        VTK richiede nel buffer lineare che x vari più rapidamente, poi y,
+        poi z. Perciò l'array viene trasformato:
+
+            (nx, ny, nz) -> (nz, ny, nx)
+
+        e poi appiattito in C-order.
+        """
+        phi = OutputMan._as_3d_array(phi)
+        nx, ny, nz = phi.shape
+
+        # phi_vtk[iz, iy, ix] = phi[ix, iy, iz]
+        # In C-order, ix è l'indice che varia più rapidamente.
+        phi_vtk = np.transpose(phi, (2, 1, 0)).astype(
+            np.float32,
+            copy=False,
+        )
+
+        with open(fname, 'w') as vtk_file:
+            vtk_file.write('# vtk DataFile Version 3.0\n')
+            vtk_file.write('CRANE predicted scalar field\n')
+            vtk_file.write('ASCII\n')
+            vtk_file.write('DATASET STRUCTURED_POINTS\n')
+            vtk_file.write(f'DIMENSIONS {nx} {ny} {nz}\n')
+            vtk_file.write('ORIGIN 0.0 0.0 0.0\n')
+            vtk_file.write('SPACING 1.0 1.0 1.0\n')
+            vtk_file.write(f'POINT_DATA {nx * ny * nz}\n')
+            vtk_file.write(f'SCALARS {field_name} float 1\n')
+            vtk_file.write('LOOKUP_TABLE default\n')
+
+            np.savetxt(
+                vtk_file,
+                phi_vtk.ravel(order='C'),
+                fmt='%.8e',
+            )
 
     def _save_prediction(self, time: int, pred: np.ndarray) -> None:
         """
-        Saves prediction outputs according to DELTA_NPY and DELTA_PNG.
+        Salva le predizioni nei formati richiesti.
+
+        I file vengono creati solo ai tempi compatibili con i rispettivi
+        delta di output.
         """
         if self.deltaNPY > 0 and time % self.deltaNPY == 0:
             np.save(
@@ -176,36 +240,12 @@ class OutputMan:
                 pred,
             )
 
-        if self.deltaPNG > 0 and time % self.deltaPNG == 0:
-            self.savePNG(
-                self.path / 'pred_png' / f'{time:03d}.png',
+        if self.deltaVTK > 0 and time % self.deltaVTK == 0:
+            self.saveVTK(
+                self.path / 'pred_vtk' / f'{time:03d}.vtk',
                 pred,
+                field_name=self.vtk_field_name,
             )
-
-    def _save_difference(
-        self,
-        time: int,
-        true: np.ndarray,
-        pred: np.ndarray,
-    ) -> None:
-        """
-        Saves the clipped signed difference pred - true as a PNG.
-        """
-        if self.deltaPNG <= 0:
-            return
-
-        if time % self.deltaPNG != 0:
-            return
-
-        diff = np.clip(pred - true, -1.0, 1.0)
-
-        plt.imsave(
-            self.path / 'diff_png' / f'{time:03d}.png',
-            diff,
-            cmap=self.cmap,
-            vmin=-1.0,
-            vmax=1.0,
-        )
 
     def writeEVO(
         self,
@@ -214,17 +254,18 @@ class OutputMan:
         pred: Union[np.ndarray, None] = None,
     ) -> None:
         """
-        Writes a single frame entry to evo.txt.
+        Scrive una riga in evo.txt e salva una predizione, quando presente.
 
-        A prediction is saved only when `pred` exists. Thus, initial
-        frames for which `pred=None` can never trigger `np.clip(None, ...)`.
+        - I frame iniziali sono loggati con pred=None e non generano file VTK.
+        - Le predizioni senza truth hanno metriche NaN.
+        - Le predizioni con truth contribuiscono alle statistiche aggregate.
         """
         if true is None and pred is None:
             raise ValueError(
-                'writeEVO: both true and pred cannot be None.'
+                'writeEVO: true e pred non possono essere entrambi None.'
             )
 
-        # Initial/input frame: true exists, pred does not.
+        # Frame iniziale noto, ma non generato dalla rete.
         if pred is None:
             self.fileEVO.write(
                 f'{time}\t'
@@ -241,10 +282,10 @@ class OutputMan:
             self.fileEVO.flush()
             return
 
-        # A real prediction exists: save it according to output cadence.
+        # Predizione valida: salva NPY/VTK indipendentemente dalla truth.
         self._save_prediction(time, pred)
 
-        # Prediction-only mode: no corresponding ground truth.
+        # Rollout puro: nessun frame vero da usare per la valutazione.
         if true is None:
             self.fileEVO.write(
                 f'{time}\t'
@@ -261,7 +302,7 @@ class OutputMan:
             self.fileEVO.flush()
             return
 
-        # Ground truth and prediction both exist: compute statistics.
+        # Ground truth e predizione disponibili: calcola le metriche.
         difference = pred - true
 
         mae = np.abs(difference).mean()
@@ -291,14 +332,14 @@ class OutputMan:
             f'{symDiff}\n'
         )
 
-        self._save_difference(time, true, pred)
         self.fileEVO.flush()
 
     def writeSTAT(self, fileSTAT, seq_name: str) -> None:
         """
-        Writes sequence-level aggregate statistics.
+        Scrive le metriche aggregate di una sequenza in errors.txt.
 
-        If no ground-truth/prediction pair exists, all metrics are NaN.
+        Se la simulazione viene fatta in inference-only mode, non esistono
+        coppie true/pred e vengono scritti NaN.
         """
         if self.niter_eval == 0:
             fileSTAT.write(
@@ -325,7 +366,7 @@ class OutputMan:
 
 def best_model_path(log_dir_path: Union[str, Path]) -> Path:
     """
-    Returns the checkpoint path associated with the lowest validation loss.
+    Restituisce il checkpoint con la validation loss minima.
     """
     log_dir_path = Path(log_dir_path)
     valid_loss_file = log_dir_path / 'valid_loss.txt'
@@ -385,8 +426,7 @@ def best_model_path(log_dir_path: Union[str, Path]) -> Path:
 
 def prepare_output_directory(output_folder: Union[str, Path]) -> None:
     """
-    Creates the output directory. If it exists, asks the user whether
-    to delete it or abort the program.
+    Crea la cartella di output. Se esiste, chiede se eliminarla.
     """
     output_folder = Path(output_folder)
 
@@ -413,7 +453,7 @@ def prepare_output_directory(output_folder: Union[str, Path]) -> None:
 
 
 def get_device(use_cuda: bool) -> str:
-    """Uses CUDA when requested and available; otherwise returns CPU."""
+    """Restituisce CUDA se richiesta e disponibile; altrimenti CPU."""
     if use_cuda and torch.cuda.is_available():
         return 'cuda'
 
@@ -428,14 +468,14 @@ def load_sequence(
     output_manager: OutputMan,
 ) -> tuple[torch.Tensor, list[np.ndarray]]:
     """
-    Loads a sequence-table row.
+    Carica tutti i frame elencati in una riga della sequence table.
 
-    Returns:
-    - iniSeq: first MIN_SEQ frames with shape [B, T, C, H, W];
-    - trueSeq: every frame listed on the row as NumPy arrays.
+    Ritorna:
+    - iniSeq: i primi MIN_SEQ frame con shape [B, T, C, nx, ny, nz];
+    - trueSeq: tutti i volumi presenti nella riga, come array NumPy.
 
-    The initial frames are logged with pred=None and do not contribute
-    to MAE/MSE/symDiff.
+    Convenzione dei volumi:
+        phi.shape == (nx, ny, nz)
     """
     frame_paths = sequence_line.strip().split()
 
@@ -461,13 +501,13 @@ def load_sequence(
 
             phi_tensor = torch.from_numpy(phi).float()
 
-            # Example: [H, W] -> [1, 1, H, W].
-            while phi_tensor.ndim < 4:
+            # Da [nx, ny, nz] a [B=1, C=1, nx, ny, nz].
+            while phi_tensor.ndim < 5:
                 phi_tensor = phi_tensor.unsqueeze(0)
 
             iniSeq.append(phi_tensor)
 
-    # [B, C, H, W] frames -> [B, T, C, H, W].
+    # Lista di [B, C, nx, ny, nz] -> [B, T, C, nx, ny, nz].
     iniSeq_tensor = torch.stack(iniSeq, dim=1)
 
     return iniSeq_tensor, trueSeq
@@ -478,21 +518,19 @@ def get_last_prediction_time(
     has_ground_truth: bool,
 ) -> int:
     """
-    Returns the final time index to predict.
+    Restituisce l'ultimo indice temporale da predire.
 
-    Evaluation mode:
-        PRED_FRAMES == 0.
-        The table contains t=0, ..., t=len(trueSeq)-1.
-        First MIN_SEQ frames are inputs, hence prediction ends at
-        t=len(trueSeq)-1.
+    Evaluation mode, PRED_FRAMES=0:
+        frame disponibili: 0, ..., len(trueSeq)-1
+        frame input: 0, ..., MIN_SEQ-1
+        ultimo frame predetto: len(trueSeq)-1
 
-    Inference-only mode:
-        PRED_FRAMES > 0.
-        Generates exactly PRED_FRAMES future frames after the input.
+    Inference-only mode, PRED_FRAMES>0:
+        vengono generati esattamente PRED_FRAMES frame dopo i MIN_SEQ input.
 
-        With MIN_SEQ=1 and PRED_FRAMES=200:
-        - Input: t=0.
-        - Predictions: t=1, ..., 200.
+    Esempio con MIN_SEQ=1 e PRED_FRAMES=200:
+        input: t=0
+        predizioni: t=1, ..., 200
     """
     if has_ground_truth:
         return true_seq_length - 1
@@ -502,13 +540,15 @@ def get_last_prediction_time(
 
 def main() -> None:
     """
-    Autoregressive one-frame-at-a-time rollout.
+    Esegue un rollout autoregressivo 3D, un frame per chiamata al modello.
 
-    Modes:
-    - PRED_FRAMES == 0: full ground truth; predict and evaluate all
-      timesteps after the initial MIN_SEQ input frames.
-    - PRED_FRAMES > 0: input-only table; generate exactly PRED_FRAMES
-      future frames without evaluation metrics.
+    PRED_FRAMES == 0:
+        la table contiene il ground truth completo e vengono calcolate
+        metriche su tutti i frame da t=MIN_SEQ a t=len(trueSeq)-1.
+
+    PRED_FRAMES > 0:
+        la table contiene solo MIN_SEQ frame iniziali per sequenza e vengono
+        generati esattamente PRED_FRAMES frame futuri senza metriche.
     """
     if PRED_FRAMES < 0:
         raise ValueError(
@@ -548,13 +588,13 @@ def main() -> None:
     model.eval()
     model.to(device)
 
-    # This preserves the method name from your original code.
+    # Mantiene il nome della funzione del tuo codice CRANE originale.
     model.make_div_filters(torch.zeros(1, device=device))
 
     with open(SEQUENCE_TABLE, 'r') as intable:
         listseq = [
             line.strip()
-            for line in intable.readlines()
+            for line in intable
             if line.strip()
         ]
 
@@ -592,7 +632,7 @@ def main() -> None:
         )
 
     countNPYout = 0
-    countPNGout = 0
+    countVTKout = 0
 
     with open(f'{OUTPUT_FOLDER}/errors.txt', 'w') as fileSTAT:
         fileSTAT.write(
@@ -644,15 +684,16 @@ def main() -> None:
                 model.zero_grad(set_to_none=True)
 
                 dNPY = DELTA_NPY if countNPYout < NUM_NPY else -1
-                dPNG = DELTA_PNG if countPNGout < NUM_PNG else -1
+                dVTK = DELTA_VTK if countVTKout < NUM_VTK else -1
 
                 countNPYout += 1
-                countPNGout += 1
+                countVTKout += 1
 
                 out = OutputMan(
                     path=seq_path,
                     deltaNPY=dNPY,
-                    deltaPNG=dPNG,
+                    deltaVTK=dVTK,
+                    vtk_field_name=VTK_FIELD_NAME,
                 )
 
                 iniSeq, trueSeq = load_sequence(
@@ -662,10 +703,11 @@ def main() -> None:
 
                 iniSeq = iniSeq.to(device)
 
-                # Initializes the persistent state from the first input.
+                # Inizializza lo stato persistente usando il primo frame input.
                 model.set_hidden(iniSeq[:, 0:1, ...])
 
                 params = None
+
                 if params is not None:
                     params = params.to(device)
 
@@ -679,13 +721,12 @@ def main() -> None:
                     f'(t={MIN_SEQ} ... t={last_time})...'
                 )
 
-                # This should only happen for malformed or degenerate input.
                 if last_time < MIN_SEQ:
                     out.writeSTAT(fileSTAT, seq_name)
                     out.close()
                     continue
 
-                # First model-generated future frame: t=MIN_SEQ.
+                # Prima predizione dopo i MIN_SEQ frame iniziali.
                 predSeq = model(
                     iniSeq,
                     future=0,
@@ -693,25 +734,20 @@ def main() -> None:
                     approx_inference=False,
                 )
 
+                # Conserva unicamente il frame da usare come input
+                # al prossimo passo autoregressivo.
                 predSeq = predSeq[:, MIN_SEQ - 1:MIN_SEQ, ...]
 
                 time = MIN_SEQ
                 pred_frame = predSeq[0, 0, 0, ...].cpu().numpy()
 
-                if has_ground_truth:
-                    out.writeEVO(
-                        time=time,
-                        true=trueSeq[time],
-                        pred=pred_frame,
-                    )
-                else:
-                    out.writeEVO(
-                        time=time,
-                        true=None,
-                        pred=pred_frame,
-                    )
+                out.writeEVO(
+                    time=time,
+                    true=trueSeq[time] if has_ground_truth else None,
+                    pred=pred_frame,
+                )
 
-                # Every iteration predicts exactly one new frame.
+                # Ogni iterazione genera esattamente un nuovo volume 3D.
                 while time < last_time:
                     if time % 50 == 0:
                         print(time, end='...', flush=True)
@@ -726,18 +762,11 @@ def main() -> None:
                     time += 1
                     pred_frame = predSeq[0, 0, 0, ...].cpu().numpy()
 
-                    if has_ground_truth:
-                        out.writeEVO(
-                            time=time,
-                            true=trueSeq[time],
-                            pred=pred_frame,
-                        )
-                    else:
-                        out.writeEVO(
-                            time=time,
-                            true=None,
-                            pred=pred_frame,
-                        )
+                    out.writeEVO(
+                        time=time,
+                        true=trueSeq[time] if has_ground_truth else None,
+                        pred=pred_frame,
+                    )
 
                 out.writeSTAT(fileSTAT, seq_name)
                 out.close()
