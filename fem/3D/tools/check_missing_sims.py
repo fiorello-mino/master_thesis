@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 """
-Script per trovare simulazioni presenti in /archive/roberto/poresAMDIS/square/
-ma assenti in /data/fiorello/poresAMDIS/
+Script per copiare i file .dat e .3d dalle simulazioni mancanti
+in /data/fiorello/pores3D/data_train/square/init/
 
-Struttura attesa:
-  /archive/roberto/poresAMDIS/square/iso_P0X/<sim_name>/...
-  /data/fiorello/poresAMDIS/iso_P0X/<sim_name>/...
+Struttura:
+  /archive/roberto/poresAMDIS/square/iso_P0X/<sim_name>/<sim_name>.dat
+  /archive/roberto/poresAMDIS/square/iso_P0X/<sim_name>/<qualcosa>.3d
+  -> copia in /data/fiorello/pores3D/data_train/square/init/
 """
 
 import os
+import shutil
 from pathlib import Path
 
 ARCHIVE_BASE = Path("/archive/roberto/poresAMDIS/square")
 DATA_BASE = Path("/data/fiorello/poresAMDIS")
+INIT_DIR = Path("/data/fiorello/pores3D/data_train/square/init")
+
+def find_3d_file(sim_path):
+    """Trova l'unico file .3d nella cartella della simulazione"""
+    files_3d = list(sim_path.glob("*.3d"))
+    if len(files_3d) == 0:
+        return None
+    if len(files_3d) > 1:
+        print(f"ATTENZIONE: trovati {len(files_3d)} file .3d in {sim_path}, uso il primo")
+    return files_3d[0]
 
 def main():
     if not ARCHIVE_BASE.exists():
@@ -22,6 +34,10 @@ def main():
         print(f"ERRORE: {DATA_BASE} non esiste o non è accessibile")
         return
 
+    # Crea cartella init se non esiste
+    INIT_DIR.mkdir(parents=True, exist_ok=True)
+    print(f"Cartella init: {INIT_DIR}\n")
+
     # Trova tutte le cartelle pitch (iso_P06, iso_P07, ...)
     pitch_folders = sorted([
         d for d in os.listdir(ARCHIVE_BASE)
@@ -30,7 +46,8 @@ def main():
 
     print(f"Trovate {len(pitch_folders)} cartelle pitch: {pitch_folders}\n")
 
-    missing = {}
+    # Raccogli tutte le simulazioni mancanti con il loro percorso completo
+    missing_sims = []  # lista di (pitch, sim_name, archive_path)
 
     for pitch in pitch_folders:
         archive_pitch_path = ARCHIVE_BASE / pitch
@@ -44,8 +61,8 @@ def main():
 
         # Se la cartella pitch non esiste in /data, tutte mancano
         if not data_pitch_path.exists():
-            missing[pitch] = archive_sims
-            print(f"{pitch}: cartella PITCH ASSENTE in {DATA_BASE} ({len(archive_sims)} simulazioni mancanti)")
+            for sim in archive_sims:
+                missing_sims.append((pitch, sim, archive_pitch_path / sim))
             continue
 
         # Simulazioni presenti in /data per questo pitch
@@ -56,40 +73,69 @@ def main():
 
         # Calcola differenza
         missing_in_pitch = archive_sims - data_sims
+        for sim in missing_in_pitch:
+            missing_sims.append((pitch, sim, archive_pitch_path / sim))
 
-        if missing_in_pitch:
-            missing[pitch] = missing_in_pitch
-            print(f"{pitch}: {len(missing_in_pitch)} simulazioni mancanti")
+    print(f"Totale simulazioni mancanti: {len(missing_sims)}\n")
+
+    # Copia i file .dat e .3d
+    copied_dat = 0
+    copied_3d = 0
+    errors = []
+
+    for pitch, sim_name, sim_path in missing_sims:
+        # File .dat (stesso nome della simulazione)
+        dat_file = sim_path / f"{sim_name}.dat"
+        
+        # File .3d (unico file con estensione .3d nella cartella)
+        macro_file = find_3d_file(sim_path)
+
+        # Copia .dat se esiste
+        if dat_file.exists():
+            dest_dat = INIT_DIR / f"{sim_name}.dat"
+            shutil.copy2(dat_file, dest_dat)
+            copied_dat += 1
+            print(f"Copiato: {dat_file.name} -> {INIT_DIR}")
         else:
-            print(f"{pitch}: OK (tutte presenti)")
+            errors.append(f"MANCANTE .dat: {dat_file}")
 
-    # Stampa riepilogo dettagliato
+        # Copia .3d se esiste
+        if macro_file is not None:
+            dest_3d = INIT_DIR / macro_file.name  # mantieni nome originale del file .3d
+            shutil.copy2(macro_file, dest_3d)
+            copied_3d += 1
+            print(f"Copiato: {macro_file.name} -> {INIT_DIR}")
+        else:
+            errors.append(f"MANCANTE .3d in: {sim_path}")
+
+    # Riepilogo
     print("\n" + "=" * 60)
-    print("RIEPILOGO SIMULAZIONI MANCANTI")
+    print("RIEPILOGO COPIA")
     print("=" * 60)
+    print(f"File .dat copiati: {copied_dat}")
+    print(f"File .3d copiati: {copied_3d}")
 
-    total_missing = 0
-    for pitch in sorted(missing.keys()):
-        sims = missing[pitch]
-        print(f"\n{pitch} ({len(sims)} mancanti):")
-        for sim in sorted(sims):
-            print(f"  - {sim}")
-        total_missing += len(sims)
+    if errors:
+        print(f"\nERRORI/AVVISI ({len(errors)}):")
+        for err in errors:
+            print(f"  - {err}")
 
-    print(f"\nTOTALE: {total_missing} simulazioni mancanti")
+    # Lista file copiati
+    all_files = sorted(list(INIT_DIR.glob("*.dat")) + list(INIT_DIR.glob("*.3d")))
+    print(f"\nTotale file in {INIT_DIR}: {len(all_files)}")
 
-    # Opzionale: salva lista in un file
-    output_file = Path("missing_simulations.txt")
-    with output_file.open("w") as f:
-        f.write("SIMULAZIONI MANCANTI\n")
+    # Salva log
+    log_file = Path("copy_log.txt")
+    with log_file.open("w") as f:
+        f.write("LOG COPIA FILE .dat e .3d\n")
         f.write("=" * 60 + "\n\n")
-        for pitch in sorted(missing.keys()):
-            f.write(f"{pitch}:\n")
-            for sim in sorted(missing[pitch]):
-                f.write(f"  - {sim}\n")
-            f.write("\n")
-        f.write(f"TOTALE: {total_missing}\n")
-    print(f"\nLista salvata in: {output_file.resolve()}")
+        f.write(f"File .dat copiati: {copied_dat}\n")
+        f.write(f"File .3d copiati: {copied_3d}\n\n")
+        if errors:
+            f.write(f"ERRORI ({len(errors)}):\n")
+            for err in errors:
+                f.write(f"  {err}\n")
+    print(f"\nLog salvato in: {log_file.resolve()}")
 
 
 if __name__ == "__main__":
