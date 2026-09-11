@@ -3,16 +3,21 @@
 Script per modificare i file .dat in /data/fiorello/pores3D/data_train/square/init/
 
 Modifiche:
-1. Nella riga che CONTIENE "surf->adapt->relative energy tolerance:" aggiunge sotto:
+1. La riga che CONTIENE "surf->adapt->strategy:" diventa:
+   surf->adapt->strategy: 3
+   E sotto aggiunge:
    surf->adapt->time delta 1:                       0.5
    surf->adapt->time delta 2:                       2.0
+   surf->adapt->relative energy tolerance: 1e-5
+   surf->adapt->min timestep: 5e-6
+   surf->adapt->max timestep: 1e-4
 
 2. Modifica la riga che CONTIENE "output->directory:" in:
    output->directory: /scratch/fiorello/data_train3D/square/<sim_name>
-   (con uno spazio dopo i due punti)
 
 3. Dopo "output->directory:" aggiunge:
-   surf->output->write every delta:0.005
+   surf->output->write every delta: 0.005
+   (con spazio dopo i due punti)
 
 4. Modifica la riga che CONTIENE "surf->output->write every i-th timestep:" in:
    surf->output->write every i-th timestep:         10000
@@ -36,20 +41,28 @@ def modify_dat_file(dat_path, sim_name):
     while i < len(lines):
         line = lines[i]
         
-        # 1. Cerca riga che CONTIENE "surf->adapt->relative energy tolerance:" e aggiungi due righe dopo
-        if "surf->adapt->relative energy tolerance:" in line:
-            new_lines.append(line)
-            # Aggiungi le due righe di time delta
+        # 1. Cerca riga che CONTIENE "surf->adapt->strategy:" -> modifica e aggiungi 5 righe dopo
+        if "surf->adapt->strategy:" in line:
+            new_lines.append("surf->adapt->strategy: 3\n")
+            # Aggiungi le cinque righe sotto
             new_lines.append("surf->adapt->time delta 1:                       0.5\n")
             new_lines.append("surf->adapt->time delta 2:                       2.0\n")
+            new_lines.append("surf->adapt->relative energy tolerance: 1e-5\n")
+            new_lines.append("surf->adapt->min timestep: 5e-6\n")
+            new_lines.append("surf->adapt->max timestep: 1e-4\n")
             i += 1
             continue
         
         # 2. Cerca riga che CONTIENE "output->directory:" e modifica con il percorso corretto
         if "output->directory:" in line:
             new_lines.append(f"output->directory: /scratch/fiorello/data_train3D/square/{sim_name}\n")
-            # Aggiungi la riga "write every delta"
-            new_lines.append("surf->output->write every delta:0.005\n")
+            # Aggiungi la riga "write every delta" (con spazio dopo i due punti)
+            new_lines.append("surf->output->write every delta: 0.005\n")
+            i += 1
+            continue
+        
+        # 3. Salta la riga che CONTIENE "surf->adapt->min timestep:" (già inserita sopra)
+        if "surf->adapt->min timestep:" in line:
             i += 1
             continue
         
