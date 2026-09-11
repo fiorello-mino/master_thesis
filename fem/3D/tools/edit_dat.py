@@ -8,7 +8,8 @@ Modifiche:
    surf->adapt->time delta 2:                       2.0
 
 2. Modifica la riga che CONTIENE "output->directory:" in:
-   output->directory:/scratch/fiorello/data_train3D/square/<sim_name>
+   output->directory: /scratch/fiorello/data_train3D/square/<sim_name>
+   (con uno spazio dopo i due punti)
 
 3. Dopo "output->directory:" aggiunge:
    surf->output->write every delta:0.005
@@ -46,7 +47,7 @@ def modify_dat_file(dat_path, sim_name):
         
         # 2. Cerca riga che CONTIENE "output->directory:" e modifica con il percorso corretto
         if "output->directory:" in line:
-            new_lines.append(f"output->directory:/scratch/fiorello/data_train3D/square/{sim_name}\n")
+            new_lines.append(f"output->directory: /scratch/fiorello/data_train3D/square/{sim_name}\n")
             # Aggiungi la riga "write every delta"
             new_lines.append("surf->output->write every delta:0.005\n")
             i += 1
