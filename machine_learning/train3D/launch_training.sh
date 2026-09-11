@@ -1,6 +1,6 @@
 # !/bin/bash
 
-python3 /home/fiorello/CRANE/train_with_loss.py \
+python3 /home/fiorello/CRANE/train.py \
 	--device  'cuda:0' \
 	--threeD \
 	--vtk \
@@ -14,7 +14,7 @@ python3 /home/fiorello/CRANE/train_with_loss.py \
 	--weightd 0e-5 \
 	--train_set 'train_set.txt' \
 	--valid_set 'valid_set.txt' \
-	--id 'E5e-3_eTrue' \
+	--id 'E1e-1' \
 	--logfreq 1 \
 	--kernel_size 5 \
 	--hidden 3 \
@@ -29,6 +29,13 @@ python3 /home/fiorello/CRANE/train_with_loss.py \
 	--massW 0.0 \
 	--ramp \
 	--ramp_length 18 \
+	--epsilon 0.1 \
+	--dt 5e-3 \
+	--dx 0.025 \
+	--dy 0.025 \
+	--dz 0.025 \
+        --w_energy 0.1 \
+	--w_bounds 0.0	
 	#--conservative \
 	#--reload_model '/home/fiorello/master_thesis/machine_learning/train_pores/train_logs/bc_y2/model/epoch_20.pt'
 	#--dual \
