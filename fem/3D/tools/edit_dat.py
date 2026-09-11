@@ -12,14 +12,16 @@ Modifiche:
    surf->adapt->min timestep: 5e-6
    surf->adapt->max timestep: 1e-4
 
-2. Modifica la riga che CONTIENE "output->directory:" in:
+2. Modifica la riga che CONTIENE "surf->adapt->timestep:" in:
+   surf->adapt->timestep: 1e-4
+
+3. Modifica la riga che CONTIENE "output->directory:" in:
    output->directory: /scratch/fiorello/data_train3D/square/<sim_name>
 
-3. Dopo "output->directory:" aggiunge:
+4. Dopo "output->directory:" aggiunge:
    surf->output->write every delta: 0.005
-   (con spazio dopo i due punti)
 
-4. Modifica la riga che CONTIENE "surf->output->write every i-th timestep:" in:
+5. Modifica la riga che CONTIENE "surf->output->write every i-th timestep:" in:
    surf->output->write every i-th timestep:         10000
 """
 
@@ -53,7 +55,13 @@ def modify_dat_file(dat_path, sim_name):
             i += 1
             continue
         
-        # 2. Cerca riga che CONTIENE "output->directory:" e modifica con il percorso corretto
+        # 2. Modifica riga che CONTIENE "surf->adapt->timestep:"
+        if "surf->adapt->timestep:" in line:
+            new_lines.append("surf->adapt->timestep: 1e-4\n")
+            i += 1
+            continue
+        
+        # 3. Cerca riga che CONTIENE "output->directory:" e modifica con il percorso corretto
         if "output->directory:" in line:
             new_lines.append(f"output->directory: /scratch/fiorello/data_train3D/square/{sim_name}\n")
             # Aggiungi la riga "write every delta" (con spazio dopo i due punti)
@@ -61,12 +69,12 @@ def modify_dat_file(dat_path, sim_name):
             i += 1
             continue
         
-        # 3. Salta la riga che CONTIENE "surf->adapt->min timestep:" (già inserita sopra)
+        # 4. Salta la riga che CONTIENE "surf->adapt->min timestep:" (già inserita sopra)
         if "surf->adapt->min timestep:" in line:
             i += 1
             continue
         
-        # 4. Modifica riga che CONTIENE "surf->output->write every i-th timestep:"
+        # 5. Modifica riga che CONTIENE "surf->output->write every i-th timestep:"
         if "surf->output->write every i-th timestep:" in line:
             new_lines.append("surf->output->write every i-th timestep:         10000\n")
             i += 1
