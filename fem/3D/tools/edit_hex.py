@@ -1,170 +1,227 @@
 #!/usr/bin/env python3
 """
-Copia gli init e i file .3d delle simulazioni hexagon.
+Modifica tutti i file .dat nella cartella:
 
-Struttura attesa:
-  /archive/roberto/poresAMDIS/hexagon/
-      isoHex_R0.2_H1.0_P0.8/
-          iso2_R0.2_H1.0_P0.8H.dat
-          <uno o più file>.3d
+    /data/fiorello/pores3D/data_train/hexagon/init/
 
-Destinazione piatta:
-  /data/fiorello/pores3D/data_train/hexagon/init/
-      iso2_R0.2_H1.0_P0.8H.dat
-      <uno o più file>.3d
+Esempio input:
+    iso2_R0.2_H1.0_P0.8H.dat
+
+Output directory:
+    /scratch/fiorello/data_train3D/hexagon/iso_P08/isoHex_R0.2_H1.0_P0.8
 """
 
 from pathlib import Path
+import re
 import shutil
 
-SOURCE_DIR = Path("/archive/roberto/poresAMDIS/hexagon")
-DEST_DIR = Path("/data/fiorello/pores3D/data_train/hexagon/init")
-
-SOURCE_PREFIX = "isoHex"
-INIT_PREFIX = "iso2"
+INIT_DIR = Path("/data/fiorello/pores3D/data_train/hexagon/init")
+OUTPUT_BASE = Path("/scratch/fiorello/data_train3D/hexagon")
 
 
-def init_name_from_sim_dir(sim_dir_name: str) -> str:
+def extract_pitch(sim_name: str) -> str | None:
     """
+    Esempi:
+        iso2_R0.2_H1.0_P0.8H -> iso_P08
+        iso2_R0.2_H1.0_P1.0H -> iso_P10
+    """
+    match = re.search(r"_P(\d+)\.(\d+)H?$", sim_name)
+
+    if match is None:
+        return None
+
+    return f"iso_P{match.group(1)}{match.group(2)}"
+
+
+def output_sim_name(init_sim_name: str) -> str | None:
+    """
+    Trasforma il nome dell'init nel nome originale della cartella simulazione.
+
     Esempio:
-      isoHex_R0.2_H1.0_P0.8
-      -> iso2_R0.2_H1.0_P0.8H
+        iso2_R0.2_H1.0_P0.8H
+        -> isoHex_R0.2_H1.0_P0.8
     """
-    if not sim_dir_name.startswith(SOURCE_PREFIX):
-        raise ValueError(
-            f"La cartella non inizia con '{SOURCE_PREFIX}': {sim_dir_name}"
+    if not init_sim_name.startswith("iso2"):
+        return None
+
+    # iso2... -> isoHex...
+    sim_name = "isoHex" + init_sim_name[len("iso2"):]
+
+    # Rimuove esclusivamente la H finale nel nome dell'init.
+    return sim_name.removesuffix("H")
+
+
+def is_adapt_parameter(line: str) -> bool:
+    """Righe rigenerate sotto 'surf->adapt->strategy:'."""
+    return any(key in line for key in (
+        "surf->adapt->time delta 1:",
+        "surf->adapt->time delta 2:",
+        "surf->adapt->relative energy tolerance:",
+        "surf->adapt->min timestep:",
+        "surf->adapt->max timestep:",
+    ))
+
+
+def modify_dat_file(dat_path: Path) -> tuple[bool, str]:
+    init_sim_name = dat_path.stem
+    pitch = extract_pitch(init_sim_name)
+    original_sim_name = output_sim_name(init_sim_name)
+
+    if pitch is None:
+        return False, f"Pitch non riconosciuto: {dat_path.name}"
+
+    if original_sim_name is None:
+        return False, (
+            f"Prefisso init non riconosciuto (atteso 'iso2'): {dat_path.name}"
         )
 
-    init_name = INIT_PREFIX + sim_dir_name[len(SOURCE_PREFIX):]
+    # Esempio:
+    # /scratch/fiorello/data_train3D/hexagon/iso_P08/isoHex_R0.2_H1.0_P0.8
+    output_dir = OUTPUT_BASE / pitch / original_sim_name
 
-    # La H finale identifica hexagon nel nome dell'init.
-    return f"{init_name}H"
+    lines = dat_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    new_lines = []
 
+    found = {
+        "strategy": False,
+        "timestep": False,
+        "end_time": False,
+        "output_directory": False,
+        "write_every_step": False,
+    }
 
-def copy_file(source: Path, destination: Path, copied: list, overwritten: list):
-    """Copia un file e registra se è stato sovrascritto."""
-    if destination.exists():
-        overwritten.append(destination.name)
+    i = 0
 
-    shutil.copy2(source, destination)
-    copied.append(destination.name)
+    while i < len(lines):
+        line = lines[i]
+
+        # Riscrive strategy e inserisce tutti i parametri adaptive sotto di essa.
+        if "surf->adapt->strategy:" in line:
+            found["strategy"] = True
+
+            new_lines.append("surf->adapt->strategy: 3\n")
+            new_lines.append("surf->adapt->time delta 1: 0.7071\n")
+            new_lines.append("surf->adapt->time delta 2: 1.4142\n")
+            new_lines.append("surf->adapt->relative energy tolerance: 1e-5\n")
+            new_lines.append("surf->adapt->min timestep: 5e-6\n")
+            new_lines.append("surf->adapt->max timestep: 1e-4\n")
+
+            i += 1
+            while i < len(lines) and is_adapt_parameter(lines[i]):
+                i += 1
+            continue
+
+        # Imposta timestep iniziale.
+        if "surf->adapt->timestep:" in line:
+            found["timestep"] = True
+            new_lines.append("surf->adapt->timestep: 1e-4\n")
+            i += 1
+            continue
+
+        # Imposta end time.
+        if "surf->adapt->end time:" in line:
+            found["end_time"] = True
+            new_lines.append("surf->adapt->end time: 0.2\n")
+            i += 1
+            continue
+
+        # Imposta la directory output.
+        if "output->directory:" in line:
+            found["output_directory"] = True
+
+            new_lines.append(f"output->directory: {output_dir}\n")
+            new_lines.append("surf->output->write every delta: 0.005\n")
+
+            i += 1
+            while (
+                i < len(lines)
+                and "surf->output->write every delta:" in lines[i]
+            ):
+                i += 1
+            continue
+
+        # Imposta ogni quanti timestep scrivere.
+        if "surf->output->write every i-th timestep:" in line:
+            found["write_every_step"] = True
+            new_lines.append(
+                "surf->output->write every i-th timestep:         10000\n"
+            )
+            i += 1
+            continue
+
+        # Rimuove min/max eventualmente presenti altrove nel file.
+        if (
+            "surf->adapt->min timestep:" in line
+            or "surf->adapt->max timestep:" in line
+        ):
+            i += 1
+            continue
+
+        new_lines.append(line)
+        i += 1
+
+    dat_path.write_text("".join(new_lines), encoding="utf-8")
+
+    missing = [key for key, value in found.items() if not value]
+
+    if missing:
+        return True, (
+            f"{dat_path.name} -> {output_dir} | "
+            f"ATTENZIONE: stringhe non trovate: {', '.join(missing)}"
+        )
+
+    return True, f"{dat_path.name} -> {output_dir}"
 
 
 def main():
-    if not SOURCE_DIR.is_dir():
-        raise SystemExit(
-            f"ERRORE: directory sorgente non trovata o non accessibile:\n"
-            f"  {SOURCE_DIR}"
-        )
+    if not INIT_DIR.is_dir():
+        raise SystemExit(f"ERRORE: directory non trovata: {INIT_DIR}")
 
-    DEST_DIR.mkdir(parents=True, exist_ok=True)
+    dat_files = sorted(INIT_DIR.glob("*.dat"))
 
-    sim_dirs = sorted(
-        path for path in SOURCE_DIR.iterdir()
-        if path.is_dir() and path.name.startswith(SOURCE_PREFIX)
-    )
+    if not dat_files:
+        raise SystemExit(f"ERRORE: nessun file .dat trovato in {INIT_DIR}")
 
-    if not sim_dirs:
-        raise SystemExit(
-            f"ERRORE: nessuna cartella con prefisso '{SOURCE_PREFIX}' trovata in:\n"
-            f"  {SOURCE_DIR}"
-        )
+    print(f"Trovati {len(dat_files)} file .dat in {INIT_DIR}")
 
-    print(f"Cartelle simulazione isoHex trovate: {len(sim_dirs)}")
-    print(f"Destinazione: {DEST_DIR}\n")
+    # Backup eseguito una volta sola.
+    backup_dir = INIT_DIR.with_name(f"{INIT_DIR.name}_backup")
 
-    copied_dat = []
-    copied_3d = []
-    overwritten = []
-    missing_dat = []
-    missing_3d = []
+    if not backup_dir.exists():
+        shutil.copytree(INIT_DIR, backup_dir)
+        print(f"Backup creato: {backup_dir}")
+    else:
+        print(f"Backup già esistente: {backup_dir}")
 
-    for sim_dir in sim_dirs:
-        sim_folder_name = sim_dir.name
-        init_name = init_name_from_sim_dir(sim_folder_name)
+    print()
 
-        print(f"\nSimulazione: {sim_folder_name}")
+    success = 0
+    problems = []
 
-        # Copia il file init .dat:
-        # isoHex_... -> iso2_...H.dat
-        source_dat = sim_dir / f"{init_name}.dat"
-        dest_dat = DEST_DIR / f"{init_name}.dat"
+    for dat_path in dat_files:
+        try:
+            ok, message = modify_dat_file(dat_path)
+            print(message)
 
-        if source_dat.is_file():
-            copy_file(source_dat, dest_dat, copied_dat, overwritten)
-            print(f"  DAT copiato: {source_dat.name}")
-        else:
-            missing_dat.append(source_dat)
-            print(f"  DAT MANCANTE: {source_dat.name}")
+            if ok:
+                success += 1
+            else:
+                problems.append(message)
 
-        # Copia tutti i file .3d direttamente nella cartella della simulazione.
-        files_3d = sorted(
-            path for path in sim_dir.iterdir()
-            if path.is_file() and path.suffix.lower() == ".3d"
-        )
+        except Exception as exc:
+            message = f"{dat_path.name}: ERRORE: {exc}"
+            print(message)
+            problems.append(message)
 
-        if not files_3d:
-            missing_3d.append(sim_dir)
-            print("  Nessun file .3d trovato")
-            continue
+    print("\n" + "=" * 70)
+    print("RIEPILOGO")
+    print("=" * 70)
+    print(f"File modificati: {success}/{len(dat_files)}")
 
-        for source_3d in files_3d:
-            dest_3d = DEST_DIR / source_3d.name
-            copy_file(source_3d, dest_3d, copied_3d, overwritten)
-            print(f"  3D copiato:  {source_3d.name}")
-
-    print("\n" + "=" * 65)
-    print("RIEPILOGO COPIA HEXAGON")
-    print("=" * 65)
-    print(f"File .dat copiati: {len(copied_dat)}")
-    print(f"File .3d copiati:  {len(copied_3d)}")
-    print(f"File sovrascritti: {len(overwritten)}")
-    print(f"Init .dat mancanti: {len(missing_dat)}")
-    print(f"Simulazioni senza file .3d: {len(missing_3d)}")
-
-    if missing_dat:
-        print("\nFile .dat non trovati:")
-        for source_dat in missing_dat:
-            print(f"  - {source_dat}")
-
-    if missing_3d:
-        print("\nCartelle senza file .3d:")
-        for sim_dir in missing_3d:
-            print(f"  - {sim_dir}")
-
-    log_file = DEST_DIR / "copy_hexagon_init_and_3d.log"
-    with log_file.open("w", encoding="utf-8") as log:
-        log.write("COPIA INIT E FILE .3D - HEXAGON\n")
-        log.write("=" * 65 + "\n")
-        log.write(f"Sorgente: {SOURCE_DIR}\n")
-        log.write(f"Destinazione: {DEST_DIR}\n\n")
-        log.write(f"DAT copiati: {len(copied_dat)}\n")
-        log.write(f"3D copiati: {len(copied_3d)}\n")
-        log.write(f"Sovrascritti: {len(overwritten)}\n")
-        log.write(f"DAT mancanti: {len(missing_dat)}\n")
-        log.write(f"Directory senza .3d: {len(missing_3d)}\n\n")
-
-        if copied_dat:
-            log.write("FILE .DAT COPIATI:\n")
-            for name in copied_dat:
-                log.write(f"{name}\n")
-
-        if copied_3d:
-            log.write("\nFILE .3D COPIATI:\n")
-            for name in copied_3d:
-                log.write(f"{name}\n")
-
-        if missing_dat:
-            log.write("\nFILE .DAT MANCANTI:\n")
-            for path in missing_dat:
-                log.write(f"{path}\n")
-
-        if missing_3d:
-            log.write("\nCARTELLE SENZA .3D:\n")
-            for path in missing_3d:
-                log.write(f"{path}\n")
-
-    print(f"\nLog salvato in: {log_file}")
+    if problems:
+        print(f"\nProblemi trovati: {len(problems)}")
+        for message in problems:
+            print(f"  - {message}")
 
 
 if __name__ == "__main__":
