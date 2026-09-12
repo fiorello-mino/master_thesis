@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Copia gli init file dalle simulazioni hexagon.
+Copia i file init delle simulazioni hexagon.
 
 Struttura attesa:
   /archive/roberto/poresAMDIS/hexagon/
       isoHex_R0.2_H1.0_P0.8/
-          iso2_R0.2_H1.0_P0.8.dat
+          iso2_R0.2_H1.0_P0.8H.dat
 
 Destinazione:
   /data/fiorello/pores3D/data_train/hexagon/init/
-      iso2_R0.2_H1.0_P0.8.dat
+      iso2_R0.2_H1.0_P0.8H.dat
 """
 
 from pathlib import Path
@@ -22,6 +22,27 @@ SOURCE_PREFIX = "isoHex"
 INIT_PREFIX = "iso2"
 
 
+def init_name_from_sim_dir(sim_dir_name: str) -> str:
+    """
+    Trasforma il nome della cartella nel nome base dell'init.
+
+    Esempio:
+      isoHex_R0.2_H1.0_P0.8
+      -> iso2_R0.2_H1.0_P0.8H
+    """
+    if not sim_dir_name.startswith(SOURCE_PREFIX):
+        raise ValueError(
+            f"La cartella non inizia con '{SOURCE_PREFIX}': {sim_dir_name}"
+        )
+
+    # Rimpiazza solo il prefisso iniziale:
+    # isoHex... -> iso2...
+    init_name = INIT_PREFIX + sim_dir_name[len(SOURCE_PREFIX):]
+
+    # La H finale identifica la geometria hexagon e deve restare nel file .dat.
+    return f"{init_name}H"
+
+
 def main():
     if not SOURCE_DIR.is_dir():
         raise SystemExit(
@@ -31,7 +52,7 @@ def main():
 
     DEST_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Cerca solo cartelle simulazione isoHex...
+    # Prende solo le cartelle della simulazione isoHex...
     sim_dirs = sorted(
         path for path in SOURCE_DIR.iterdir()
         if path.is_dir() and path.name.startswith(SOURCE_PREFIX)
@@ -39,11 +60,11 @@ def main():
 
     if not sim_dirs:
         raise SystemExit(
-            f"ERRORE: nessuna directory con prefisso '{SOURCE_PREFIX}' in:\n"
+            f"ERRORE: nessuna directory con prefisso '{SOURCE_PREFIX}' trovata in:\n"
             f"  {SOURCE_DIR}"
         )
 
-    print(f"Cartelle simulazione trovate: {len(sim_dirs)}")
+    print(f"Cartelle simulazione isoHex trovate: {len(sim_dirs)}")
     print(f"Destinazione: {DEST_DIR}\n")
 
     copied = []
@@ -51,14 +72,10 @@ def main():
     overwritten = []
 
     for sim_dir in sim_dirs:
-        source_sim_name = sim_dir.name
+        sim_folder_name = sim_dir.name
 
-        # isoHex_R0.2_H1.0_P0.8 -> iso2_R0.2_H1.0_P0.8
-        init_name = source_sim_name.replace(
-            SOURCE_PREFIX,
-            INIT_PREFIX,
-            1
-        )
+        # es. isoHex_R0.2_H1.0_P0.8 -> iso2_R0.2_H1.0_P0.8H
+        init_name = init_name_from_sim_dir(sim_folder_name)
 
         source_dat = sim_dir / f"{init_name}.dat"
         dest_dat = DEST_DIR / f"{init_name}.dat"
@@ -74,36 +91,19 @@ def main():
         shutil.copy2(source_dat, dest_dat)
         copied.append(dest_dat.name)
 
-        print(f"COPIATO: {source_dat} -> {dest_dat}")
+        print(f"COPIATO: {source_dat.name} -> {dest_dat}")
 
     print("\n" + "=" * 60)
     print("RIEPILOGO")
     print("=" * 60)
     print(f"File .dat copiati: {len(copied)}")
-    print(f"File già esistenti e sovrascritti: {len(overwritten)}")
-    print(f"Init attesi ma non trovati: {len(missing)}")
+    print(f"File già presenti e sovrascritti: {len(overwritten)}")
+    print(f"File init attesi ma non trovati: {len(missing)}")
 
-    log_file = DEST_DIR / "copy_hexagon_init.log"
-    with log_file.open("w", encoding="utf-8") as log:
-        log.write("COPIA INIT HEXAGON\n")
-        log.write("=" * 60 + "\n")
-        log.write(f"Sorgente: {SOURCE_DIR}\n")
-        log.write(f"Destinazione: {DEST_DIR}\n")
-        log.write(f"Copiati: {len(copied)}\n")
-        log.write(f"Sovrascritti: {len(overwritten)}\n")
-        log.write(f"Mancanti: {len(missing)}\n\n")
-
-        if copied:
-            log.write("FILE COPIATI:\n")
-            for name in copied:
-                log.write(f"{name}\n")
-
-        if missing:
-            log.write("\nFILE MANCANTI:\n")
-            for path in missing:
-                log.write(f"{path}\n")
-
-    print(f"\nLog scritto in: {log_file}")
+    if missing:
+        print("\nInit mancanti:")
+        for source_dat in missing:
+            print(f"  - {source_dat}")
 
 
 if __name__ == "__main__":
