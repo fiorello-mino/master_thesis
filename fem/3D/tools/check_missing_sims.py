@@ -13,7 +13,7 @@ import os
 import shutil
 from pathlib import Path
 
-ARCHIVE_BASE = Path("/archive/roberto/poresAMDIS/hexagon")
+ARCHIVE_BASE = Path("/archive/roberto/poresAMDIS/square")
 DATA_BASE = Path("/data/fiorello/poresAMDIS")
 INIT_DIR = Path("/data/fiorello/pores3D/data_train/hexagon/init")
 

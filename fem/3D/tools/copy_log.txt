@@ -1,6 +1,6 @@
 LOG COPIA FILE .dat e .3d
 ============================================================
 
-File .dat copiati: 0
-File .3d copiati: 0
+File .dat copiati: 98
+File .3d copiati: 98
 
