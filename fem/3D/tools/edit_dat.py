@@ -88,8 +88,8 @@ def modify_dat_file(dat_path: Path) -> tuple[bool, str]:
             found["strategy"] = True
 
             new_lines.append("surf->adapt->strategy: 3\n")
-            new_lines.append("surf->adapt->time delta 1: 0.5\n")
-            new_lines.append("surf->adapt->time delta 2: 2.0\n")
+            new_lines.append("surf->adapt->time delta 1: 0.7071\n")
+            new_lines.append("surf->adapt->time delta 2: 1.4142\n")
             new_lines.append("surf->adapt->relative energy tolerance: 1e-5\n")
             new_lines.append("surf->adapt->min timestep: 5e-6\n")
             new_lines.append("surf->adapt->max timestep: 1e-4\n")
