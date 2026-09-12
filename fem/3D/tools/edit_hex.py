@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Copia i file init <sim_name>.dat dalle simulazioni in:
+Copia gli init file dalle simulazioni hexagon.
 
-    /archive/roberto/poresAMDIS/hexagon/<sim_name>/<sim_name>.dat
+Struttura attesa:
+  /archive/roberto/poresAMDIS/hexagon/
+      isoHex_R0.2_H1.0_P0.8/
+          iso2_R0.2_H1.0_P0.8.dat
 
-verso:
-
-    /data/fiorello/pores3D/data_train/hexagon/init/<sim_name>.dat
-
-Non ci sono cartelle di pitch intermedie.
+Destinazione:
+  /data/fiorello/pores3D/data_train/hexagon/init/
+      iso2_R0.2_H1.0_P0.8.dat
 """
 
 from pathlib import Path
@@ -16,6 +17,9 @@ import shutil
 
 SOURCE_DIR = Path("/archive/roberto/poresAMDIS/hexagon")
 DEST_DIR = Path("/data/fiorello/pores3D/data_train/hexagon/init")
+
+SOURCE_PREFIX = "isoHex"
+INIT_PREFIX = "iso2"
 
 
 def main():
@@ -25,14 +29,19 @@ def main():
             f"  {SOURCE_DIR}"
         )
 
-    # Crea la cartella destinazione se non esiste.
     DEST_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Considera solo directory direttamente dentro hexagon.
-    sim_dirs = sorted(path for path in SOURCE_DIR.iterdir() if path.is_dir())
+    # Cerca solo cartelle simulazione isoHex...
+    sim_dirs = sorted(
+        path for path in SOURCE_DIR.iterdir()
+        if path.is_dir() and path.name.startswith(SOURCE_PREFIX)
+    )
 
     if not sim_dirs:
-        raise SystemExit(f"ERRORE: nessuna cartella simulazione trovata in {SOURCE_DIR}")
+        raise SystemExit(
+            f"ERRORE: nessuna directory con prefisso '{SOURCE_PREFIX}' in:\n"
+            f"  {SOURCE_DIR}"
+        )
 
     print(f"Cartelle simulazione trovate: {len(sim_dirs)}")
     print(f"Destinazione: {DEST_DIR}\n")
@@ -42,34 +51,37 @@ def main():
     overwritten = []
 
     for sim_dir in sim_dirs:
-        sim_name = sim_dir.name
-        source_dat = sim_dir / f"{sim_name}.dat"
-        dest_dat = DEST_DIR / f"{sim_name}.dat"
+        source_sim_name = sim_dir.name
+
+        # isoHex_R0.2_H1.0_P0.8 -> iso2_R0.2_H1.0_P0.8
+        init_name = source_sim_name.replace(
+            SOURCE_PREFIX,
+            INIT_PREFIX,
+            1
+        )
+
+        source_dat = sim_dir / f"{init_name}.dat"
+        dest_dat = DEST_DIR / f"{init_name}.dat"
 
         if not source_dat.is_file():
-            missing.append(str(source_dat))
+            missing.append(source_dat)
             print(f"MANCANTE: {source_dat}")
             continue
 
         if dest_dat.exists():
             overwritten.append(dest_dat.name)
 
-        # copy2 conserva timestamp e metadati quando possibile.
         shutil.copy2(source_dat, dest_dat)
         copied.append(dest_dat.name)
-        print(f"COPIATO: {source_dat.name}")
+
+        print(f"COPIATO: {source_dat} -> {dest_dat}")
 
     print("\n" + "=" * 60)
     print("RIEPILOGO")
     print("=" * 60)
     print(f"File .dat copiati: {len(copied)}")
-    print(f"File sovrascritti: {len(overwritten)}")
-    print(f"Init mancanti: {len(missing)}")
-
-    if missing:
-        print("\nFile attesi ma non trovati:")
-        for filename in missing:
-            print(f"  - {filename}")
+    print(f"File già esistenti e sovrascritti: {len(overwritten)}")
+    print(f"Init attesi ma non trovati: {len(missing)}")
 
     log_file = DEST_DIR / "copy_hexagon_init.log"
     with log_file.open("w", encoding="utf-8") as log:
@@ -83,11 +95,13 @@ def main():
 
         if copied:
             log.write("FILE COPIATI:\n")
-            log.writelines(f"{name}\n" for name in copied)
+            for name in copied:
+                log.write(f"{name}\n")
 
         if missing:
             log.write("\nFILE MANCANTI:\n")
-            log.writelines(f"{path}\n" for path in missing)
+            for path in missing:
+                log.write(f"{path}\n")
 
     print(f"\nLog scritto in: {log_file}")
 
