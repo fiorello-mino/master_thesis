@@ -13,9 +13,9 @@ import os
 import shutil
 from pathlib import Path
 
-ARCHIVE_BASE = Path("/archive/roberto/poresAMDIS/square")
+ARCHIVE_BASE = Path("/archive/roberto/poresAMDIS/hexagon")
 DATA_BASE = Path("/data/fiorello/poresAMDIS")
-INIT_DIR = Path("/data/fiorello/pores3D/data_train/square/init")
+INIT_DIR = Path("/data/fiorello/pores3D/data_train/hexagon/init")
 
 def find_3d_file(sim_path):
     """Trova l'unico file .3d nella cartella della simulazione"""
