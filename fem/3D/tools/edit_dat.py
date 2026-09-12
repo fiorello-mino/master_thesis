@@ -6,8 +6,8 @@ Modifiche:
 1. La riga che CONTIENE "surf->adapt->strategy:" diventa:
    surf->adapt->strategy: 3
    E sotto aggiunge:
-   surf->adapt->time delta 1:                       0.5
-   surf->adapt->time delta 2:                       2.0
+   surf->adapt->time delta 1:                       0.7071
+   surf->adapt->time delta 2:                       1.4142
    surf->adapt->relative energy tolerance: 1e-5
    surf->adapt->min timestep: 5e-6
    surf->adapt->max timestep: 1e-4
@@ -15,13 +15,16 @@ Modifiche:
 2. Modifica la riga che CONTIENE "surf->adapt->timestep:" in:
    surf->adapt->timestep: 1e-4
 
-3. Modifica la riga che CONTIENE "output->directory:" in:
+3. Modifica la riga che CONTIENE "surf->adapt->end time:" in:
+   surf->adapt->end time: 0.2
+
+4. Modifica la riga che CONTIENE "output->directory:" in:
    output->directory: /scratch/fiorello/data_train3D/square/<sim_name>
 
-4. Dopo "output->directory:" aggiunge:
+5. Dopo "output->directory:" aggiunge:
    surf->output->write every delta: 0.005
 
-5. Modifica la riga che CONTIENE "surf->output->write every i-th timestep:" in:
+6. Modifica la riga che CONTIENE "surf->output->write every i-th timestep:" in:
    surf->output->write every i-th timestep:         10000
 """
 
@@ -47,8 +50,8 @@ def modify_dat_file(dat_path, sim_name):
         if "surf->adapt->strategy:" in line:
             new_lines.append("surf->adapt->strategy: 3\n")
             # Aggiungi le cinque righe sotto
-            new_lines.append("surf->adapt->time delta 1:                       0.5\n")
-            new_lines.append("surf->adapt->time delta 2:                       2.0\n")
+            new_lines.append("surf->adapt->time delta 1:                       0.7071\n")
+            new_lines.append("surf->adapt->time delta 2:                       1.4142\n")
             new_lines.append("surf->adapt->relative energy tolerance: 1e-5\n")
             new_lines.append("surf->adapt->min timestep: 5e-6\n")
             new_lines.append("surf->adapt->max timestep: 1e-4\n")
@@ -61,7 +64,13 @@ def modify_dat_file(dat_path, sim_name):
             i += 1
             continue
         
-        # 3. Cerca riga che CONTIENE "output->directory:" e modifica con il percorso corretto
+        # 3. Modifica riga che CONTIENE "surf->adapt->end time:"
+        if "surf->adapt->end time:" in line:
+            new_lines.append("surf->adapt->end time: 0.2\n")
+            i += 1
+            continue
+        
+        # 4. Cerca riga che CONTIENE "output->directory:" e modifica con il percorso corretto
         if "output->directory:" in line:
             new_lines.append(f"output->directory: /scratch/fiorello/data_train3D/square/{sim_name}\n")
             # Aggiungi la riga "write every delta" (con spazio dopo i due punti)
@@ -69,12 +78,12 @@ def modify_dat_file(dat_path, sim_name):
             i += 1
             continue
         
-        # 4. Salta la riga che CONTIENE "surf->adapt->min timestep:" (già inserita sopra)
+        # 5. Salta la riga che CONTIENE "surf->adapt->min timestep:" (già inserita sopra)
         if "surf->adapt->min timestep:" in line:
             i += 1
             continue
         
-        # 5. Modifica riga che CONTIENE "surf->output->write every i-th timestep:"
+        # 6. Modifica riga che CONTIENE "surf->output->write every i-th timestep:"
         if "surf->output->write every i-th timestep:" in line:
             new_lines.append("surf->output->write every i-th timestep:         10000\n")
             i += 1
