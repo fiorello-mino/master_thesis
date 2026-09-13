@@ -1,306 +1,129 @@
-from __future__ import annotations
-
+import os
+import re
 import random
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+BASE = Path("/data/fiorello/pores3D/data/square")
+N_TRAIN_VAL = 20  # lunghezza sequenza per train/val
+N_EXT = 41        # tutti i frame per external test
 
-# ============================================================
-# CONFIGURAZIONE
-# ============================================================
+N_TRAIN_SIMS = 80
+N_VAL_SIMS   = 20
+N_EXT_SIMS   = 50
 
-# Root contenente iso_P06, iso_P07, ..., iso_P10 e le cartelle simulazione.
-ROOT_DIR = Path("/data/fiorello/poresAMDIS")
+SEED = 42  # per riproducibilità
 
-# Cartella in cui scrivere ESCLUSIVAMENTE train_set.txt e valid_set.txt.
-OUTPUT_DIR = Path(
-    "/home/fiorello/master_thesis/machine_learning/train3D"
-)
+random.seed(SEED)
 
-# Una sequenza di N_SEQ path per ogni riga dei file TXT.
-TRAIN_TXT = OUTPUT_DIR / "train_set.txt"
-VALID_TXT = OUTPUT_DIR / "valid_set.txt"
-
-# Numero di frame consecutivi in ogni sequenza.
-N_SEQ = 20
-
-# Circa 4/5 training e 1/5 validation.
-TRAIN_FRACTION = 0.8
-
-# Seed fisso: split e frame scelti sono riproducibili.
-# Metti None se vuoi uno split diverso a ogni esecuzione.
-RANDOM_SEED = 42
-
-# Cerca solo i veri frame del campo phi.
-FRAME_GLOB = "surf_*.npy"
-VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
-
-# Se True, ogni sequenza deve avere frame temporalmente separati esattamente
-# di EXPECTED_DT. Decimal evita problemi di confronto con floating point.
-CHECK_TIME_SPACING = True
-EXPECTED_DT = Decimal("0.005000")
-
-# Se una simulazione contiene PIU' DI 50 frame, la sequenza selezionata può
-# iniziare solo nei primi 30 frame. Il frame iniziale è quindi compreso fra:
-# 1 e 30 in numerazione umana, oppure 0 e 29 in indice Python.
-#
-# Se una simulazione contiene 50 frame o meno, tutti gli start validi restano
-# disponibili.
-LIMIT_START_ONLY_IF_MORE_THAN_FRAMES = 50
-MAX_START_FRAME_NUMBER = 30
-
-
-# ============================================================
-# FUNZIONI
-# ============================================================
-
-
-def is_data_frame(path: Path) -> bool:
-    """Accetta surf_<tempo>.npy ed esclude le mask di fallback VTK."""
-    return (
-        path.is_file()
-        and path.name.startswith("surf_")
-        and path.suffix == ".npy"
-        and not path.name.endswith(VTK_MASK_SUFFIX)
-    )
-
-
-def parse_time(frame_path: Path) -> Decimal:
-    """Estrae il tempo da un nome nel formato surf_<tempo>.npy."""
-    time_string = frame_path.stem.removeprefix("surf_")
-
-    try:
-        return Decimal(time_string)
-    except InvalidOperation as exc:
-        raise ValueError(
-            f"Nome frame non valido: {frame_path.name}"
-        ) from exc
-
-
-def get_data_frames(folder: Path) -> list[Path]:
-    """Restituisce i frame della simulazione ordinati per tempo."""
-    frames = [
-        path
-        for path in folder.glob(FRAME_GLOB)
-        if is_data_frame(path)
-    ]
-
-    return sorted(frames, key=parse_time)
-
-
-def find_simulation_folders(root_dir: Path) -> list[Path]:
-    """Trova ogni cartella che contiene direttamente almeno un frame NPY."""
-    folders = {
-        path.parent
-        for path in root_dir.rglob(FRAME_GLOB)
-        if is_data_frame(path)
-    }
-
-    return sorted(folders)
-
-
-def valid_sequence_start_indices(
-    frames: list[Path],
-) -> list[int]:
-    """Trova gli indici che consentono una sequenza valida di N_SEQ frame."""
-    if len(frames) < N_SEQ:
-        return []
-
-    all_starts = list(range(len(frames) - N_SEQ + 1))
-
-    if not CHECK_TIME_SPACING:
-        return all_starts
-
-    times = [parse_time(path) for path in frames]
-    valid_starts: list[int] = []
-
-    for start_index in all_starts:
-        sequence_times = times[start_index : start_index + N_SEQ]
-
-        time_spacing_is_valid = all(
-            current_time - previous_time == EXPECTED_DT
-            for previous_time, current_time in zip(
-                sequence_times[:-1],
-                sequence_times[1:],
-            )
-        )
-
-        if time_spacing_is_valid:
-            valid_starts.append(start_index)
-
-    return valid_starts
-
-
-def allowed_sequence_start_indices(
-    frames: list[Path],
-) -> list[int]:
-    """Applica il controllo temporale e l'eventuale limite al frame iniziale."""
-    valid_starts = valid_sequence_start_indices(frames)
-
-    if len(frames) <= LIMIT_START_ONLY_IF_MORE_THAN_FRAMES:
-        return valid_starts
-
-    max_start_index = MAX_START_FRAME_NUMBER - 1
-
-    return [
-        start_index
-        for start_index in valid_starts
-        if start_index <= max_start_index
-    ]
-
-
-def split_simulations(
-    folders: list[Path],
-    rng: random.Random,
-) -> tuple[list[Path], list[Path]]:
-    """Divide le simulazioni in train e validation senza mescolare i frame."""
-    shuffled_folders = folders.copy()
-    rng.shuffle(shuffled_folders)
-
-    n_train = int(TRAIN_FRACTION * len(shuffled_folders))
-
-    train_folders = sorted(shuffled_folders[:n_train])
-    valid_folders = sorted(shuffled_folders[n_train:])
-
-    return train_folders, valid_folders
-
-
-def write_sequences(
-    folders: list[Path],
-    output_txt: Path,
-    rng: random.Random,
-) -> tuple[int, int]:
+def extract_H(folder_name: str) -> float | None:
     """
-    Scrive una sequenza casuale per simulazione.
-
-    Ogni riga contiene N_SEQ path assoluti, separati da spazi.
-    Ritorna: (numero righe scritte, numero simulazioni saltate).
+    Estrae H da nomi tipo:
+    iso2_R0.2_H1.0_P0.6
+    iso2_R0.2_H3.5_P0.7
     """
-    output_txt.parent.mkdir(parents=True, exist_ok=True)
+    m = re.search(r"_H([0-9]+(?:\.[0-9]+)?)", folder_name)
+    if not m:
+        return None
+    return float(m.group(1))
 
-    written = 0
-    skipped = 0
+def get_start_range(H: float) -> tuple[int, int]:
+    """
+    Restituisce (start_min, start_max) in base a H.
+    Regole:
+      - 1.0 <= H <= 2.0 : start = 0 (fisso)
+      - 2.0 <  H <= 3.0 : start in [0, 5]
+      - 3.0 <  H <= 4.0 : start in [0, 10]
+      - 4.0 <  H <= 5.0 : start in [0, 20]  # aggiornato
+    """
+    if H <= 2.0:
+        return 0, 0
+    elif H <= 3.0:
+        return 0, 5
+    elif H <= 4.0:
+        return 0, 10
+    else:
+        return 0, 20
 
-    with output_txt.open("w", encoding="utf-8") as file:
-        for folder in folders:
-            frames = get_data_frames(folder)
-            allowed_starts = allowed_sequence_start_indices(frames)
-
-            if not allowed_starts:
-                skipped += 1
+def find_sim_folders():
+    """
+    Scansiona data/square/iso_P*/ e raccoglie le simulazioni
+    che hanno:
+      - nome con H estraibile
+      - almeno surf_000000.npy presente
+    """
+    sims = []
+    for p_folder in sorted(BASE.iterdir()):
+        if not p_folder.is_dir():
+            continue
+        if not p_folder.name.startswith("iso_P"):
+            continue
+        for sim_folder in sorted(p_folder.iterdir()):
+            if not sim_folder.is_dir():
                 continue
+            H = extract_H(sim_folder.name)
+            if H is None:
+                continue
+            first_file = sim_folder / "surf_000000.npy"
+            if not first_file.exists():
+                continue
+            sims.append((sim_folder, H))
+    return sims
 
-            start_index = rng.choice(allowed_starts)
-            sequence = frames[start_index : start_index + N_SEQ]
+def build_frame_paths(sim_path: Path, start: int, length: int) -> list[str]:
+    """
+    Costruisce la lista di path ai file .npy per una data simulazione,
+    a partire da 'start' e per 'length' frame.
+    I file sono del tipo surf_0.000000.npy, surf_0.005000.npy, ...
+    con dt = 5e-3.
+    """
+    paths = []
+    for i in range(start, start + length):
+        t = i * 5e-3
+        fname = f"surf_{t:.6f}.npy"
+        paths.append(str(sim_path / fname))
+    return paths
 
-            file.write(" ".join(str(path) for path in sequence) + "\n")
-            written += 1
+def main():
+    sims = find_sim_folders()
+    print(f"Trovate {len(sims)} simulazioni candidate.")
 
-    return written, skipped
+    total_needed = N_TRAIN_SIMS + N_VAL_SIMS + N_EXT_SIMS
+    if len(sims) < total_needed:
+        print(f"Attenzione: ho solo {len(sims)} simulazioni, meno delle {total_needed} richieste.")
+        # procedo comunque con quelle disponibili, ridimensionando
 
+    # Mischia e seleziona
+    random.shuffle(sims)
+    selected = sims[:total_needed]
 
-# ============================================================
-# MAIN
-# ============================================================
+    train_sims = selected[:N_TRAIN_SIMS]
+    val_sims   = selected[N_TRAIN_SIMS:N_TRAIN_SIMS + N_VAL_SIMS]
+    ext_sims   = selected[N_TRAIN_SIMS + N_VAL_SIMS:
+                          N_TRAIN_SIMS + N_VAL_SIMS + N_EXT_SIMS]
 
+    def write_sequences(sim_list, out_file: Path, length: int):
+        lines = []
+        for sim_path, H in sim_list:
+            if length == N_TRAIN_VAL:
+                # train/val: start random con vincoli, 20 frame
+                start_min, start_max = get_start_range(H)
+                start = random.randint(start_min, start_max)
+                # sicurezza: non superare 41 - length
+                start = min(start, 41 - length)
+            else:
+                # external test: tutti i frame da 0 a 40
+                start = 0
 
-def main() -> None:
-    if not ROOT_DIR.is_dir():
-        raise FileNotFoundError(
-            f"Root directory non trovata: {ROOT_DIR}"
-        )
+            frame_paths = build_frame_paths(sim_path, start, length)
+            line = " ".join(frame_paths)
+            lines.append(line + "\n")
 
-    if N_SEQ <= 0:
-        raise ValueError(f"N_SEQ deve essere positivo, trovato {N_SEQ}")
+        out_file.write_text("".join(lines))
+        print(f"Scritto {len(lines)} righe in {out_file}")
 
-    if not 0.0 < TRAIN_FRACTION < 1.0:
-        raise ValueError(
-            "TRAIN_FRACTION deve stare strettamente tra 0 e 1, "
-            f"trovato {TRAIN_FRACTION}"
-        )
-
-    if LIMIT_START_ONLY_IF_MORE_THAN_FRAMES < 0:
-        raise ValueError(
-            "LIMIT_START_ONLY_IF_MORE_THAN_FRAMES non può essere negativo"
-        )
-
-    if MAX_START_FRAME_NUMBER <= 0:
-        raise ValueError(
-            "MAX_START_FRAME_NUMBER deve essere positivo, "
-            f"trovato {MAX_START_FRAME_NUMBER}"
-        )
-
-    rng = random.Random(RANDOM_SEED)
-
-    all_folders = find_simulation_folders(ROOT_DIR)
-
-    if not all_folders:
-        raise FileNotFoundError(
-            f"Nessun frame '{FRAME_GLOB}' trovato sotto {ROOT_DIR}"
-        )
-
-    # Mantiene solo le simulazioni da cui si può estrarre una sequenza di
-    # N_SEQ frame consecutivi rispettando anche la regola sui primi 30 frame.
-    eligible_folders: list[Path] = []
-
-    for folder in all_folders:
-        frames = get_data_frames(folder)
-
-        if allowed_sequence_start_indices(frames):
-            eligible_folders.append(folder)
-
-    if not eligible_folders:
-        raise RuntimeError(
-            f"Nessuna simulazione contiene una sequenza valida di {N_SEQ} frame"
-        )
-
-    train_folders, valid_folders = split_simulations(eligible_folders, rng)
-
-    train_written, train_skipped = write_sequences(
-        folders=train_folders,
-        output_txt=TRAIN_TXT,
-        rng=rng,
-    )
-
-    valid_written, valid_skipped = write_sequences(
-        folders=valid_folders,
-        output_txt=VALID_TXT,
-        rng=rng,
-    )
-
-    print("=" * 78)
-    print("GENERAZIONE TRAIN/VALID SET 3D")
-    print("=" * 78)
-    print(f"Root directory              : {ROOT_DIR}")
-    print(f"Directory output            : {OUTPUT_DIR}")
-    print(f"N_SEQ                       : {N_SEQ}")
-    print(f"TRAIN_FRACTION              : {TRAIN_FRACTION}")
-    print(f"Random seed                 : {RANDOM_SEED}")
-    print(f"Controllo dt                : {CHECK_TIME_SPACING}")
-
-    if CHECK_TIME_SPACING:
-        print(f"Passo temporale richiesto   : {EXPECTED_DT}")
-
-    print(
-        "Regola frame iniziale       : "
-        f"se frame > {LIMIT_START_ONLY_IF_MORE_THAN_FRAMES}, "
-        f"inizio entro frame {MAX_START_FRAME_NUMBER}"
-    )
-
-    print(f"\nSimulazioni trovate        : {len(all_folders)}")
-    print(f"Simulazioni utilizzabili    : {len(eligible_folders)}")
-    print(f"Simulazioni non utilizzabili: {len(all_folders) - len(eligible_folders)}")
-
-    print(f"\nTrain simulazioni          : {len(train_folders)}")
-    print(f"Train righe scritte         : {train_written}")
-    print(f"Train simulazioni saltate   : {train_skipped}")
-    print(f"Train file                  : {TRAIN_TXT}")
-
-    print(f"\nValidation simulazioni     : {len(valid_folders)}")
-    print(f"Validation righe scritte    : {valid_written}")
-    print(f"Validation simulazioni saltate: {valid_skipped}")
-    print(f"Validation file             : {VALID_TXT}")
-
+    write_sequences(train_sims, Path("train_set.txt"), N_TRAIN_VAL)
+    write_sequences(val_sims,   Path("test_set.txt"),   N_TRAIN_VAL)
+    write_sequences(ext_sims,   Path("ext_test.txt"),   N_EXT)
 
 if __name__ == "__main__":
     main()
