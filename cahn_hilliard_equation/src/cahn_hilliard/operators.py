@@ -265,3 +265,70 @@ def div_3D(
                 div_z = (v_z[z_up, y, y] - v_z[z_down, y, y]) * dx2_inv
                 div[z, y, y] = div_x + div_y + div_z
                 
+
+from numba import njit
+import numpy as np
+
+@njit(fastmath=True)
+def grad_3D_neumann(
+    phi: np.ndarray, 
+    dx: float,
+    dy: float,
+    dz: float,
+    grad_x: np.ndarray, 
+    grad_y: np.ndarray,
+    grad_z: np.ndarray
+):
+    """
+    Calcola il gradiente del campo scalare 3D su griglia uniforme con BC di Neumann
+    omogenee (dphi/dn = 0) in x, y, z usando schema alle differenze centrate.
+    
+    phi, grad_x, grad_y, grad_z hanno shape (nx, ny, nz).
+    Indici: [x, y, z].
+    """
+    
+    nx, ny, nz = phi.shape
+    
+    dx2_inv = 1.0 / (2.0 * dx)
+    dy2_inv = 1.0 / (2.0 * dy)
+    dz2_inv = 1.0 / (2.0 * dz)
+    
+    # --- gradiente in x ---
+    for y in range(ny):
+        for z in range(nz):
+            # interno in x
+            for x in range(1, nx - 1):
+                grad_x[x, y, z] = (phi[x + 1, y, z] - phi[x - 1, y, z]) * dx2_inv
+            
+            # bordo x = 0
+            grad_x[0, y, z] = (phi[1, y, z] - phi[0, y, z]) * dx2_inv
+            
+            # bordo x = nx-1
+            grad_x[nx - 1, y, z] = (phi[nx - 1, y, z] - phi[nx - 2, y, z]) * dx2_inv
+
+    # --- gradiente in y ---
+    for x in range(nx):
+        for z in range(nz):
+            # interno in y
+            for y in range(1, ny - 1):
+                grad_y[x, y, z] = (phi[x, y + 1, z] - phi[x, y - 1, z]) * dy2_inv
+            
+            # bordo y = 0
+            grad_y[x, 0, z] = (phi[x, 1, z] - phi[x, 0, z]) * dy2_inv
+            
+            # bordo y = ny-1
+            grad_y[x, ny - 1, z] = (phi[x, ny - 1, z] - phi[x, ny - 2, z]) * dy2_inv
+
+    # --- gradiente in z ---
+    for x in range(nx):
+        for y in range(ny):
+            # interno in z
+            for z in range(1, nz - 1):
+                grad_z[x, y, z] = (phi[x, y, z + 1] - phi[x, y, z - 1]) * dz2_inv
+            
+            # bordo z = 0
+            grad_z[x, y, 0] = (phi[x, y, 1] - phi[x, y, 0]) * dz2_inv
+            
+            # bordo z = nz-1
+            grad_z[x, y, nz - 1] = (phi[x, y, nz - 1] - phi[x, y, nz - 2]) * dz2_inv
+                
