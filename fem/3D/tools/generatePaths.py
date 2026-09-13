@@ -3,7 +3,7 @@ import re
 import random
 from pathlib import Path
 
-BASE = Path("/data/fiorello/pores3D/data/square")
+BASE = Path("/data/fiorello/pores3D/data/square/")
 N_TRAIN_VAL = 20  # lunghezza sequenza per train/val
 N_EXT = 41        # tutti i frame per external test
 
@@ -121,9 +121,9 @@ def main():
         out_file.write_text("".join(lines))
         print(f"Scritto {len(lines)} righe in {out_file}")
 
-    write_sequences(train_sims, Path("train_set.txt"), N_TRAIN_VAL)
-    write_sequences(val_sims,   Path("test_set.txt"),   N_TRAIN_VAL)
-    write_sequences(ext_sims,   Path("ext_test.txt"),   N_EXT)
+    write_sequences(train_sims, Path("/scratch/fiorello/train3D/train_set.txt"), N_TRAIN_VAL)
+    write_sequences(val_sims,   Path("/scratch/fiorello/train3D/test_set.txt"),   N_TRAIN_VAL)
+    write_sequences(ext_sims,   Path("/scratch/fiorello/test3D/square/ext_test.txt"),   N_EXT)
 
 if __name__ == "__main__":
     main()
