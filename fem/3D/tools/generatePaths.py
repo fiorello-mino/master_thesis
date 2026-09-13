@@ -216,9 +216,9 @@ def main():
     val_sims = selected[N_TRAIN:N_TRAIN + N_VAL]
     ext_sims = selected[N_TRAIN + N_VAL:]
 
-    write_train_or_val(train_sims, Path("train_set.txt"))
-    write_train_or_val(val_sims, Path("test_set.txt"))
-    write_ext_test(ext_sims, Path("ext_test.txt"))
+    write_train_or_val(train_sims, Path("/scratch/fiorello/train3D/train_set.txt"))
+    write_train_or_val(val_sims, Path("/scratch/fiorello/train3D/test_set.txt"))
+    write_ext_test(ext_sims, Path("/scratch/fiorello/test3D/square/ext_test.txt"))
 
     print("\nGenerazione completata.")
     print("train_set.txt: 80 righe × 20 frame")
