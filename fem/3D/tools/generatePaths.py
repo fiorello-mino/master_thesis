@@ -1,129 +1,230 @@
-import os
 import re
 import random
 from pathlib import Path
 
-BASE = Path("/data/fiorello/pores3D/data/square/")
-N_TRAIN_VAL = 20  # lunghezza sequenza per train/val
-N_EXT = 41        # tutti i frame per external test
+BASE = Path("/data/fiorello/pores3D/data/square")
 
-N_TRAIN_SIMS = 80
-N_VAL_SIMS   = 20
-N_EXT_SIMS   = 50
+N_SEQ = 20
+N_ALL_FRAMES = 41
 
-SEED = 42  # per riproducibilità
+N_TRAIN = 80
+N_VAL = 20
+N_EXT = 50
+N_REQUIRED = N_TRAIN + N_VAL + N_EXT
 
-random.seed(SEED)
+DT = 5e-3
+SEED = 42
+
+rng = random.Random(SEED)
+
 
 def extract_H(folder_name: str) -> float | None:
     """
-    Estrae H da nomi tipo:
-    iso2_R0.2_H1.0_P0.6
-    iso2_R0.2_H3.5_P0.7
+    Esempio:
+    iso2_R0.2_H1.0_P0.6 -> 1.0
     """
-    m = re.search(r"_H([0-9]+(?:\.[0-9]+)?)", folder_name)
-    if not m:
-        return None
-    return float(m.group(1))
+    match = re.search(r"_H([0-9]+(?:\.[0-9]+)?)(?:_|$)", folder_name)
+    return float(match.group(1)) if match else None
+
 
 def get_start_range(H: float) -> tuple[int, int]:
     """
-    Restituisce (start_min, start_max) in base a H.
-    Regole:
-      - 1.0 <= H <= 2.0 : start = 0 (fisso)
-      - 2.0 <  H <= 3.0 : start in [0, 5]
-      - 3.0 <  H <= 4.0 : start in [0, 10]
-      - 4.0 <  H <= 5.0 : start in [0, 20]  # aggiornato
+    Vincoli scelti:
+
+    1.0 <= H <= 2.0  -> start = 0
+    2.0 <  H <= 3.0  -> start casuale in [0, 5]
+    3.0 <  H <= 4.0  -> start casuale in [0, 10]
+    4.0 <  H <= 5.0  -> start casuale in [0, 20]
     """
-    if H <= 2.0:
+    if 1.0 <= H <= 2.0:
         return 0, 0
-    elif H <= 3.0:
+    elif 2.0 < H <= 3.0:
         return 0, 5
-    elif H <= 4.0:
+    elif 3.0 < H <= 4.0:
         return 0, 10
-    else:
+    elif 4.0 < H <= 5.0:
         return 0, 20
 
-def find_sim_folders():
-    """
-    Scansiona data/square/iso_P*/ e raccoglie le simulazioni
-    che hanno:
-      - nome con H estraibile
-      - almeno surf_000000.npy presente
-    """
-    sims = []
-    for p_folder in sorted(BASE.iterdir()):
-        if not p_folder.is_dir():
-            continue
-        if not p_folder.name.startswith("iso_P"):
-            continue
-        for sim_folder in sorted(p_folder.iterdir()):
-            if not sim_folder.is_dir():
-                continue
-            H = extract_H(sim_folder.name)
-            if H is None:
-                continue
-            first_file = sim_folder / "surf_000000.npy"
-            if not first_file.exists():
-                continue
-            sims.append((sim_folder, H))
-    return sims
+    raise ValueError(f"H={H} fuori dall'intervallo [1.0, 5.0]")
 
-def build_frame_paths(sim_path: Path, start: int, length: int) -> list[str]:
+
+def frame_path(sim_path: Path, frame_idx: int) -> Path:
     """
-    Costruisce la lista di path ai file .npy per una data simulazione,
-    a partire da 'start' e per 'length' frame.
-    I file sono del tipo surf_0.000000.npy, surf_0.005000.npy, ...
-    con dt = 5e-3.
+    0  -> surf_0.000000.npy
+    1  -> surf_0.005000.npy
+    2  -> surf_0.010000.npy
+    ...
+    40 -> surf_0.200000.npy
     """
-    paths = []
-    for i in range(start, start + length):
-        t = i * 5e-3
-        fname = f"surf_{t:.6f}.npy"
-        paths.append(str(sim_path / fname))
+    t = frame_idx * DT
+    return sim_path / f"surf_{t:.6f}.npy"
+
+
+def has_all_frames(sim_path: Path) -> bool:
+    """
+    Una simulazione è valida se possiede tutti i frame da 0 a 40.
+    """
+    return all(
+        frame_path(sim_path, frame_idx).is_file()
+        for frame_idx in range(N_ALL_FRAMES)
+    )
+
+
+def find_simulations() -> list[tuple[Path, float]]:
+    if not BASE.is_dir():
+        raise FileNotFoundError(
+            f"Directory non trovata o non accessibile:\n{BASE}"
+        )
+
+    p_folders = sorted(
+        p for p in BASE.iterdir()
+        if p.is_dir() and p.name.startswith("iso_P")
+    )
+
+    print(f"Cartelle iso_P trovate: {len(p_folders)}")
+    print(" ".join(p.name for p in p_folders))
+
+    simulations = []
+    n_no_H = 0
+    n_missing_frames = 0
+
+    for p_folder in p_folders:
+        sim_folders = sorted(
+            p for p in p_folder.iterdir()
+            if p.is_dir()
+        )
+
+        print(f"{p_folder.name}: {len(sim_folders)} sottocartelle")
+
+        for sim_path in sim_folders:
+            H = extract_H(sim_path.name)
+
+            if H is None:
+                n_no_H += 1
+                print(f"[H non riconosciuto] {sim_path}")
+                continue
+
+            if not has_all_frames(sim_path):
+                n_missing_frames += 1
+                print(f"[frame mancanti] {sim_path}")
+                continue
+
+            simulations.append((sim_path, H))
+
+    print(f"\nValide: {len(simulations)}")
+    print(f"Scartate per H non riconosciuto: {n_no_H}")
+    print(f"Scartate per frame mancanti: {n_missing_frames}")
+
+    return simulations
+
+
+def build_sequence(
+    sim_path: Path,
+    start: int,
+    n_frames: int,
+) -> list[str]:
+    paths = [
+        str(frame_path(sim_path, i))
+        for i in range(start, start + n_frames)
+    ]
+
+    missing = [path for path in paths if not Path(path).is_file()]
+
+    if missing:
+        raise FileNotFoundError(
+            "Frame non trovati:\n" + "\n".join(missing)
+        )
+
     return paths
 
+
+def write_train_or_val(
+    simulations: list[tuple[Path, float]],
+    output_path: Path,
+) -> None:
+    """
+    Scrive una riga per simulazione: 20 path per riga.
+    """
+    lines = []
+
+    for sim_path, H in simulations:
+        low, high = get_start_range(H)
+
+        # Limite assoluto: con 41 frame e N_SEQ = 20,
+        # lo start massimo ammesso è 21.
+        high = min(high, N_ALL_FRAMES - N_SEQ)
+
+        start = rng.randint(low, high)
+
+        paths = build_sequence(
+            sim_path=sim_path,
+            start=start,
+            n_frames=N_SEQ,
+        )
+
+        lines.append(" ".join(paths))
+
+    output_path.write_text(
+        "\n".join(lines) + "\n",
+        encoding="utf-8",
+    )
+
+    print(f"{output_path}: {len(lines)} righe, {N_SEQ} path per riga")
+
+
+def write_ext_test(
+    simulations: list[tuple[Path, float]],
+    output_path: Path,
+) -> None:
+    """
+    Scrive una riga per simulazione: tutti i 41 frame, da 0 a 40.
+    """
+    lines = []
+
+    for sim_path, _ in simulations:
+        paths = build_sequence(
+            sim_path=sim_path,
+            start=0,
+            n_frames=N_ALL_FRAMES,
+        )
+
+        lines.append(" ".join(paths))
+
+    output_path.write_text(
+        "\n".join(lines) + "\n",
+        encoding="utf-8",
+    )
+
+    print(f"{output_path}: {len(lines)} righe, {N_ALL_FRAMES} path per riga")
+
+
 def main():
-    sims = find_sim_folders()
-    print(f"Trovate {len(sims)} simulazioni candidate.")
+    simulations = find_simulations()
 
-    total_needed = N_TRAIN_SIMS + N_VAL_SIMS + N_EXT_SIMS
-    if len(sims) < total_needed:
-        print(f"Attenzione: ho solo {len(sims)} simulazioni, meno delle {total_needed} richieste.")
-        # procedo comunque con quelle disponibili, ridimensionando
+    if len(simulations) < N_REQUIRED:
+        raise RuntimeError(
+            f"Servono {N_REQUIRED} simulazioni valide "
+            f"(80 train + 20 validation + 50 external test), "
+            f"ma ne hai {len(simulations)}."
+        )
 
-    # Mischia e seleziona
-    random.shuffle(sims)
-    selected = sims[:total_needed]
+    # Estrazione casuale senza ripetizioni:
+    # train, validation ed external test sono disgiunti.
+    selected = rng.sample(simulations, N_REQUIRED)
 
-    train_sims = selected[:N_TRAIN_SIMS]
-    val_sims   = selected[N_TRAIN_SIMS:N_TRAIN_SIMS + N_VAL_SIMS]
-    ext_sims   = selected[N_TRAIN_SIMS + N_VAL_SIMS:
-                          N_TRAIN_SIMS + N_VAL_SIMS + N_EXT_SIMS]
+    train_sims = selected[:N_TRAIN]
+    val_sims = selected[N_TRAIN:N_TRAIN + N_VAL]
+    ext_sims = selected[N_TRAIN + N_VAL:]
 
-    def write_sequences(sim_list, out_file: Path, length: int):
-        lines = []
-        for sim_path, H in sim_list:
-            if length == N_TRAIN_VAL:
-                # train/val: start random con vincoli, 20 frame
-                start_min, start_max = get_start_range(H)
-                start = random.randint(start_min, start_max)
-                # sicurezza: non superare 41 - length
-                start = min(start, 41 - length)
-            else:
-                # external test: tutti i frame da 0 a 40
-                start = 0
+    write_train_or_val(train_sims, Path("train_set.txt"))
+    write_train_or_val(val_sims, Path("test_set.txt"))
+    write_ext_test(ext_sims, Path("ext_test.txt"))
 
-            frame_paths = build_frame_paths(sim_path, start, length)
-            line = " ".join(frame_paths)
-            lines.append(line + "\n")
+    print("\nGenerazione completata.")
+    print("train_set.txt: 80 righe × 20 frame")
+    print("test_set.txt:  20 righe × 20 frame")
+    print("ext_test.txt:  50 righe × 41 frame")
 
-        out_file.write_text("".join(lines))
-        print(f"Scritto {len(lines)} righe in {out_file}")
-
-    write_sequences(train_sims, Path("/scratch/fiorello/train3D/train_set.txt"), N_TRAIN_VAL)
-    write_sequences(val_sims,   Path("/scratch/fiorello/train3D/test_set.txt"),   N_TRAIN_VAL)
-    write_sequences(ext_sims,   Path("/scratch/fiorello/test3D/square/ext_test.txt"),   N_EXT)
 
 if __name__ == "__main__":
     main()
