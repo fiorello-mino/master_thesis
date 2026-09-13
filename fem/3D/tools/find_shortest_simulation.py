@@ -9,7 +9,7 @@ from pathlib import Path
 # ============================================================
 
 # Root principale contenente iso_P06, iso_P07, ..., iso_P10.
-ROOT_DIR = Path("/data/fiorello/poresAMDIS")
+ROOT_DIR = Path("/data/fiorello/pores3D/data/square")
 
 # Cerca i file dei frame della simulazione.
 FRAME_GLOB = "surf_*.npy"
@@ -19,7 +19,7 @@ VTK_MASK_SUFFIX = "_vtk_fallback_mask.npy"
 
 # Numero minimo di frame che una simulazione deve contenere per essere mantenuta.
 # Le cartelle con n_frames < N_FRAMES sono considerate invalide.
-N_FRAMES = 50
+N_FRAMES = 41
 
 # SICUREZZA:
 # False -> stampa e crea solo il report, NON elimina nulla.

@@ -11,14 +11,14 @@ import numpy as np
 # ============================================================
 
 # Root con le cartelle originali contenenti surf_*.vtu.
-INPUT_ROOT = Path("/archive/roberto/poresAMDIS/iso_P06")
+INPUT_ROOT = Path("/home/fiorello/mnt/data_train3D/cone/iso_P08")
 
 # Root prodotta dallo script resizeFolder.py basato su PyVista/VTK.
-OUTPUT_ROOT = Path("/data/fiorello/poresAMDIS/iso_P06")
+OUTPUT_ROOT = Path("/data/fiorello/pores3D/data/cone/iso_P08")
 
 # Parametri che devono coincidere con resizeFolder.py.
-LX = 0.3
-LY = 0.3
+LX = 0.4
+LY = 0.4
 EPS = 0.1
 VOXEL_SIZE = 0.025
 
@@ -27,7 +27,7 @@ TOL = 1e-6
 
 # True  -> controlla ogni frame .npy.
 # False -> controlla primo, centrale e ultimo frame di ogni cartella.
-CHECK_EVERY_FILE = False
+CHECK_EVERY_FILE = True
 
 VTU_GLOB = "surf_*.vtu"
 DATA_NPY_GLOB = "surf_*.npy"

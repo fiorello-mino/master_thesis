@@ -10,7 +10,7 @@ import numpy as np
 # ============================================================
 
 # Root che contiene iso_P06, iso_P07, ... e le cartelle simulazione.
-ROOT_DIR = Path("/data/fiorello/poresAMDIS")
+ROOT_DIR = Path("/data/fiorello/pores3D/data/cone")
 
 # Cerca i veri frame phi.
 FRAME_GLOB = "surf_*.npy"
