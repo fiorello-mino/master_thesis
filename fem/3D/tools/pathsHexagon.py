@@ -1,7 +1,7 @@
 from pathlib import Path
 
-BASE = Path("/data/fiorello/pores3D/data/hexagon/iso_P08")
-OUTPUT = Path("hexagon_iso_P08_sequences.txt")
+BASE = Path("/data/fiorello/pores3D/data/hexagon_full/iso_P08")
+OUTPUT = Path("/scratch/fiorello/test3D/hexagon_full/ext_test.txt")
 
 
 def frame_index(path: Path) -> int:

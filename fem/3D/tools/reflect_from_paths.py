@@ -7,12 +7,12 @@ import numpy as np
 
 # File txt:
 # ogni riga contiene i path ai surf_*.npy di UNA simulazione.
-INPUT_TXT = Path("hexagon_sequences.txt")
+INPUT_TXT = Path("/scratch/fiorello/test3D/cone/ext_test.txt")
 
 # Root del nuovo dataset di pori completi.
 # I file originali non vengono mai modificati.
 OUTPUT_ROOT = Path(
-    "/data/fiorello/pores3D/data/hexagon_full_pores"
+    "/data/fiorello/pores3D/data/cone_full_pores"
 )
 
 # False: salta i file già presenti nell'output.
