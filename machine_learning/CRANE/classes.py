@@ -616,7 +616,39 @@ class ConvGRU(nn.Module):
             return self.forward_div(in_sequence, future, params=params, noise_reg=noise_reg, approx_inference=approx_inference) # conservative dynamics
         else:
             return self.forward_old(in_sequence, future, params=params, noise_reg=noise_reg, approx_inference=approx_inference) # non conservative dynamics
-    
+
+class MassConservingSigmoid(nn.Module):
+    '''
+    Layer di attivazione che forza l'output tra 0 e 1 (tramite Sigmoid) 
+    e trova un moltiplicatore di Lagrange (lambd) per conservare la massa totale.
+    '''
+    def __init__(self, max_iter=15, tol=1e-5):
+        super(MassConservingSigmoid, self).__init__()
+        self.max_iter = max_iter
+        self.tol = tol
+
+    def forward(self, H, target_mass):
+        # H: output grezzo della rete (Batch, 1, X, Y, Z)
+        # target_mass: massa da conservare (Batch, 1, 1, 1, 1)
+        B = H.shape[0]
+        lambd = torch.zeros((B, 1, 1, 1, 1), device=H.device)
+        
+        for _ in range(self.max_iter):
+            phi = torch.sigmoid(H + lambd)
+            current_mass = phi.sum(dim=(-1, -2, -3), keepdim=True)
+            
+            diff = current_mass - target_mass
+            
+            if diff.abs().max() < self.tol:
+                break
+                
+            # Derivata rispetto a lambda: sum( phi * (1 - phi) )
+            deriv = (phi * (1.0 - phi)).sum(dim=(-1, -2, -3), keepdim=True)
+            
+            # Newton-Raphson update
+            lambd = lambd - diff / (deriv + 1e-8)
+            
+        return torch.sigmoid(H + lambd)
 
 class ConvGRU3D(nn.Module):
     '''
@@ -675,7 +707,8 @@ class ConvGRU3D(nn.Module):
             nn.Tanh(),
             nn.Conv3d(
                 in_channels     = self.hidden_channels,
-                out_channels    = self.input_channels if not self.div_mode else 3*self.input_channels,
+                #out_channels    = self.input_channels if not self.div_mode else 3*self.input_channels,
+                out_channels    = self.input_channels,
                 kernel_size     = 3,
                 stride          = 1,
                 padding         = 1,
@@ -684,6 +717,7 @@ class ConvGRU3D(nn.Module):
                 )
             )
         self.sigmoid = nn.Sigmoid()
+        self.mass_cons_sigmoid = MassConservingSigmoid()
         
         for kk in range(self.hidden_units):
             
@@ -910,12 +944,14 @@ class ConvGRU3D(nn.Module):
                             hidden_list[kk][example,channel,:,:] = hidden_list[kk][example,channel,:,:]*self.dropout_mask[example, kk, channel] # this will zero-out some of the hidden shapes
             
             
-            # prima di calcolare divJ inserisco mobilità superficiale in modo che phi non esca da [0,1]
-            J_raw = self.toOut(hidden_list[-1])
+            # Nuova versione Allen-Cahn con moltiplicatore di Lagrange per conservare la massa
+            H_raw = self.toOut(hidden_list[-1])
             phi_t = input_t.squeeze(1)
             
-            mobility = torch.relu(phi_t * (1.0 - phi_t)) ** 2
-            output = phi_t + self.divergence(J_raw*mobility)
+            target_mass = phi_t.sum(dim=(-1,-2,-3), keepdim=True)
+            
+            # Il layer applica il sigmoide e shifta il potenziale per conservare la massa
+            output = self.mass_cons_sigmoid(H_raw, target_mass)
             
             outputs += [output]
             
@@ -938,9 +974,12 @@ class ConvGRU3D(nn.Module):
                         for channel in range(self.hidden_channels):
                             hidden_list[kk][example,channel,:,:] = hidden_list[kk][example,channel,:,:]*self.dropout_mask[example, kk, channel] # this will zero-out some of the hidden shapes
             
-            J_raw = self.toOut(hidden_list[-1])
-            mobility = torch.relu(output_old * (1.0 - output_old)) ** 2
-            output = output_old+self.divergence(J_raw*mobility)
+            H_raw = self.toOut(hidden_list[-1])
+            
+            # La massa da conservare è quella del frame appena calcolato
+            target_mass = phi_t.sum(dim=(-1,-2,-3), keepdim=True)
+            
+            output = self.mass_cons_sigmoid(H_raw, target_mass)
             
             outputs += [output]
             
