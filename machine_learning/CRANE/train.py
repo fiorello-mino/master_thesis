@@ -27,7 +27,7 @@ from src.parser import TrainingParser
 # --- import my stuff ---
 
 # <<< import loss function class
-from LossFunction_new import CahnHilliardLoss
+from LossFunction import CahnHilliardLoss
 
 
 # <<< training function <<<
@@ -554,8 +554,6 @@ def main():
             w_mse=1.0,
             w_energy=args.w_energy,
             w_bounds=args.w_bounds,
-            w_grad=0.0,
-            w_pde=0.0,
             epsilon=args.epsilon,
             M0=1e-2,
             dx=args.dx,
