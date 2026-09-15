@@ -41,8 +41,6 @@ class CahnHilliardLoss(nn.Module):
         w_mse=1.0,
         w_energy=0.0,
         w_grad=0.0,
-        w_pde=0.0,
-        w_mass=0.0,
         w_bounds=0.0,
         bounds_peak_weight=0.05,
         epsilon=0.1,
@@ -56,9 +54,6 @@ class CahnHilliardLoss(nn.Module):
 
         self.w_mse = w_mse
         self.w_energy = w_energy
-        self.w_grad = w_grad
-        self.w_pde = w_pde
-        self.w_mass = w_mass
         self.w_bounds = w_bounds
 
         # Peso interno della penalità sui picchi locali fuori [0, 1].
@@ -177,24 +172,6 @@ class CahnHilliardLoss(nn.Module):
         """Local free-energy density W(phi)."""
         return (18.0 / self.epsilon) * phi.square() * (1.0 - phi).square()
 
-    def dW_dphi(self, phi):
-        """Derivative dW/dphi."""
-        return (
-            (36.0 / self.epsilon)
-            * phi
-            * (1.0 - phi)
-            * (1.0 - 2.0 * phi)
-        )
-
-    def M(self, phi):
-        """Degenerate mobility M(phi)."""
-        return (
-            self.M0
-            * (36.0 / self.epsilon)
-            * phi.square()
-            * (1.0 - phi).square()
-        )
-
     def free_energy(self, phi):
         """
         Calculates the free energy for each sample, time and channel.
@@ -211,30 +188,8 @@ class CahnHilliardLoss(nn.Module):
         dV = self.dx * self.dy * self.dz
         return density.sum(dim=(-3, -2, -1)) * dV
 
-    def chemical_potential(self, phi):
-        """mu = dW/dphi - 2 epsilon^2 Laplacian(phi)."""
-        return self.dW_dphi(phi) - 2.0 * (self.epsilon ** 2) * self.laplacian(phi)
-
     def mse_loss(self, pred, target):
         return F.mse_loss(pred, target)
-
-    def gradient_loss(self, pred, target):
-        """L1 mismatch of spatial gradients."""
-        gx_pred, gy_pred, gz_pred = self.gradient(pred)
-        gx_true, gy_true, gz_true = self.gradient(target)
-
-        return (
-            F.l1_loss(gx_pred, gx_true)
-            + F.l1_loss(gy_pred, gy_true)
-            + F.l1_loss(gz_pred, gz_true)
-        )
-
-    def mass_conservation_loss(self, pred, target):
-        """MSE between total predicted and target mass for every B, T, C."""
-        dV = self.dx * self.dy * self.dz
-        mass_pred = pred.sum(dim=(-3, -2, -1)) * dV
-        mass_true = target.sum(dim=(-3, -2, -1)) * dV
-        return F.mse_loss(mass_pred, mass_true)
 
     def energy_matching_loss(self, pred, target):
         """
@@ -291,31 +246,6 @@ class CahnHilliardLoss(nn.Module):
         delta_energy = energy[:, 1:] - energy[:, :-1]
         return F.relu(delta_energy).square().mean()
 
-    def pde_residual_loss(self, pred):
-        """Residual of dphi/dt - div(M(phi) grad(mu)) = 0."""
-        if pred.shape[1] < 2:
-            raise ValueError(
-                "pde_residual_loss requires at least T=2 time frames, "
-                f"but got T={pred.shape[1]}."
-            )
-
-        dphi_dt = (pred[:, 1:] - pred[:, :-1]) / self.dt
-
-        phi_t = pred[:, :-1]
-        mu_t = self.chemical_potential(phi_t)
-
-        dmu_dx, dmu_dy, dmu_dz = self.gradient(mu_t)
-        mobility = self.M(phi_t)
-
-        jx = mobility * dmu_dx
-        jy = mobility * dmu_dy
-        jz = mobility * dmu_dz
-
-        rhs = self.divergence(jx, jy, jz)
-        residual = dphi_dt - rhs
-
-        return residual.square().mean()
-
     def forward(self, pred, target):
         """
         Returns:
@@ -330,17 +260,11 @@ class CahnHilliardLoss(nn.Module):
 
         l_mse = self.mse_loss(pred, target)
         l_energy = self.energy_matching_loss(pred, target)
-        l_grad = self.gradient_loss(pred, target)
-        l_pde = self.pde_residual_loss(pred)
-        l_mass = self.mass_conservation_loss(pred, target)
         l_bounds = self.bounds_loss(pred)
 
         total = (
             self.w_mse * l_mse
             + self.w_energy * l_energy
-            + self.w_grad * l_grad
-            + self.w_pde * l_pde
-            + self.w_mass * l_mass
             + self.w_bounds * l_bounds
         )
 
@@ -348,9 +272,6 @@ class CahnHilliardLoss(nn.Module):
             "loss_total": total.detach(),
             "loss_mse": l_mse.detach(),
             "loss_energy": l_energy.detach(),
-            "loss_grad": l_grad.detach(),
-            "loss_pde": l_pde.detach(),
-            "loss_mass": l_mass.detach(),
             "loss_bounds": l_bounds.detach(),
         }
 

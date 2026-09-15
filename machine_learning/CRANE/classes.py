@@ -909,8 +909,13 @@ class ConvGRU3D(nn.Module):
                         for channel in range(self.hidden_channels):
                             hidden_list[kk][example,channel,:,:] = hidden_list[kk][example,channel,:,:]*self.dropout_mask[example, kk, channel] # this will zero-out some of the hidden shapes
             
-            output = self.toOut(hidden_list[-1])
-            output = input_t.squeeze(1)+self.divergence(output)
+            
+            # prima di calcolare divJ inserisco mobilità superficiale in modo che phi non esca da [0,1]
+            J_raw = self.toOut(hidden_list[-1])
+            phi_t = input_t.squeeze(1)
+            
+            mobility = torch.relu(phi_t * (1.0 - phi_t)) ** 2
+            output = phi_t + self.divergence(J_raw*mobility)
             
             outputs += [output]
             
@@ -933,8 +938,9 @@ class ConvGRU3D(nn.Module):
                         for channel in range(self.hidden_channels):
                             hidden_list[kk][example,channel,:,:] = hidden_list[kk][example,channel,:,:]*self.dropout_mask[example, kk, channel] # this will zero-out some of the hidden shapes
             
-            output = self.toOut(hidden_list[-1])
-            output = output_old+self.divergence(output)
+            J_raw = self.toOut(hidden_list[-1])
+            mobility = torch.relu(output_old * (1.0 - output_old)) ** 2
+            output = output_old+self.divergence(J_raw*mobility)
             
             outputs += [output]
             

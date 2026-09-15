@@ -40,8 +40,6 @@ def train(model, loss_fn, optimizer, loaders, args):
     valid_mse_losses = []
     valid_e_losses = []
     valid_bounds_losses = []
-    valid_grad_losses = []
-    valid_pde_losses = []
     
     valid_e_ratios = []
     valid_bounds_ratios = []
@@ -169,8 +167,6 @@ def train(model, loss_fn, optimizer, loaders, args):
             epoch_valid_mse_losses =    []
             epoch_valid_e_losses =      []
             epoch_valid_bounds_losses = []
-            epoch_valid_grad_losses =   []
-            epoch_valid_pde_losses = []
             
             epoch_valid_e_ratio = []
             epoch_valid_bounds_ratio = []
@@ -236,8 +232,6 @@ def train(model, loss_fn, optimizer, loaders, args):
                     mse_loss    = metrics["loss_mse"]
                     e_loss      = metrics["loss_energy"]
                     bounds_loss = metrics["loss_bounds"]
-                    grad_loss   = metrics["loss_grad"]
-                    pde_loss    = metrics["loss_pde"]
                     
                     eps = 1e-12
                     
@@ -264,8 +258,6 @@ def train(model, loss_fn, optimizer, loaders, args):
                     epoch_valid_mse_losses.append(mse_loss.cpu().item())
                     epoch_valid_e_losses.append(e_loss.cpu().item())
                     epoch_valid_bounds_losses.append(bounds_loss.cpu().item())
-                    epoch_valid_grad_losses.append(grad_loss.cpu().item())
-                    epoch_valid_pde_losses.append(pde_loss.cpu().item())
 
                     epoch_valid_e_ratio.append(e_ratio.cpu().item())
                     epoch_valid_bounds_ratio.append(bounds_ratio.cpu().item())
@@ -287,8 +279,6 @@ def train(model, loss_fn, optimizer, loaders, args):
                 valid_mse_losses.append(np.mean(epoch_valid_mse_losses))
                 valid_e_losses.append(np.mean(epoch_valid_e_losses))
                 valid_bounds_losses.append(np.mean(epoch_valid_bounds_losses))
-                valid_grad_losses.append(np.mean(epoch_valid_grad_losses))
-                valid_pde_losses.append(np.mean(epoch_valid_pde_losses))
                 
                 valid_e_ratios.append(np.mean(epoch_valid_e_ratio))
                 valid_bounds_ratios.append(np.mean(epoch_valid_bounds_ratio))
@@ -315,9 +305,7 @@ def train(model, loss_fn, optimizer, loaders, args):
                     "energy_ratio\t"
                     "phi_min\t"
                     "phi_max\t"
-                    "oob_fraction\t"
-                    "grad\t"
-                    "pde\n"
+                    "oob_fraction\n"
                 )
 
                 with open(valid_terms_path, "a+") as f:
@@ -333,9 +321,7 @@ def train(model, loss_fn, optimizer, loaders, args):
                         f"{valid_e_ratios[-1]:.6e}\t"
                         f"{valid_phi_mins[-1]:.6e}\t"
                         f"{valid_phi_maxs[-1]:.6e}\t"
-                        f"{valid_oobs[-1]:.6e}\t"
-                        f"{valid_grad_losses[-1]:.6e}\t"
-                        f"{valid_pde_losses[-1]:.6e}\n"
+                        f"{valid_oobs[-1]:.6e}\n"
                     )
             
         optimizer.zero_grad() # <- better safe than sorry
