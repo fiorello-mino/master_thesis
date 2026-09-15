@@ -13,22 +13,22 @@ import torch
 
 
 # <<< import CRANE modules <<<
-from PersistentModel import PersistentModel
+from PersistentModel import PersistentModel3D
 from src.utils import *
 # === import CRANE modules ===
 
 
 # <<< OUTPUT VARIABLES <<<
 # Salva NPY solo per le prime NUM_NPY sequenze.
-NUM_NPY: int = 100
-DELTA_NPY: int = 10
+NUM_NPY: int = 50
+DELTA_NPY: int = 1
 
 # Salva VTK solo per le prime NUM_VTK sequenze.
-NUM_VTK: int = 100
+NUM_VTK: int = 10
 DELTA_VTK: int = 1
 
 # Nome del campo scalare visibile in ParaView.
-VTK_FIELD_NAME: str = 'phi'
+VTK_FIELD_NAME: str = 'values'
 # === OUTPUT VARIABLES ===
 
 
@@ -42,18 +42,14 @@ VTK_FIELD_NAME: str = 'phi'
 #   sequence_table con esattamente MIN_SEQ frame iniziali per riga.
 #   Il modello genera PRED_FRAMES frame futuri autoregressivamente.
 #   Non vengono calcolate metriche, perché non esiste ground truth.
-PRED_FRAMES: int = 1
+PRED_FRAMES: int = 0
 # === PREDICTION VARIABLES ===
 
 
 # <<< SCRIPT VARIABLES <<<
-LOG_DIR = Path(
-    '/home/fiorello/master_thesis/machine_learning/train3D/'
-    'train_logs/prova3D_1'
-)
-
-SEQUENCE_TABLE: str = '/data/fiorello/pores3D/ext_test/conformal/test_set.txt'
-OUTPUT_FOLDER: str = '/data/fiorello/pores3D/ext_test/conformal/mse'
+MODEL_PATH = Path('/scratch/fiorello/train3D_old/train_logs/B3e1/model/epoch_477.pt')
+SEQUENCE_TABLE: str = '/scratch/fiorello/test3D/square/ext_test.txt'
+OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/B3e1'
 CUDA: bool = True
 # === SCRIPT VARIABLES ===
 
@@ -236,13 +232,13 @@ class OutputMan:
         """
         if self.deltaNPY > 0 and time % self.deltaNPY == 0:
             np.save(
-                self.path / 'pred_npy' / f'{time:03d}.npy',
+                self.path / 'pred_npy' / f'phi_{time:03d}.npy',
                 pred,
             )
 
         if self.deltaVTK > 0 and time % self.deltaVTK == 0:
             self.saveVTK(
-                self.path / 'pred_vtk' / f'{time:03d}.vtk',
+                self.path / 'pred_vtk' / f'phi_{time:03d}.vtk',
                 pred,
                 field_name=self.vtk_field_name,
             )
@@ -362,66 +358,6 @@ class OutputMan:
             f'{avgSymDiff}\n'
         )
         fileSTAT.flush()
-
-
-def best_model_path(log_dir_path: Union[str, Path]) -> Path:
-    """
-    Restituisce il checkpoint con la validation loss minima.
-    """
-    log_dir_path = Path(log_dir_path)
-    valid_loss_file = log_dir_path / 'valid_loss.txt'
-
-    if not log_dir_path.is_dir():
-        raise FileNotFoundError(
-            f'La cartella di log non esiste: {log_dir_path}'
-        )
-
-    if not valid_loss_file.is_file():
-        raise FileNotFoundError(
-            f'File valid_loss.txt non trovato: {valid_loss_file}'
-        )
-
-    min_loss = None
-    best_epoch = None
-
-    with valid_loss_file.open('r') as file:
-        for epoch, line in enumerate(file):
-            line = line.strip()
-
-            if not line:
-                continue
-
-            try:
-                loss = float(line)
-            except ValueError as exc:
-                raise ValueError(
-                    f'Valore non valido in {valid_loss_file}, '
-                    f'riga {epoch + 1}: {line!r}'
-                ) from exc
-
-            if min_loss is None or loss < min_loss:
-                min_loss = loss
-                best_epoch = epoch
-
-    if best_epoch is None:
-        raise ValueError(
-            f'Il file {valid_loss_file} è vuoto '
-            f'o contiene solo righe vuote.'
-        )
-
-    checkpoint_path = log_dir_path / 'model' / f'epoch_{best_epoch}.pt'
-
-    if not checkpoint_path.is_file():
-        raise FileNotFoundError(
-            f'Checkpoint del best model non trovato: {checkpoint_path}'
-        )
-
-    print(
-        f'Best model trovato in {log_dir_path}:\n'
-        f'epoch={best_epoch}, valid_loss={min_loss}'
-    )
-
-    return checkpoint_path
 
 
 def prepare_output_directory(output_folder: Union[str, Path]) -> None:
@@ -560,7 +496,7 @@ def main() -> None:
     prepare_output_directory(OUTPUT_FOLDER)
     device = get_device(CUDA)
 
-    model = PersistentModel(
+    model = PersistentModel3D(
         hidden_units=HIDDEN_UNITS,
         input_channels=INPUT_CHANNELS,
         output_channels=OUTPUT_CHANNELS,
@@ -576,10 +512,8 @@ def main() -> None:
         conservative=CONSERVATIVE,
     )
 
-    model_path = best_model_path(LOG_DIR)
-
     checkpoint = torch.load(
-        model_path,
+        MODEL_PATH,
         map_location=device,
         weights_only=True,
     )
@@ -783,7 +717,7 @@ def main() -> None:
                     torch.cuda.empty_cache()
 
     with open(f'{OUTPUT_FOLDER}/model_path.txt', 'w') as file_path:
-        file_path.write(f'{model_path}\n')
+        file_path.write(f'{MODEL_PATH}\n')
 
 
 if __name__ == '__main__':
