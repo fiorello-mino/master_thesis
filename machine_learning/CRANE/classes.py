@@ -616,39 +616,7 @@ class ConvGRU(nn.Module):
             return self.forward_div(in_sequence, future, params=params, noise_reg=noise_reg, approx_inference=approx_inference) # conservative dynamics
         else:
             return self.forward_old(in_sequence, future, params=params, noise_reg=noise_reg, approx_inference=approx_inference) # non conservative dynamics
-
-class MassConservingSigmoid(nn.Module):
-    '''
-    Layer di attivazione che forza l'output tra 0 e 1 (tramite Sigmoid) 
-    e trova un moltiplicatore di Lagrange (lambd) per conservare la massa totale.
-    '''
-    def __init__(self, max_iter=15, tol=1e-5):
-        super(MassConservingSigmoid, self).__init__()
-        self.max_iter = max_iter
-        self.tol = tol
-
-    def forward(self, H, target_mass):
-        # H: output grezzo della rete (Batch, 1, X, Y, Z)
-        # target_mass: massa da conservare (Batch, 1, 1, 1, 1)
-        B = H.shape[0]
-        lambd = torch.zeros((B, 1, 1, 1, 1), device=H.device)
-        
-        for _ in range(self.max_iter):
-            phi = torch.sigmoid(H + lambd)
-            current_mass = phi.sum(dim=(-1, -2, -3), keepdim=True)
-            
-            diff = current_mass - target_mass
-            
-            if diff.abs().max() < self.tol:
-                break
-                
-            # Derivata rispetto a lambda: sum( phi * (1 - phi) )
-            deriv = (phi * (1.0 - phi)).sum(dim=(-1, -2, -3), keepdim=True)
-            
-            # Newton-Raphson update
-            lambd = lambd - diff / (deriv + 1e-8)
-            
-        return torch.sigmoid(H + lambd)
+    
 
 class ConvGRU3D(nn.Module):
     '''
@@ -707,8 +675,7 @@ class ConvGRU3D(nn.Module):
             nn.Tanh(),
             nn.Conv3d(
                 in_channels     = self.hidden_channels,
-                #out_channels    = self.input_channels if not self.div_mode else 3*self.input_channels,
-                out_channels    = self.input_channels,
+                out_channels    = self.input_channels if not self.div_mode else 3*self.input_channels,
                 kernel_size     = 3,
                 stride          = 1,
                 padding         = 1,
@@ -717,7 +684,6 @@ class ConvGRU3D(nn.Module):
                 )
             )
         self.sigmoid = nn.Sigmoid()
-        self.mass_cons_sigmoid = MassConservingSigmoid()
         
         for kk in range(self.hidden_units):
             
@@ -735,48 +701,52 @@ class ConvGRU3D(nn.Module):
                     bias            = self.bias
                     )
                 )
-
+        
+        
     def make_div_filters(self, x):
-        print('Constructing SMOTHED differential operators as filters...', end='')
-
+        '''
+        This method constructs the divergence filters
+        '''
+        
+        print('Constructing differential operators as filters...', end='')
+        
         grad1 = nn.Conv3d(1, 1, kernel_size=3, stride=1, padding=1, bias=False, padding_mode=self.padding_mode)
         grad2 = nn.Conv3d(1, 1, kernel_size=3, stride=1, padding=1, bias=False, padding_mode=self.padding_mode)
         grad3 = nn.Conv3d(1, 1, kernel_size=3, stride=1, padding=1, bias=False, padding_mode=self.padding_mode)
-
-        # Filtro base per la derivata
-        diff_1d = np.array([1., 0., -1.])
-        # Filtro base per lo smoothing (media pesata ortogonale)
-        smooth_1d = np.array([1., 2., 1.]) / 4.0
-
-        # Costruzione del kernel 3D per gradX (Derivata in X, Smooth in Y, Smooth in Z)
-        smooth_yz = np.outer(smooth_1d, smooth_1d)  # Matrice 3x3
-        gradx_matrix = np.zeros((3, 3, 3))
-        for i in range(3):
-            gradx_matrix[i, :, :] = diff_1d[i] * smooth_yz
-
-        # Costruzione del kernel 3D per gradY
-        smooth_xz = np.outer(diff_1d, smooth_1d)
-        grady_matrix = np.zeros((3, 3, 3))
-        for j in range(3):
-            grady_matrix[:, j, :] = diff_1d[j] * np.outer(smooth_1d, smooth_1d)  # equivalente vettoriale
-            # Modo più semplice: trasporre la matrice X
-
-        grady_matrix = np.swapaxes(gradx_matrix, 0, 1)
-        gradz_matrix = np.swapaxes(gradx_matrix, 0, 2)
-
-        grad1.weight = nn.Parameter(torch.from_numpy(gradx_matrix).float().unsqueeze(0).unsqueeze(0))
-        grad2.weight = nn.Parameter(torch.from_numpy(grady_matrix).float().unsqueeze(0).unsqueeze(0))
-        grad3.weight = nn.Parameter(torch.from_numpy(gradz_matrix).float().unsqueeze(0).unsqueeze(0))
-
+        
+        gradx_matrix = np.zeros((3,3,3))
+        grady_matrix = np.zeros((3,3,3))
+        gradz_matrix = np.zeros((3,3,3))
+        
+        gradx_matrix[0,1,1] = 1.
+        gradx_matrix[2,1,1] = -1.
+        
+        grady_matrix[1,0,1] = 1.
+        grady_matrix[1,2,1] = -1.
+        
+        gradz_matrix[1,1,0] = 1.
+        gradz_matrix[1,1,2] = -1.
+        
+        grad1.weight = nn.Parameter(
+            torch.from_numpy(gradx_matrix).float().unsqueeze(0).unsqueeze(0)
+            )
+        grad2.weight = nn.Parameter(
+            torch.from_numpy(grady_matrix).float().unsqueeze(0).unsqueeze(0)
+            )
+        grad3.weight = nn.Parameter(
+            torch.from_numpy(gradz_matrix).float().unsqueeze(0).unsqueeze(0)
+            )
+        
         grad1.requires_grad = False
         grad2.requires_grad = False
         grad3.requires_grad = False
-
+        
         grad1.to(x.device)
         grad2.to(x.device)
         grad3.to(x.device)
-
+        
         self.divergence_filters = [grad1, grad2, grad3]
+        
         print('DONE!')
         
         
@@ -938,15 +908,9 @@ class ConvGRU3D(nn.Module):
                     for example in range(in_sequence.shape[0]): # iterate in the batch dimension
                         for channel in range(self.hidden_channels):
                             hidden_list[kk][example,channel,:,:] = hidden_list[kk][example,channel,:,:]*self.dropout_mask[example, kk, channel] # this will zero-out some of the hidden shapes
-
-            J_raw = self.toOut(hidden_list[-1])
-            phi_t = input_t.squeeze(1)
-
-            mobility = torch.relu(phi_t * (1.0 - phi_t))
-            J_phys = J_raw * mobility
-
-            # La funzione self.divergence ora userà i nuovi filtri Sobel 3D costruiti da make_div_filters
-            output = phi_t + self.divergence(J_phys)
+            
+            output = self.toOut(hidden_list[-1])
+            output = input_t.squeeze(1)+self.divergence(output)
             
             outputs += [output]
             
@@ -968,14 +932,9 @@ class ConvGRU3D(nn.Module):
                     for example in range(in_sequence.shape[0]): # iterate in the batch dimension
                         for channel in range(self.hidden_channels):
                             hidden_list[kk][example,channel,:,:] = hidden_list[kk][example,channel,:,:]*self.dropout_mask[example, kk, channel] # this will zero-out some of the hidden shapes
-
-            J_raw = self.toOut(hidden_list[-1])
-
-            # Mobilità lineare con ReLU per salvaguardia numerica basata su output_old
-            mobility = torch.relu(output_old * (1.0 - output_old))
-            J_phys = J_raw * mobility
-
-            output = output_old + self.divergence(J_phys)
+            
+            output = self.toOut(hidden_list[-1])
+            output = output_old+self.divergence(output)
             
             outputs += [output]
             
