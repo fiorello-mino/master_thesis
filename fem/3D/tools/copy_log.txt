@@ -1,6 +1,8 @@
 LOG COPIA FILE .dat e .3d
 ============================================================
 
-File .dat copiati: 98
-File .3d copiati: 98
+File .dat copiati: 199
+File .3d copiati: 200
 
+ERRORI (1):
+  MANCANTE .dat: /archive/roberto/poresAMDIS/square/iso_P10/iso2_R0.2_H2.0_P1.0/iso2_R0.2_H2.0_P1.0.dat

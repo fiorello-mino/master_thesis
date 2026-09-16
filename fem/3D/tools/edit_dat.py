@@ -13,8 +13,8 @@ from pathlib import Path
 import re
 import shutil
 
-INIT_DIR = Path("/data/fiorello/pores3D/data_train/square/init")
-OUTPUT_BASE = Path("/scratch/fiorello/data_train3D/square")
+INIT_DIR = Path("/data/fiorello/pores3D_2/square/init")
+OUTPUT_BASE = Path("/scratch/fiorello/pores3D_2/square")
 
 
 def extract_pitch(sim_name: str) -> str | None:
@@ -119,7 +119,7 @@ def modify_dat_file(dat_path: Path) -> tuple[bool, str]:
             found["output_directory"] = True
 
             new_lines.append(f"output->directory: {output_dir}\n")
-            new_lines.append("surf->output->write every delta: 0.005\n")
+            new_lines.append("surf->output->write every delta: 0.0025\n")
 
             # Se già presente, evita di aggiungere più righe duplicate.
             i += 1

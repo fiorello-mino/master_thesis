@@ -15,7 +15,7 @@ from pathlib import Path
 
 ARCHIVE_BASE = Path("/archive/roberto/poresAMDIS/square")
 DATA_BASE = Path("/data/fiorello/poresAMDIS")
-INIT_DIR = Path("/data/fiorello/pores3D/data_train/hexagon/init")
+INIT_DIR = Path("/data/fiorello/pores3D_2/square/init")
 
 def find_3d_file(sim_path):
     """Trova l'unico file .3d nella cartella della simulazione"""
@@ -41,7 +41,7 @@ def main():
     # Trova tutte le cartelle pitch (iso_P06, iso_P07, ...)
     pitch_folders = sorted([
         d for d in os.listdir(ARCHIVE_BASE)
-        if d.startswith("iso_P0") and (ARCHIVE_BASE / d).is_dir()
+        if d.startswith("iso_P") and (ARCHIVE_BASE / d).is_dir()
     ])
 
     print(f"Trovate {len(pitch_folders)} cartelle pitch: {pitch_folders}\n")
@@ -72,7 +72,8 @@ def main():
         ])
 
         # Calcola differenza
-        missing_in_pitch = archive_sims - data_sims
+        #missing_in_pitch = archive_sims - data_sims
+        missing_in_pitch = archive_sims
         for sim in missing_in_pitch:
             missing_sims.append((pitch, sim, archive_pitch_path / sim))
 
