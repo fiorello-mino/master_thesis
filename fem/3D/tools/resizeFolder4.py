@@ -14,10 +14,10 @@ from scipy.interpolate import NearestNDInterpolator
 # ============================================================
 
 # Root che contiene le cartelle iso2_R..._H..._P...
-INPUT_ROOT = Path("/home/fiorello/mnt/data_train3D/square/iso_P09")
+INPUT_ROOT = Path("/home/fiorello/mnt/pores3D_2/square/iso_P09")
 
 # Root che riceve gli NPY.
-OUTPUT_ROOT = Path("/data/fiorello/pores3D/data/square/iso_P09")
+OUTPUT_ROOT = Path("/data/fiorello/pores3D_2/data/square/iso_P09")
 
 # Campo scalare nel point_data del VTU.
 FIELD_NAME = "phi"

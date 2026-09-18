@@ -4,6 +4,7 @@ path.append('/home/fiorello/CRANE/')
 
 import os
 import shutil
+import argparse
 from pathlib import Path
 from typing import Union
 
@@ -47,9 +48,9 @@ PRED_FRAMES: int = 0
 
 
 # <<< SCRIPT VARIABLES <<<
-MODEL_PATH = Path('/scratch/fiorello/train3D_old/train_logs/B3e1/model/epoch_477.pt')
+MODEL_PATH = Path('/scratch/fiorello/train3D_AC/train_logs/mse_cons/model/epoch_427.pt')
+OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/train1/mse_cons'
 SEQUENCE_TABLE: str = '/scratch/fiorello/test3D/square/ext_test.txt'
-OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/B3e1'
 CUDA: bool = True
 # === SCRIPT VARIABLES ===
 
@@ -66,11 +67,11 @@ PADDING_MODE: str = 'reflect'
 
 SEPARABLE: bool = False
 BIAS: bool = True
-DIVERGENCE: bool = True
+DIVERGENCE: bool = False
 NUM_PARAMS: int = 0
 DROPOUT: bool = False
 DROPOUT_PROB: Union[float, None] = None
-CONSERVATIVE: bool = False
+CONSERVATIVE: bool = True
 # === MODEL VARIABLES ===
 
 
