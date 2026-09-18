@@ -701,59 +701,55 @@ class ConvGRU3D(nn.Module):
                     bias            = self.bias
                     )
                 )
-
+        
+        
     def make_div_filters(self, x):
         '''
-        This method constructs the divergence filters using backward differences
-        (staggered grid approach) to avoid checkerboard artifacts.
+        This method constructs the divergence filters
         '''
-
-        print('Constructing staggered differential operators as filters...', end='')
-
+        
+        print('Constructing differential operators as filters...', end='')
+        
         grad1 = nn.Conv3d(1, 1, kernel_size=3, stride=1, padding=1, bias=False, padding_mode=self.padding_mode)
         grad2 = nn.Conv3d(1, 1, kernel_size=3, stride=1, padding=1, bias=False, padding_mode=self.padding_mode)
         grad3 = nn.Conv3d(1, 1, kernel_size=3, stride=1, padding=1, bias=False, padding_mode=self.padding_mode)
-
-        gradx_matrix = np.zeros((3, 3, 3))
-        grady_matrix = np.zeros((3, 3, 3))
-        gradz_matrix = np.zeros((3, 3, 3))
-
-        # Sostituiamo le differenze centrate [1, 0, -1] con differenze backward [-1, 1, 0]
-        # In PyTorch cross-correlation per il voxel i calcola: w[0]*x[i-1] + w[1]*x[i] + w[2]*x[i+1]
-        # Vogliamo out[i] = x[i] - x[i-1], quindi impostiamo w[0] = -1 e w[1] = 1
-
-        gradx_matrix[0, 1, 1] = -1.
-        gradx_matrix[1, 1, 1] = 1.
-
-        grady_matrix[1, 0, 1] = -1.
-        grady_matrix[1, 1, 1] = 1.
-
-        gradz_matrix[1, 1, 0] = -1.
-        gradz_matrix[1, 1, 1] = 1.
-
+        
+        gradx_matrix = np.zeros((3,3,3))
+        grady_matrix = np.zeros((3,3,3))
+        gradz_matrix = np.zeros((3,3,3))
+        
+        gradx_matrix[0,1,1] = 1.
+        gradx_matrix[2,1,1] = -1.
+        
+        grady_matrix[1,0,1] = 1.
+        grady_matrix[1,2,1] = -1.
+        
+        gradz_matrix[1,1,0] = 1.
+        gradz_matrix[1,1,2] = -1.
+        
         grad1.weight = nn.Parameter(
             torch.from_numpy(gradx_matrix).float().unsqueeze(0).unsqueeze(0)
-        )
+            )
         grad2.weight = nn.Parameter(
             torch.from_numpy(grady_matrix).float().unsqueeze(0).unsqueeze(0)
-        )
+            )
         grad3.weight = nn.Parameter(
             torch.from_numpy(gradz_matrix).float().unsqueeze(0).unsqueeze(0)
-        )
-
+            )
+        
         grad1.requires_grad = False
         grad2.requires_grad = False
         grad3.requires_grad = False
-
+        
         grad1.to(x.device)
         grad2.to(x.device)
         grad3.to(x.device)
-
+        
         self.divergence_filters = [grad1, grad2, grad3]
-
+        
         print('DONE!')
         
-
+        
     def divergence(self, x):
         '''
         This method calculates the divergence of the given field using finite differences approximation

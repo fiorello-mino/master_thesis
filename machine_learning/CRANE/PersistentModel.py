@@ -234,7 +234,7 @@ class PersistentModel3D( ConvGRU3D ):
          self.hidden_list = None # hidden_list is now an attribute
          self.reduce_out = True ###
          self.squash_out = True ###
-         self.conservative = False
+         self.conservative = True
 
     def set_hidden(
          self,
