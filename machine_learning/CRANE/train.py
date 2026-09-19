@@ -38,10 +38,15 @@ def train(model, loss_fn, optimizer, loaders, args):
     valid_losses = []
     
     valid_mse_losses = []
+    
+    valid_grad_losses = []
     valid_e_losses = []
+    valid_mu_losses = []
     valid_bounds_losses = []
     
+    valid_grad_ratios = []
     valid_e_ratios = []
+    valid_mu_ratios = []
     valid_bounds_ratios = []
     
     valid_phi_mins = []
@@ -165,10 +170,15 @@ def train(model, loss_fn, optimizer, loaders, args):
             epoch_valid_losses = []
             
             epoch_valid_mse_losses =    []
+            
+            epoch_valid_grad_losses = []
             epoch_valid_e_losses =      []
+            epoch_valid_mu_losses = []
             epoch_valid_bounds_losses = []
             
+            epoch_valid_grad_ratio = []
             epoch_valid_e_ratio = []
+            epoch_valid_mu_ratio = []
             epoch_valid_bounds_ratio = []
             
             epoch_valid_phi_min = []
@@ -230,13 +240,26 @@ def train(model, loss_fn, optimizer, loaders, args):
                     loss4print = total_loss.item()
     
                     mse_loss    = metrics["loss_mse"]
+                    grad_loss   = metrics["loss_grad"]
                     e_loss      = metrics["loss_energy"]
+                    mu_loss     = metrics["loss_mu"]
                     bounds_loss = metrics["loss_bounds"]
                     
                     eps = 1e-12
                     
+                    
+                    grad_ratio = (
+                        args.w_grad * grad_loss
+                        / (mse_loss + eps)
+                    )
+                    
                     e_ratio = (
                         args.w_energy * e_loss
+                        / (mse_loss + eps)
+                    )
+                    
+                    mu_ratio = (
+                        args.w_mu * mu_loss
                         / (mse_loss + eps)
                     )
                     
@@ -256,10 +279,14 @@ def train(model, loss_fn, optimizer, loaders, args):
                     epoch_valid_losses.append(loss4print)
                     
                     epoch_valid_mse_losses.append(mse_loss.cpu().item())
+                    epoch_valid_grad_losses.append(grad_loss.cpu().item())
                     epoch_valid_e_losses.append(e_loss.cpu().item())
+                    epoch_valid_mu_losses.append(mu_loss.cpu().item())
                     epoch_valid_bounds_losses.append(bounds_loss.cpu().item())
 
+                    epoch_valid_grad_ratio.append(grad_ratio.cpu().item())
                     epoch_valid_e_ratio.append(e_ratio.cpu().item())
+                    epoch_valid_mu_ratio.append(mu_ratio.cpu().item())
                     epoch_valid_bounds_ratio.append(bounds_ratio.cpu().item())
 
                     epoch_valid_phi_min.append(phi_min.cpu().item())
@@ -277,10 +304,14 @@ def train(model, loss_fn, optimizer, loaders, args):
 
             if args.threeD and not args.extract_param:
                 valid_mse_losses.append(np.mean(epoch_valid_mse_losses))
+                valid_grad_losses.append(np.mean(epoch_valid_grad_losses))
                 valid_e_losses.append(np.mean(epoch_valid_e_losses))
+                valid_mu_losses.append(np.mean(epoch_valid_mu_losses))
                 valid_bounds_losses.append(np.mean(epoch_valid_bounds_losses))
                 
+                valid_grad_ratios.append(np.mean(epoch_valid_grad_ratio))
                 valid_e_ratios.append(np.mean(epoch_valid_e_ratio))
+                valid_mu_ratios.append(np.mean(epoch_valid_mu_ratio))
                 valid_bounds_ratios.append(np.mean(epoch_valid_bounds_ratio))
 
                 valid_phi_mins.append(np.min(epoch_valid_phi_min))
@@ -299,10 +330,12 @@ def train(model, loss_fn, optimizer, loaders, args):
                 header = (
                     "# total\t"
                     "mse\t"
-                    "bounds\t"
-                    "bounds_ratio\t"
+                    "grad\t"
+                    "grad_ratio\t"
                     "energy\t"
                     "energy_ratio\t"
+                    "mu\t"
+                    "mu_ratio\t"
                     "phi_min\t"
                     "phi_max\t"
                     "oob_fraction\n"
@@ -315,10 +348,12 @@ def train(model, loss_fn, optimizer, loaders, args):
                     f.write(
                         f"{valid_losses[-1]:.6e}\t"
                         f"{valid_mse_losses[-1]:.6e}\t"
-                        f"{valid_bounds_losses[-1]:.6e}\t"
-                        f"{valid_bounds_ratios[-1]:.6e}\t"
+                        f"{valid_grad_losses[-1]:.6e}\t"
+                        f"{valid_grad_ratios[-1]:.6e}\t"
                         f"{valid_e_losses[-1]:.6e}\t"
                         f"{valid_e_ratios[-1]:.6e}\t"
+                        f"{valid_mu_losses[-1]:.6e}\t"
+                        f"{valid_mu_ratios[-1]:.6e}\t"
                         f"{valid_phi_mins[-1]:.6e}\t"
                         f"{valid_phi_maxs[-1]:.6e}\t"
                         f"{valid_oobs[-1]:.6e}\n"
@@ -552,14 +587,13 @@ def main():
     else:
         loss_fn = CahnHilliardLoss(
             w_mse=1.0,
+            w_grad=args.w_grad,
             w_energy=args.w_energy,
-            w_bounds=args.w_bounds,
+            w_mu=args.w_mu,
             epsilon=args.epsilon,
-            M0=1e-2,
             dx=args.dx,
             dy=args.dy,
             dz=args.dz,
-            dt=args.dt,
         ).to(args.device)
     
     # training loop

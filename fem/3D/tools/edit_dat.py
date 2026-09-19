@@ -111,9 +111,9 @@ def modify_dat_file(dat_path: Path) -> tuple[bool, str]:
         if "surf->adapt->end time:" in line:
             found["end_time"] = True
             new_lines.append("surf->adapt->end time: 0.2\n")
-            new_lines.append("surf->adapt->end if no evolution: 1\n")
-            new_lines.append("surf->adapt->end if no evolution->num iterations: 5\n")
-            new_lines.append("surf->adapt->end if no evolution->relative energy tolerance: 1e-7\n")
+            #new_lines.append("surf->adapt->end if no evolution: 1\n")
+            #new_lines.append("surf->adapt->end if no evolution->num iterations: 5\n")
+            #new_lines.append("surf->adapt->end if no evolution->relative energy tolerance: 1e-7\n")
 
             i += 1
             continue
@@ -123,7 +123,7 @@ def modify_dat_file(dat_path: Path) -> tuple[bool, str]:
             found["output_directory"] = True
 
             new_lines.append(f"output->directory: {output_dir}\n")
-            new_lines.append("surf->output->write every delta: 0.0025\n")
+            new_lines.append("surf->output->write every delta: 0.002\n")
 
             # Se già presente, evita di aggiungere più righe duplicate.
             i += 1
