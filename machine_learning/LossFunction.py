@@ -7,7 +7,7 @@ class CahnHilliardLoss(nn.Module):
     """
     Loss per un campo di Cahn-Hilliard 3D.
 
-    Convenzione degli input:
+    Input:
         pred, target: (B, T, C, Nx, Ny, Nz)
 
     Coordinate fisiche:
@@ -15,10 +15,10 @@ class CahnHilliardLoss(nn.Module):
         asse -2 -> y
         asse -1 -> z
 
-    Gli operatori spaziali usano il layout PyTorch 3D:
+    Gli operatori spaziali ricevono un tensore 5D:
         (B, T, C, Nx, Ny, Nz) -> (B*T, C, Nx, Ny, Nz)
 
-    Energia:
+    Energia libera:
         E(phi) = integral [W(phi) + epsilon^2 |grad phi|^2] dV
 
     Potenziale:
@@ -29,16 +29,20 @@ class CahnHilliardLoss(nn.Module):
 
     Boundary conditions:
         Neumann omogenee in x, y, z, approssimate con padding replicate.
+
+    Termini aggiuntivi:
+        - energy_matching_loss: MSE tra E_pred(B,T,C) ed E_true(B,T,C)
+        - bounds_loss: mean violation + peak violation per frame, pensata per
+          artefatti localizzati fuori dall'intervallo [0, 1].
     """
 
     def __init__(
         self,
         w_mse=1.0,
-        w_energy=1e-3,
+        w_energy=0.0,
         w_grad=0.0,
-        w_pde=0.0,
-        w_mass=0.0,
         w_bounds=0.0,
+        bounds_peak_weight=0.05,
         epsilon=0.1,
         M0=1.0,
         dx=0.025,
@@ -50,10 +54,10 @@ class CahnHilliardLoss(nn.Module):
 
         self.w_mse = w_mse
         self.w_energy = w_energy
-        self.w_grad = w_grad
-        self.w_pde = w_pde
-        self.w_mass = w_mass
         self.w_bounds = w_bounds
+
+        # Peso interno della penalità sui picchi locali fuori [0, 1].
+        self.bounds_peak_weight = bounds_peak_weight
 
         self.epsilon = epsilon
         self.M0 = M0
@@ -63,12 +67,7 @@ class CahnHilliardLoss(nn.Module):
         self.dt = dt
 
     def _reshape_spatial_3d(self, c):
-        """
-        Trasforma:
-            (B, T, C, Nx, Ny, Nz) -> (B*T, C, Nx, Ny, Nz)
-
-        La dimensione C viene conservata e non fusa nel batch.
-        """
+        """(B, T, C, Nx, Ny, Nz) -> (B*T, C, Nx, Ny, Nz)."""
         if c.ndim != 6:
             raise ValueError(
                 "Expected c to have shape (B, T, C, Nx, Ny, Nz), "
@@ -80,29 +79,16 @@ class CahnHilliardLoss(nn.Module):
 
     @staticmethod
     def _restore_spatial_3d(c_reshaped, original_shape):
-        """Trasforma (B*T, C, Nx, Ny, Nz) -> (B, T, C, Nx, Ny, Nz)."""
+        """(B*T, C, Nx, Ny, Nz) -> (B, T, C, Nx, Ny, Nz)."""
         return c_reshaped.reshape(original_shape)
 
     def pad_neumann(self, c):
-        """
-        Aggiunge un ghost layer per lato lungo x, y e z.
-
-        Input:
-            c: (B, T, C, Nx, Ny, Nz)
-
-        Output:
-            (B*T, C, Nx+2, Ny+2, Nz+2)
-        """
+        """Adds one replicate ghost layer on both sides of x, y, z."""
         c_reshaped = self._reshape_spatial_3d(c)
         return F.pad(c_reshaped, (1, 1, 1, 1, 1, 1), mode="replicate")
 
     def gradient(self, c):
-        """
-        Calcola gradiente 3D con differenze centrali del secondo ordine.
-
-        Output:
-            gx, gy, gz con shape uguale a c.
-        """
+        """Second-order central gradient with homogeneous Neumann padding."""
         original_shape = c.shape
         c_pad = self.pad_neumann(c)
 
@@ -128,13 +114,7 @@ class CahnHilliardLoss(nn.Module):
         )
 
     def divergence(self, jx, jy, jz):
-        """
-        Calcola div(j) = d(jx)/dx + d(jy)/dy + d(jz)/dz
-        con differenze centrali del secondo ordine e BC di Neumann.
-
-        Input/output:
-            jx, jy, jz e div hanno shape (B, T, C, Nx, Ny, Nz).
-        """
+        """Second-order central divergence with homogeneous Neumann padding."""
         if jx.shape != jy.shape or jx.shape != jz.shape:
             raise ValueError(
                 "jx, jy and jz must have identical shapes; got "
@@ -165,12 +145,7 @@ class CahnHilliardLoss(nn.Module):
         return self._restore_spatial_3d(div, original_shape)
 
     def laplacian(self, c):
-        """
-        Calcola Laplaciano 3D con stencil a 7 punti e BC di Neumann.
-
-        Input/output:
-            (B, T, C, Nx, Ny, Nz)
-        """
+        """3D seven-point Laplacian with homogeneous Neumann padding."""
         original_shape = c.shape
         c_pad = self.pad_neumann(c)
 
@@ -194,32 +169,14 @@ class CahnHilliardLoss(nn.Module):
         return self._restore_spatial_3d(lap, original_shape)
 
     def W(self, phi):
-        """Densità di energia libera locale W(phi)."""
+        """Local free-energy density W(phi)."""
         return (18.0 / self.epsilon) * phi.square() * (1.0 - phi).square()
-
-    def dW_dphi(self, phi):
-        """Derivata del potenziale: dW/dphi."""
-        return (
-            (36.0 / self.epsilon)
-            * phi
-            * (1.0 - phi)
-            * (1.0 - 2.0 * phi)
-        )
-
-    def M(self, phi):
-        """Mobilità degenere M(phi)."""
-        return (
-            self.M0
-            * (36.0 / self.epsilon)
-            * phi.square()
-            * (1.0 - phi).square()
-        )
 
     def free_energy(self, phi):
         """
-        Calcola E(phi) per ogni batch, frame temporale e canale.
+        Calculates the free energy for each sample, time and channel.
 
-        Output:
+        Output shape:
             (B, T, C)
         """
         w_local = self.W(phi)
@@ -231,104 +188,69 @@ class CahnHilliardLoss(nn.Module):
         dV = self.dx * self.dy * self.dz
         return density.sum(dim=(-3, -2, -1)) * dV
 
-    def chemical_potential(self, phi):
-        """
-        mu = dW/dphi - 2 epsilon^2 Laplacian(phi).
-
-        Il fattore 2 è coerente con:
-            E = integral [W(phi) + epsilon^2 |grad phi|^2] dV
-        """
-        return self.dW_dphi(phi) - 2.0 * (self.epsilon ** 2) * self.laplacian(phi)
-
     def mse_loss(self, pred, target):
         return F.mse_loss(pred, target)
 
-    def gradient_loss(self, pred, target):
-        """Errore L1 tra i gradienti predetti e target."""
-        gx_pred, gy_pred, gz_pred = self.gradient(pred)
-        gx_true, gy_true, gz_true = self.gradient(target)
-
-        return (
-            F.l1_loss(gx_pred, gx_true)
-            + F.l1_loss(gy_pred, gy_true)
-            + F.l1_loss(gz_pred, gz_true)
-        )
-
-    def mass_conservation_loss(self, pred, target):
+    def energy_matching_loss(self, pred, target):
         """
-        Confronta la massa totale di predizione e target per ogni B, T, C.
+        MSE between predicted and target free energy at every B, T, C.
+
+        This replaces the previous energy-dissipation-only penalty.
+        It forces the predicted trajectory to have the same energy curve
+        as the target trajectory, but it does not alone force the spatial
+        morphology to match; the voxel MSE and/or gradient loss do that.
         """
-        dV = self.dx * self.dy * self.dz
-
-        mass_pred = pred.sum(dim=(-3, -2, -1)) * dV
-        mass_true = target.sum(dim=(-3, -2, -1)) * dV
-
-        return F.mse_loss(mass_pred, mass_true)
+        energy_pred = self.free_energy(pred)
+        energy_true = self.free_energy(target)
+        return F.mse_loss(energy_pred, energy_true)
 
     def bounds_loss(self, pred):
         """
-        Penalizza solamente i valori esterni al range fisico [0, 1].
+        Soft range constraint for phi in [0, 1], designed for local artifacts.
 
-        Per ogni voxel:
-            phi < 0: penalità phi^2
-            0 <= phi <= 1: penalità 0
-            phi > 1: penalità (phi - 1)^2
+        mean_term penalizes the total spatial extent/severity of violations.
+        peak_term computes one maximum violation per (sample, time, channel),
+        then averages those maxima. Therefore a small local spike cannot be
+        fully diluted by the 3D volume.
+
+        The returned quantity is:
+            mean(v^2) + bounds_peak_weight * mean(max_xyz(v^2))
+        where v is the distance outside [0, 1].
         """
-        below_zero = F.relu(-pred)
-        above_one = F.relu(pred - 1.0)
+        below = F.relu(-pred)
+        above = F.relu(pred - 1.0)
 
-        return torch.mean(below_zero.square() + above_one.square())
+        violation_sq = below.square() + above.square()
 
-    def free_energy_loss(self, pred):
+        mean_term = violation_sq.mean()
+        peak_per_frame = violation_sq.amax(dim=(-3, -2, -1))
+        peak_term = peak_per_frame.mean()
+
+        return mean_term + self.bounds_peak_weight * peak_term
+
+    def free_energy_dissipation_loss(self, pred):
         """
-        Penalizza aumenti di energia libera tra frame consecutivi:
-            mean(max(E(t+dt) - E(t), 0)^2).
+        Optional diagnostic/regularizer: penalizes E(t+dt) > E(t).
+
+        It is not used in total by default. Use it only if you later add a
+        separate weight and explicitly want energy monotonicity in addition
+        to matching the reference energy curve.
         """
         if pred.shape[1] < 2:
             raise ValueError(
-                "free_energy_loss requires at least T=2 time frames, "
+                "free_energy_dissipation_loss requires at least T=2 time frames, "
                 f"but got T={pred.shape[1]}."
             )
 
         energy = self.free_energy(pred)
         delta_energy = energy[:, 1:] - energy[:, :-1]
-        return torch.mean(F.relu(delta_energy).square())
-
-    def pde_residual_loss(self, pred):
-        """
-        Residuo della PDE di Cahn-Hilliard:
-            dphi/dt - div(M(phi) grad(mu)) = 0.
-
-        La derivata temporale è una differenza in avanti tra frame consecutivi.
-        """
-        if pred.shape[1] < 2:
-            raise ValueError(
-                "pde_residual_loss requires at least T=2 time frames, "
-                f"but got T={pred.shape[1]}."
-            )
-
-        dphi_dt = (pred[:, 1:] - pred[:, :-1]) / self.dt
-
-        phi_t = pred[:, :-1]
-        mu_t = self.chemical_potential(phi_t)
-
-        dmu_dx, dmu_dy, dmu_dz = self.gradient(mu_t)
-        mobility = self.M(phi_t)
-
-        jx = mobility * dmu_dx
-        jy = mobility * dmu_dy
-        jz = mobility * dmu_dz
-
-        rhs = self.divergence(jx, jy, jz)
-        residual = dphi_dt - rhs
-
-        return torch.mean(residual.square())
+        return F.relu(delta_energy).square().mean()
 
     def forward(self, pred, target):
         """
         Returns:
-            total: loss scalare differenziabile su cui chiamare backward().
-            metrics: dizionario detached per logging.
+            total: differentiable scalar for backward().
+            metrics: detached scalar terms for logging.
         """
         if pred.shape != target.shape:
             raise ValueError(
@@ -337,18 +259,12 @@ class CahnHilliardLoss(nn.Module):
             )
 
         l_mse = self.mse_loss(pred, target)
-        l_energy = self.free_energy_loss(pred)
-        l_grad = self.gradient_loss(pred, target)
-        l_pde = self.pde_residual_loss(pred)
-        l_mass = self.mass_conservation_loss(pred, target)
+        l_energy = self.energy_matching_loss(pred, target)
         l_bounds = self.bounds_loss(pred)
 
         total = (
             self.w_mse * l_mse
             + self.w_energy * l_energy
-            + self.w_grad * l_grad
-            + self.w_pde * l_pde
-            + self.w_mass * l_mass
             + self.w_bounds * l_bounds
         )
 
@@ -356,10 +272,8 @@ class CahnHilliardLoss(nn.Module):
             "loss_total": total.detach(),
             "loss_mse": l_mse.detach(),
             "loss_energy": l_energy.detach(),
-            "loss_grad": l_grad.detach(),
-            "loss_pde": l_pde.detach(),
-            "loss_mass": l_mass.detach(),
             "loss_bounds": l_bounds.detach(),
         }
 
         return total, metrics
+
