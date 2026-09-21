@@ -40,7 +40,7 @@ class TrainingLoss3D(CahnHilliardLoss):
         super().__init__(w_mse=1.0, w_grad=args.w_grad,
                          w_energy=args.w_energy, w_bounds=args.w_bounds,
                          epsilon=args.epsilon, dx=args.dx, dy=args.dy,
-                         dz=args.dz, dt=args.dt)
+                         dz=args.dz)
         self.w_grad = args.w_grad
 
     def free_energy(self, phi):
