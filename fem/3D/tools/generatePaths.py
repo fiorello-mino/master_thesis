@@ -2,17 +2,17 @@ import re
 import random
 from pathlib import Path
 
-BASE = Path("/data/fiorello/pores3D/data/square")
+BASE = Path("/data/fiorello/pores3D_2/data/square")
 
-N_SEQ = 20
-N_ALL_FRAMES = 41
+N_SEQ = 40
+N_ALL_FRAMES = 101
 
 N_TRAIN = 80
 N_VAL = 20
 N_EXT = 50
 N_REQUIRED = N_TRAIN + N_VAL + N_EXT
 
-DT = 5e-3
+DT = 2e-3
 SEED = 42
 
 rng = random.Random(SEED)
@@ -216,14 +216,14 @@ def main():
     val_sims = selected[N_TRAIN:N_TRAIN + N_VAL]
     ext_sims = selected[N_TRAIN + N_VAL:]
 
-    write_train_or_val(train_sims, Path("/scratch/fiorello/train3D/train_set.txt"))
-    write_train_or_val(val_sims, Path("/scratch/fiorello/train3D/test_set.txt"))
-    write_ext_test(ext_sims, Path("/scratch/fiorello/test3D/square/ext_test.txt"))
+    write_train_or_val(train_sims, Path("/scratch/fiorello/train3D_2/train_set.txt"))
+    write_train_or_val(val_sims, Path("/scratch/fiorello/train3D_2/valid_set.txt"))
+    write_ext_test(ext_sims, Path("/scratch/fiorello/test3D_2/square/test_set.txt"))
 
     print("\nGenerazione completata.")
-    print("train_set.txt: 80 righe × 20 frame")
-    print("test_set.txt:  20 righe × 20 frame")
-    print("ext_test.txt:  50 righe × 41 frame")
+    print("train_set.txt: 80 righe × 40 frame")
+    print("test_set.txt:  20 righe × 40 frame")
+    print("ext_test.txt:  50 righe × 101 frame")
 
 
 if __name__ == "__main__":
