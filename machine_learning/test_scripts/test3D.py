@@ -48,8 +48,8 @@ PRED_FRAMES: int = 0
 
 
 # <<< SCRIPT VARIABLES <<<
-MODEL_PATH = Path('/scratch/fiorello/train3D_AC/train_logs/mse_cons/model/epoch_427.pt')
-OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/train1/mse_cons'
+MODEL_PATH = Path('/scratch/fiorello/train3D_fv_clip/train_logs/mse/model/epoch_498.pt')
+OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/train1/fv_clip_mse'
 SEQUENCE_TABLE: str = '/scratch/fiorello/test3D/square/ext_test.txt'
 CUDA: bool = True
 # === SCRIPT VARIABLES ===
@@ -67,11 +67,11 @@ PADDING_MODE: str = 'reflect'
 
 SEPARABLE: bool = False
 BIAS: bool = True
-DIVERGENCE: bool = False
+DIVERGENCE: bool = True
 NUM_PARAMS: int = 0
 DROPOUT: bool = False
 DROPOUT_PROB: Union[float, None] = None
-CONSERVATIVE: bool = True
+CONSERVATIVE: bool = False
 # === MODEL VARIABLES ===
 
 

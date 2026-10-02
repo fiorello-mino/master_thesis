@@ -6,8 +6,7 @@ from numba import njit
 
 
 # ========== SCRIPT VARIABLES ==========
-TEST_DIR = Path("/scratch/fiorello/test3D/square/E1e-1")
-ERRORS_FILE = TEST_DIR / "errors.txt"
+TEST_DIR = Path("/scratch/fiorello/test3D/square/train1/fv_clip_mse")
 # --------------------------------------
 
 
@@ -142,10 +141,10 @@ def main() -> None:
         if len(frames_pred) == 0:
             sys.exit(f"0 frames pred nella cartella {pred_dir}")
             
-        frames_pred.sort(key=lambda p: float(p.name.removeprefix("surf_").removesuffix(".npy")))
+        frames_pred.sort(key=lambda p: float(p.name.removeprefix("phi_").removesuffix(".npy")))
         phi_pred = [np.load(str(f)) for f in frames_pred]
         
-        # ----- carico npy true -----
+                # ----- carico npy true -----
         true_dir = sim / "true_npy"
         if not true_dir.is_dir():
             sys.exit(f"Cartella true_npy non trovata in {sim}")
@@ -156,8 +155,17 @@ def main() -> None:
         ]
         if len(frames_true) == 0:
             sys.exit(f"0 frames true nella cartella {true_dir}")
-            
+        
+        # ordino per tempo
         frames_true.sort(key=lambda p: float(p.name.removeprefix("surf_").removesuffix(".npy")))
+        
+        # rimuovo il frame iniziale (t = 0)
+        frames_true = [f for f in frames_true
+                       if float(f.name.removeprefix("surf_").removesuffix(".npy")) > 0.0]
+        
+        if len(frames_true) == 0:
+            sys.exit(f"Nessun frame true (escluso t=0) nella cartella {true_dir}")
+        
         phi_true = [np.load(str(f)) for f in frames_true]
         
         # ----- controllo coerenza -----
@@ -180,16 +188,16 @@ def main() -> None:
         # ----- scrivo su file -----
         # riga 0: commento
         stats[0] = stats[0].rstrip("\n")
-        stats[0] += "\t11: E_pred\t12: E_true\t13: mass_pred\t14: mass_true\n"
+        stats[0] += "\t11: E_true\t12: E_pred\t13: mass_true\t14: mass_pred\n"
         
         # righe 1..N: unisco i nuovi dati alla riga esistente
-        for i in range(1, len(stats)):
+        for i in range(2, len(stats)):
             stats[i] = stats[i].rstrip("\n")
             stats[i] += (
-                f"\t{e_pred[i-1]:.6e}"
-                f"\t{e_true[i-1]:.6e}"
-                f"\t{m_pred[i-1]:.6e}"
-                f"\t{m_true[i-1]:.6e}\n"
+                f"\t{e_true[i-2]:.6e}"
+                f"\t{e_pred[i-2]:.6e}"
+                f"\t{m_true[i-2]:.6e}"
+                f"\t{m_pred[i-2]:.6e}\n"
             )
         
         with open(evo_file, "w") as f:
