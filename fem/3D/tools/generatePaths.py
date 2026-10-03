@@ -4,15 +4,15 @@ from pathlib import Path
 
 BASE = Path("/scratch/fiorello/pores3D_h2/square")
 
-N_SEQ = 20
-N_ALL_FRAMES = 33
+N_SEQ = 10
+N_ALL_FRAMES = 50
 
 N_TRAIN = 80
 N_VAL = 20
 N_EXT = 50
 N_REQUIRED = N_TRAIN + N_VAL + N_EXT
 
-DT = 6e-3
+DT = 4e-3
 SEED = 42
 
 rng = random.Random(SEED)
@@ -37,13 +37,13 @@ def get_start_range(H: float) -> tuple[int, int]:
     4.0 <  H <= 5.0  -> start casuale in [0, 20]
     """
     if 1.0 <= H <= 2.0:
-        return 0, 0
+        return 0, 5
     elif 2.0 < H <= 3.0:
-        return 0, 4
+        return 0, 10
     elif 3.0 < H <= 4.0:
-        return 0, 9
+        return 0, 20
     elif 4.0 < H <= 5.0:
-        return 0, 13
+        return 0, 40
 
     raise ValueError(f"H={H} fuori dall'intervallo [1.0, 5.0]")
 
@@ -216,9 +216,9 @@ def main():
     val_sims = selected[N_TRAIN:N_TRAIN + N_VAL]
     ext_sims = selected[N_TRAIN + N_VAL:]
 
-    write_train_or_val(train_sims, Path("/scratch/fiorello/train3D_h2/train_set.txt"))
-    write_train_or_val(val_sims, Path("/scratch/fiorello/train3D_h2/valid_set.txt"))
-    write_ext_test(ext_sims, Path("/scratch/fiorello/test3D_h2/square/test_set.txt"))
+    write_train_or_val(train_sims, Path("/scratch/fiorello/train3D_h2/train_set2.txt"))
+    write_train_or_val(val_sims, Path("/scratch/fiorello/train3D_h2/valid_set2.txt"))
+    write_ext_test(ext_sims, Path("/scratch/fiorello/test3D_h2/square/test_set2.txt"))
 
     print("\nGenerazione completata.")
     print("train_set.txt: 80 righe × 40 frame")
