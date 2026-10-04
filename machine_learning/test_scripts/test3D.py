@@ -48,8 +48,8 @@ PRED_FRAMES: int = 0
 
 
 # <<< SCRIPT VARIABLES <<<
-MODEL_PATH = Path('/scratch/fiorello/train3D_fv_clip/train_logs/mse/model/epoch_498.pt')
-OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/train1/fv_clip_mse'
+MODEL_PATH = Path('/scratch/fiorello/train3D_fv/train_logs/c24_mse/model/epoch_477.pt')
+OUTPUT_FOLDER: str = '/scratch/fiorello/test3D/square/train1/fv_c24_mse'
 SEQUENCE_TABLE: str = '/scratch/fiorello/test3D/square/ext_test.txt'
 CUDA: bool = True
 # === SCRIPT VARIABLES ===
@@ -61,7 +61,7 @@ MIN_SEQ: int = 1
 HIDDEN_UNITS: int = 3
 INPUT_CHANNELS: int = 1
 OUTPUT_CHANNELS: int = 1
-HIDDEN_CHANNELS: int = 16
+HIDDEN_CHANNELS: int = 24
 KERNEL_SIZE: int = 5
 PADDING_MODE: str = 'reflect'
 

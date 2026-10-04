@@ -1,157 +1,495 @@
-### plot_compare.gp ###################################################
-# Cambia solo qui i path e i label
-# -------------------------------------------------------------------
-#errorsA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/errors.txt'
-#errorsB = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/errors.txt'
-#medianA = 'ext_test_64_2/lr5e-5_hl3_2_tr10/median_energy_error.txt'
-#medianB = = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/median_energy_error.txt'
-#evoA    = 'ext_test_64_2/lr1e-4_b8_k3_hl2_ch16_seq20/0000/evo.txt'
-#evoB    = 'ext_test_64_2/lr1e-4_b4_k7_hl2_ch16_seq20_ramp5_wd2e-5/0000/evo.txt'
+### compare_models.gnu ################################################
+# Confronto tra due modelli A e B
+#
+# Variabili ricevute da run_plot.sh:
+#
+#   errorsA
+#   errorsB
+#   medianA
+#   medianB
+#   labelA
+#   labelB
+#   outdir
+#
+#######################################################################
 
-#labelA  = 'lr5e-5_k5_hl3'
-#labelB  = 'lr1e-4_k7_hl2'
 
-#outdir  = 'plots/prec_vs_new_2/'
-# -------------------------------------------------------------------
+# =====================================================================
+# GENERAL STYLE
+# =====================================================================
 
 set terminal pngcairo size 900,700 enhanced font ',12'
+
 set datafile separator whitespace
+
 set key top left
+set grid
 
-# colonne errors.txt: 1:id  2:maxMAE  3:maxMSE  4:overallMAE  5:overallMSE
-# colonne evo.txt:    1:MAE  2:MSE  3:avg_True  4:avg_Pred
-#                     5:min_True  6:min_Pred  7:max_True  8:max_Pred
-#                     9:E_True  10:E_Pred
-# asse x nei plot evo: $0 = indice di riga = frame index
+
+
+# =====================================================================
+# FILE STRUCTURE
+# =====================================================================
+
+# errors.txt
+#
+#  1 : id
+#  2 : maxMAE
+#  3 : maxMSE
+#  4 : overallMAE
+#  5 : overallMSE
+#  6 : max(symDiff)
+#  7 : avg(symDiff)
+#  8 : phi_min_sequence
+#  9 : phi_max_sequence
+# 10 : domains_final_true
+# 11 : domains_final_pred
+# 12 : delta_domains
+#
+# La colonna 1 e' una stringa.
+# Per Sequence id usiamo:
+#
+#     ($0+1)
+#
+
+
+# medians.txt
+#
+#  1 : time
+#
+#  2 : median_energy_error
+#  3 : p25_energy_error
+#  4 : p75_energy_error
+#
+#  5 : median_mass_error
+#  6 : p25_mass_error
+#  7 : p75_mass_error
+#
+#  8 : median_phi_min
+#  9 : p25_phi_min
+# 10 : p75_phi_min
+#
+# 11 : median_phi_max
+# 12 : p25_phi_max
+# 13 : p75_phi_max
+
+
 
 #######################################################################
-# 1) overall MAE per sequenza
+# 1) OVERALL MAE PER SEQUENZA
 #######################################################################
+
 set output outdir.'overallMAE_compare.png'
+
 set xlabel 'Sequence id'
 set ylabel 'Overall MAE'
-set grid
-plot errorsA using 1:4 with lines lc rgb 'blue' lw 2 title labelA, \
-     errorsB using 1:4 with lines lc rgb 'red'  lw 2 title labelB
 
-#######################################################################
-# 2) overall MSE per sequenza
-#######################################################################
-set output outdir.'overallMSE_compare.png'
-set xlabel 'Sequence id'
-set ylabel 'Overall MSE'
-set grid
-plot errorsA using 1:5 with lines lc rgb 'blue' lw 2 title labelA, \
-     errorsB using 1:5 with lines lc rgb 'red'  lw 2 title labelB
-
-#######################################################################
-# 3) max MAE per sequenza
-#######################################################################
-set output outdir.'maxMAE_compare.png'
-set xlabel 'Sequence id'
-set ylabel 'Max MAE'
-set grid
-plot errorsA using 1:2 with lines lc rgb 'blue' lw 2 title labelA, \
-     errorsB using 1:2 with lines lc rgb 'red'  lw 2 title labelB
-
-#######################################################################
-# 4) max MSE per sequenza
-#######################################################################
-set output outdir.'maxMSE_compare.png'
-set xlabel 'Sequence id'
-set ylabel 'Max MSE'
-set grid
-plot errorsA using 1:3 with lines lc rgb 'blue' lw 2 title labelA, \
-     errorsB using 1:3 with lines lc rgb 'red'  lw 2 title labelB
-
-#######################################################################
-# 5) mediana dell'errore relativo per dt
-#######################################################################
-set output outdir.'median_rel_error_compare.png'
-set xlabel "time"
-set ylabel "median |ΔE| / |E_true|"
-set grid
-
-set style fill transparent solid 0.2 noborder
+set xrange [1:50]
+set xtics 5
 
 plot \
-    medianA using 1:3:4 with filledcurves lc rgb 'blue'  title labelA.'_IQR', \
-    medianB using 1:3:4 with filledcurves lc rgb 'red'   title labelB.'_IQR', \
-    medianA using 1:2      with lines       lc rgb 'blue' lw 2 title labelA, \
-    medianB using 1:2      with lines       lc rgb 'red'  lw 2 title labelB
+    errorsA using ($0+1):4 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.6 \
+        title labelA, \
+    errorsB using ($0+1):4 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.6 \
+        title labelB
 
 
 
+#######################################################################
+# 2) OVERALL MSE PER SEQUENZA
+#######################################################################
+
+set output outdir.'overallMSE_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Overall MSE'
+
+plot \
+    errorsA using ($0+1):5 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.6 \
+        title labelA, \
+    errorsB using ($0+1):5 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.6 \
+        title labelB
 
 
 
+#######################################################################
+# 3) MAX MAE PER SEQUENZA
+#######################################################################
+
+set output outdir.'maxMAE_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Max MAE'
+
+plot \
+    errorsA using ($0+1):2 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.6 \
+        title labelA, \
+    errorsB using ($0+1):2 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.6 \
+        title labelB
 
 
 
+#######################################################################
+# 4) MAX MSE PER SEQUENZA
+#######################################################################
+
+set output outdir.'maxMSE_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Max MSE'
+
+plot \
+    errorsA using ($0+1):3 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.6 \
+        title labelA, \
+    errorsB using ($0+1):3 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.6 \
+        title labelB
 
 
-# #######################################################################
-# # 5) MAE(t) seq 0000
-# #######################################################################
-# set output outdir.'seq0000_MAE_vs_t.png'
-# set xlabel 'Time step'
-# set ylabel 'MAE'
-# set grid
-# plot evoA using ($0):1 with lines lc rgb 'blue' lw 2 title labelA, \
-#      evoB using ($0):1 with lines lc rgb 'red'  lw 2 title labelB
 
-# #######################################################################
-# # 6) MSE(t) seq 0000
-# #######################################################################
-# set output outdir.'seq0000_MSE_vs_t.png'
-# set xlabel 'Time step'
-# set ylabel 'MSE'
-# set grid
-# plot evoA using ($0):2 with lines lc rgb 'blue' lw 2 title labelA, \
-#      evoB using ($0):2 with lines lc rgb 'red'  lw 2 title labelB
+#######################################################################
+# 5) MAX SYMMETRIC DIFFERENCE PER SEQUENZA
+#######################################################################
 
-# #######################################################################
-# # 7) avg_true / avg_pred — modello A
-# #######################################################################
-# set output outdir.'seq0000_avg.png'
-# set xlabel 'Time step'
-# set ylabel 'Average field'
-# set grid
-# plot evoA using ($0):3 with lines lc rgb 'black' lw 2 title 'avg\_true '.labelA, \
-#      evoA using ($0):4 with lines lc rgb 'blue'  lw 2 title 'avg\_pred '.labelA, \
-#      evoB using ($0):4 with lines lc rgb 'red'   lw 2 title 'avg\_pred '.labelB
+set output outdir.'max_symDiff_compare.png'
 
-# #######################################################################
-# # 8) energia nel tempo — E_true comune + E_pred A e B
-# #######################################################################
-# set output outdir.'seq0000_energy.png'
-# set xlabel 'Time step'
-# set ylabel 'Energy'
-# set grid
-# plot evoA using ($0):9  with lines lc rgb 'black' lw 2 title 'E\_true', \
-#      evoA using ($0):10 with lines lc rgb 'blue'  lw 2 title 'E\_pred '.labelA, \
-#      evoB using ($0):10 with lines lc rgb 'red'   lw 2 title 'E\_pred '.labelB
+set xlabel 'Sequence id'
+set ylabel 'Max symmetric difference'
 
-# #######################################################################
-# # 9) errore relativo sull'energia
-# #######################################################################
-# set output outdir.'seq0000_rel_err_E.png'
-# set xlabel 'Time step'
-# set ylabel 'Relative error on E'
-# set grid
-# plot evoA using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'blue' lw 2 title labelA, \
-#      evoB using ($0):(abs($10-$9)/abs($9)) with lines lc rgb 'red'  lw 2 title labelB
+plot \
+    errorsA using ($0+1):6 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.6 \
+        title labelA, \
+    errorsB using ($0+1):6 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.6 \
+        title labelB
 
-# #######################################################################
-# # 10) max_true / max_pred
-# #######################################################################
-# set output outdir.'seq0000_max.png'
-# set xlabel 'Time step'
-# set ylabel 'Max field value'
-# set grid
-# plot evoA using ($0):7 with lines lc rgb 'black' lw 2 title 'max\_true '.labelA, \
-#      evoA using ($0):8 with lines lc rgb 'blue'  lw 2 title 'max\_pred '.labelA, \
-#      evoB using ($0):8 with lines lc rgb 'red'   lw 2 title 'max\_pred '.labelB
+
+
+#######################################################################
+# 6) AVERAGE SYMMETRIC DIFFERENCE PER SEQUENZA
+#######################################################################
+
+set output outdir.'avg_symDiff_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Average symmetric difference'
+
+plot \
+    errorsA using ($0+1):7 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.6 \
+        title labelA, \
+    errorsB using ($0+1):7 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.6 \
+        title labelB
+
+
+
+# =====================================================================
+# TEMPORAL PLOTS
+# =====================================================================
+
+unset xrange
+set xtics auto
+
+set style fill transparent solid 0.20 noborder
+
+
+
+#######################################################################
+# 7) RELATIVE ENERGY ERROR:
+#    MEDIAN + P25/P75
+#######################################################################
+
+set output outdir.'median_energy_error_compare.png'
+
+set xlabel 'Time'
+set ylabel 'Relative energy error'
+
+plot \
+    medianA using 1:3:4 with filledcurves \
+        lc rgb 'blue' \
+        title labelA.'_IQR', \
+    medianB using 1:3:4 with filledcurves \
+        lc rgb 'red' \
+        title labelB.'_IQR', \
+    medianA using 1:2 with lines \
+        lc rgb 'blue' lw 2 \
+        title labelA, \
+    medianB using 1:2 with lines \
+        lc rgb 'red' lw 2 \
+        title labelB
+
+
+
+#######################################################################
+# 8) RELATIVE MASS ERROR:
+#    MEDIAN + P25/P75
+#######################################################################
+
+set output outdir.'median_mass_error_compare.png'
+
+set xlabel 'Time'
+set ylabel 'Relative mass error'
+
+plot \
+    medianA using 1:6:7 with filledcurves \
+        lc rgb 'blue' \
+        title labelA.'_IQR', \
+    medianB using 1:6:7 with filledcurves \
+        lc rgb 'red' \
+        title labelB.'_IQR', \
+    medianA using 1:5 with lines \
+        lc rgb 'blue' lw 2 \
+        title labelA, \
+    medianB using 1:5 with lines \
+        lc rgb 'red' lw 2 \
+        title labelB
+
+
+
+#######################################################################
+# 9) MIN(PHI) VS TIME
+#
+# Per ogni simulazione s e timestep t:
+#
+#     phi_min_s(t) = min_xyz phi_s(t)
+#
+# medians.txt contiene poi:
+#
+#     median_s(phi_min_s(t))
+#     p25_s(phi_min_s(t))
+#     p75_s(phi_min_s(t))
+#######################################################################
+
+set output outdir.'phi_min_vs_time_compare.png'
+
+set xlabel 'Time'
+set ylabel 'min(phi)'
+
+plot \
+    medianA using 1:9:10 with filledcurves \
+        lc rgb 'blue' \
+        title labelA.'_IQR', \
+    medianB using 1:9:10 with filledcurves \
+        lc rgb 'red' \
+        title labelB.'_IQR', \
+    medianA using 1:8 with lines \
+        lc rgb 'blue' lw 2 \
+        title labelA, \
+    medianB using 1:8 with lines \
+        lc rgb 'red' lw 2 \
+        title labelB
+
+
+
+#######################################################################
+# 10) MAX(PHI) VS TIME
+#
+# Per ogni simulazione s e timestep t:
+#
+#     phi_max_s(t) = max_xyz phi_s(t)
+#
+# medians.txt contiene poi:
+#
+#     median_s(phi_max_s(t))
+#     p25_s(phi_max_s(t))
+#     p75_s(phi_max_s(t))
+#######################################################################
+
+set output outdir.'phi_max_vs_time_compare.png'
+
+set xlabel 'Time'
+set ylabel 'max(phi)'
+
+plot \
+    medianA using 1:12:13 with filledcurves \
+        lc rgb 'blue' \
+        title labelA.'_IQR', \
+    medianB using 1:12:13 with filledcurves \
+        lc rgb 'red' \
+        title labelB.'_IQR', \
+    medianA using 1:11 with lines \
+        lc rgb 'blue' lw 2 \
+        title labelA, \
+    medianB using 1:11 with lines \
+        lc rgb 'red' lw 2 \
+        title labelB
+
+
+
+# =====================================================================
+# PER-SEQUENCE PLOTS
+# =====================================================================
+
+set xrange [1:50]
+set xtics 5
+
+
+
+#######################################################################
+# 11) MINIMO GLOBALE DELL'INTERA SEQUENZA
+#
+# Per ogni simulazione:
+#
+#     min_{t,x,y,z} phi_pred
+#
+# errors.txt colonna 8
+#######################################################################
+
+set output outdir.'global_phi_min_per_sequence_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Global sequence min(phi)'
+
+plot \
+    errorsA using ($0+1):8 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.7 \
+        title labelA, \
+    errorsB using ($0+1):8 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.7 \
+        title labelB
+
+
+
+#######################################################################
+# 12) MASSIMO GLOBALE DELL'INTERA SEQUENZA
+#
+# Per ogni simulazione:
+#
+#     max_{t,x,y,z} phi_pred
+#
+# errors.txt colonna 9
+#######################################################################
+
+set output outdir.'global_phi_max_per_sequence_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Global sequence max(phi)'
+
+plot \
+    errorsA using ($0+1):9 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.7 \
+        title labelA, \
+    errorsB using ($0+1):9 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.7 \
+        title labelB
+
+
+
+#######################################################################
+# 13) DOMAINS TRUE AL FRAME FINALE
+#
+# errors.txt colonna 10
+#######################################################################
+
+set output outdir.'final_domains_true_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Final connected domains - true'
+
+set ytics 1
+
+plot \
+    errorsA using ($0+1):10 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.8 \
+        title labelA, \
+    errorsB using ($0+1):10 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.8 \
+        title labelB
+
+
+
+#######################################################################
+# 14) DOMAINS PRED AL FRAME FINALE
+#
+# errors.txt colonna 11
+#######################################################################
+
+set output outdir.'final_domains_pred_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Final connected domains - predicted'
+
+set ytics 1
+
+plot \
+    errorsA using ($0+1):11 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.8 \
+        title labelA, \
+    errorsB using ($0+1):11 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.8 \
+        title labelB
+
+
+
+#######################################################################
+# 15) DELTA NUMERO DI DOMINI
+#
+# errors.txt:
+#
+#     colonna 12 = N_pred - N_true
+#
+# Delta N = 0:
+#     numero corretto di domini
+#
+# Delta N > 0:
+#     troppi domini predetti
+#
+# Delta N < 0:
+#     troppo pochi domini predetti
+#######################################################################
+
+set output outdir.'final_domains_delta_compare.png'
+
+set xlabel 'Sequence id'
+set ylabel 'Delta N = N_pred - N_true'
+
+set ytics 1
+
+
+# linea Delta N = 0
+
+set arrow 1 \
+    from graph 0, first 0 \
+    to graph 1, first 0 \
+    nohead \
+    dt 2 \
+    lw 1.5 \
+    lc rgb 'black' \
+    back
+
+
+plot \
+    errorsA using ($0+1):12 with linespoints \
+        lc rgb 'blue' lw 2 pt 7 ps 0.8 \
+        title labelA, \
+    errorsB using ($0+1):12 with linespoints \
+        lc rgb 'red' lw 2 pt 7 ps 0.8 \
+        title labelB
+
+
+unset arrow 1
+
+
+
+# =====================================================================
+# RESET
+# =====================================================================
+
+unset xrange
+
+set xtics auto
+set ytics auto
 
 unset output
-### fine script ########################################################
+
+
+### fine script #######################################################
