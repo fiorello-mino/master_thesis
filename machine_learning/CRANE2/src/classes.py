@@ -620,10 +620,13 @@ class ConvGRU(nn.Module):
 
 class ConvGRU3D(nn.Module):
     '''
-    ConvGRU3D with learned face fluxes and a conservative FV update.
+    ConvGRU3D with learned face transport and a conservative FV update.
     Input: (B,T,C,X,Y,Z). Output: (B,T+future,C,X,Y,Z).
     Uniform, equal-volume cells; zero normal flux at all outer faces.
-    No mobility, chemical potential, clipping or bound guarantee.
+    Face flux: J_f = M((phi_L + phi_R)/2) * q_f, with learned q_f and
+    surface mobility M(phi) = 3.6 * phi**2 * (1-phi)**2.
+    No chemical potential, clipping or bound guarantee. Train fresh weights:
+    the output head now predicts q_f rather than the unweighted flux J_f.
     voxel_size and dt must be saved with the model configuration.
     '''
     
@@ -736,32 +739,54 @@ class ConvGRU3D(nn.Module):
         """Compatibility with train.py: no filters or parameters are needed."""
         return None
 
-    def face_fluxes(self, raw):
-        """Decode (B,3*C,X,Y,Z) into oriented face fluxes, including boundaries.
+    @staticmethod
+    def surface_mobility(phi):
+        """Degenerate mobility; no clipping or positive floor is applied."""
+        return 3.6 * phi.square() * (1.0 - phi).square()
 
-        The three channel blocks contain Jx, Jy, Jz. Index i in Jx
-        represents face i+1/2, NOT a cell-centred flux. The last plane
-        along each component's own axis is unused. Outer faces are zero.
+    def face_fluxes(self, raw, phi):
+        """Build J_f = M(phi_f)*q_f on shared faces, with zero outer flux.
+
+        raw is (B,3*C,X,Y,Z), containing the learned qx, qy, qz blocks;
+        phi is the unperturbed current field (B,C,X,Y,Z). Index i in qx
+        represents face i+1/2. The last plane along each component's own
+        axis is unused. Evaluate M at the mean of the adjacent phi values,
+        rather than averaging mobilities: a 0/1 pair can still transport.
         """
         if raw.ndim != 5 or raw.shape[1] != 3 * self.input_channels:
-            raise ValueError('Expected raw flux shape (B,3*C,X,Y,Z).')
-        jx, jy, jz = raw.split(self.input_channels, dim=1)
+            raise ValueError('Expected raw transport shape (B,3*C,X,Y,Z).')
+        expected_shape = (raw.shape[0], self.input_channels, *raw.shape[-3:])
+        if tuple(phi.shape) != expected_shape:
+            raise ValueError('Expected phi shape (B,C,X,Y,Z) matching raw transport.')
+        if phi.device != raw.device:
+            raise ValueError('phi and raw transport must be on the same device.')
+        # Compute both the mobility and flux products at least in float32.
+        if raw.dtype in (torch.float16, torch.bfloat16):
+            raw = raw.float()
+        if phi.dtype in (torch.float16, torch.bfloat16):
+            phi = phi.float()
+
+        qx, qy, qz = raw.split(self.input_channels, dim=1)
+        phi_x = 0.5 * (phi[:, :, :-1, :, :] + phi[:, :, 1:, :, :])
+        phi_y = 0.5 * (phi[:, :, :, :-1, :] + phi[:, :, :, 1:, :])
+        phi_z = 0.5 * (phi[:, :, :, :, :-1] + phi[:, :, :, :, 1:])
+
+        jx = self.surface_mobility(phi_x) * qx[:, :, :-1, :, :]
+        jy = self.surface_mobility(phi_y) * qy[:, :, :, :-1, :]
+        jz = self.surface_mobility(phi_z) * qz[:, :, :, :, :-1]
         return (
-            torch.nn.functional.pad(jx[:, :, :-1, :, :], (0, 0, 0, 0, 1, 1)),
-            torch.nn.functional.pad(jy[:, :, :, :-1, :], (0, 0, 1, 1, 0, 0)),
-            torch.nn.functional.pad(jz[:, :, :, :, :-1], (1, 1, 0, 0, 0, 0)),
+            torch.nn.functional.pad(jx, (0, 0, 0, 0, 1, 1)),
+            torch.nn.functional.pad(jy, (0, 0, 1, 1, 0, 0)),
+            torch.nn.functional.pad(jz, (1, 1, 0, 0, 0, 0)),
         )
 
-    def divergence(self, raw):
-        """Physical FV divergence. No dt, sign reversal or mean subtraction.
+    def divergence(self, raw, phi):
+        """FV divergence of mobility-weighted fluxes, without dt or sign reversal.
 
         Uniform cell-centred control volumes, closed on all six sides.
         Spatial tensor axes are X,Y,Z, in exactly this order.
         """
-        # Keep conservative arithmetic at least float32 under mixed precision.
-        if raw.dtype in (torch.float16, torch.bfloat16):
-            raw = raw.float()
-        jx, jy, jz = self.face_fluxes(raw)
+        jx, jy, jz = self.face_fluxes(raw, phi)
         hx, hy, hz = self.voxel_size
         return (
             (jx[:, :, 1:, :, :] - jx[:, :, :-1, :, :]) / hx
@@ -852,7 +877,7 @@ class ConvGRU3D(nn.Module):
                 layer_input = state
             raw = self.toOut(hidden[-1])
             if use_divergence:
-                output = base - self.dt * self.divergence(raw)
+                output = base - self.dt * self.divergence(raw, base)
             else:
                 output = self.sigmoid(raw)
             outputs.append(output)
