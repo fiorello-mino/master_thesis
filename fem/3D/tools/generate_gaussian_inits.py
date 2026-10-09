@@ -7,24 +7,24 @@ import random
 import re
 
 # ================= PARAMETRI DA MODIFICARE =================
-BASE_DIR = Path(__file__).resolve().parent
-TEMPLATE = BASE_DIR / 'gaussian_template_P0.7.dat'
-INIT_DIR = BASE_DIR / 'init_gaussian'
+BASE_DIR = Path("/home/fiorello/mesoEvo/install_seq/init/")
+TEMPLATE = BASE_DIR / 'gaussian_template_P07.dat'
+INIT_DIR = BASE_DIR / 'init_gaussian/'
 
-SIGMA_MIN = 0.5  # Esempio: modificare secondo l'intervallo desiderato.
-SIGMA_MAX = 1.5
+SIGMA_MIN = 1.5  # Esempio: modificare secondo l'intervallo desiderato.
+SIGMA_MAX = 3.0
 AMPLITUDE_MIN = -2.0
 AMPLITUDE_MAX = -1.0
 STEP = 0.1  # Passo fisso della griglia, per sigma e ampiezza.
-NUM_FILES = 20
-SEED = 42  # None per una nuova estrazione casuale a ogni esecuzione.
-SHAPE = 'gaussian + -plane'
-MACRO_FILE_NAME = './macro/trenchB_7_7_120.3d'
+NUM_FILES = 10
+SEED = 4  # None per una nuova estrazione casuale a ogni esecuzione.
+SHAPE = '-gaussian + -plane'
+MACRO_FILE_NAME = './macro/trenchB_16_16_60.3d'
 
 # Directory madre sul computer che esegue AMDiS.
 # Il suo nome (qui P07) diventa anche il prefisso delle simulazioni.
 # Esempio di output: .../P07/P07_gaussian_S1.0_A2.0
-SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data_train3D/square/P07'
+SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data3D/gaussian/P08'
 # ==========================================================
 
 
@@ -91,7 +91,7 @@ def main():
         files = []
         for sigma, amplitude in pairs:
             # L'ampiezza resta negativa nell'init; nel nome compare il modulo.
-            name = f'{output_base.name}_gaussian_S{fmt(sigma)}_A{fmt(abs(amplitude))}'
+            name = f'gaussian_S{fmt(sigma)}_A{fmt(abs(amplitude))}_{output_base.name}'
             path = init_dir / f'{name}.dat'
             if path.exists():
                 raise ValueError(f'File gia esistente: {path}. Cambiare INIT_DIR nel codice.')
