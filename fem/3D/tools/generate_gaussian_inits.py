@@ -7,39 +7,49 @@ import random
 import re
 
 # ================= PARAMETRI DA MODIFICARE =================
-BASE_DIR = Path("/home/fiorello/mesoEvo/install_seq/init/")
-TEMPLATE = BASE_DIR / 'gaussian_template_P07.dat'
-INIT_DIR = BASE_DIR / 'init_gaussian/'
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATE = BASE_DIR / 'gaussian_template_P0.7.dat'
+INIT_DIR = BASE_DIR / 'init_gaussian'
 
-SIGMA_MIN = 0.15  # Esempio: modificare secondo l'intervallo desiderato.
-SIGMA_MAX = 0.20
+SIGMA_MIN = 0.5  # Esempio: modificare secondo l'intervallo desiderato.
+SIGMA_MAX = 1.5
 AMPLITUDE_MIN = -2.0
 AMPLITUDE_MAX = -1.0
-STEP = 0.1  # Passo fisso della griglia, per sigma e ampiezza.
-NUM_FILES = 10
-SEED = 40  # None per una nuova estrazione casuale a ogni esecuzione.
-SHAPE = '-gaussian + -plane'
-MACRO_FILE_NAME = './macro/trenchB_12_12_60.3d'
+SIGMA_STEP = 0.01
+AMPLITUDE_STEP = 0.1
+NUM_FILES = 20
+SEED = 42  # None per una nuova estrazione casuale a ogni esecuzione.
+SHAPE = 'gaussian + -plane'
+MACRO_FILE_NAME = './macro/trenchB_7_7_120.3d'
 
 # Directory madre sul computer che esegue AMDiS.
 # Il suo nome (qui P07) diventa anche il prefisso delle simulazioni.
-# Esempio di output: .../P07/P07_gaussian_S1.0_A2.0
-SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data3D/gaussian/P06'
+# Esempio di output: .../P07/P07_gaussian_S1.01_A2.0
+SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data_train3D/square/P07'
 # ==========================================================
 
 
-def tenths(value):
+def discrete_grid(minimum, maximum, step):
+    """Griglia inclusiva esatta, senza arrotondamenti floating point."""
     try:
-        scaled = Decimal(str(value)) * 10
-        if not scaled.is_finite() or scaled != scaled.to_integral_value():
+        low, high, increment = (Decimal(str(v)) for v in (minimum, maximum, step))
+        if not all(v.is_finite() for v in (low, high, increment)):
             raise ValueError
-        return int(scaled)
+        if increment <= 0 or low > high:
+            raise ValueError
+        for bound in (low, high):
+            units = bound / increment
+            if units != units.to_integral_value():
+                raise ValueError
+        count = int((high - low) / increment) + 1
+        return [low + i * increment for i in range(count)]
     except (InvalidOperation, ValueError, OverflowError):
-        raise ValueError('Usare un valore multiplo di 0.1.')
+        raise ValueError('Gli estremi devono essere finiti, ordinati e multipli del passo positivo.')
 
 
-def fmt(value):
-    return f'{Decimal(value) / 10:.1f}'
+def fmt(value, step):
+    digits = max(1, -Decimal(str(step)).normalize().as_tuple().exponent)
+    return f'{value:.{digits}f}'
 
 
 def replace_key(text, key, value):
@@ -58,7 +68,9 @@ def render(template, sigma, amplitude, output, shape, macro_file_name):
         r'(?m)^[ \t]*gaussian->(?:sigma \+ amplitude|sigma|amplitude):[^\n]*\n?',
         '', text,
     )
-    parameters = f'gaussian->sigma + amplitude: [{fmt(sigma)}, {fmt(sigma)}, {fmt(amplitude)}]'
+    sigma_text = fmt(sigma, SIGMA_STEP)
+    amplitude_text = fmt(amplitude, AMPLITUDE_STEP)
+    parameters = f'gaussian->sigma + amplitude: [{sigma_text}, {sigma_text}, {amplitude_text}]'
     text = text.replace(f'surf->phi->shape: {shape}',
                         f'surf->phi->shape: {shape}\n{parameters}', 1)
     mesh_match = re.search(r'(?m)^[ \t]*surf->space->mesh:[ \t]*([^\n%#]+)', text)
@@ -70,16 +82,13 @@ def render(template, sigma, amplitude, output, shape, macro_file_name):
 
 def main():
     try:
-        if STEP != 0.1:
-            raise ValueError('Questo script usa il passo fisso STEP = 0.1.')
-        sigma_min, sigma_max = tenths(SIGMA_MIN), tenths(SIGMA_MAX)
-        amplitude_min, amplitude_max = tenths(AMPLITUDE_MIN), tenths(AMPLITUDE_MAX)
-        if not 0 < sigma_min <= sigma_max:
+        sigmas = discrete_grid(SIGMA_MIN, SIGMA_MAX, SIGMA_STEP)
+        amplitudes = discrete_grid(AMPLITUDE_MIN, AMPLITUDE_MAX, AMPLITUDE_STEP)
+        if sigmas[0] <= 0:
             raise ValueError('Richiesto 0 < SIGMA_MIN <= SIGMA_MAX.')
-        if not amplitude_min <= amplitude_max < 0:
+        if amplitudes[-1] >= 0:
             raise ValueError('Richiesto AMPLITUDE_MIN <= AMPLITUDE_MAX < 0.')
-        choices = [(s, a) for s in range(sigma_min, sigma_max + 1)
-                   for a in range(amplitude_min, amplitude_max + 1)]
+        choices = [(s, a) for s in sigmas for a in amplitudes]
         if not isinstance(NUM_FILES, int) or not 1 <= NUM_FILES <= len(choices):
             raise ValueError(f'NUM_FILES deve essere tra 1 e {len(choices)} (senza duplicati).')
         template = Path(TEMPLATE).read_text()
@@ -91,7 +100,8 @@ def main():
         files = []
         for sigma, amplitude in pairs:
             # L'ampiezza resta negativa nell'init; nel nome compare il modulo.
-            name = f'gaussian_S{fmt(sigma)}_A{fmt(abs(amplitude))}_{output_base.name}'
+            name = (f'{output_base.name}_gaussian_S{fmt(sigma, SIGMA_STEP)}'
+                    f'_A{fmt(abs(amplitude), AMPLITUDE_STEP)}')
             path = init_dir / f'{name}.dat'
             if path.exists():
                 raise ValueError(f'File gia esistente: {path}. Cambiare INIT_DIR nel codice.')
