@@ -11,20 +11,20 @@ BASE_DIR = Path("/home/fiorello/mesoEvo/install_seq/init/")
 TEMPLATE = BASE_DIR / 'gaussian_template_P07.dat'
 INIT_DIR = BASE_DIR / 'init_gaussian/'
 
-SIGMA_MIN = 1.5  # Esempio: modificare secondo l'intervallo desiderato.
-SIGMA_MAX = 3.0
+SIGMA_MIN = 0.15  # Esempio: modificare secondo l'intervallo desiderato.
+SIGMA_MAX = 0.20
 AMPLITUDE_MIN = -2.0
 AMPLITUDE_MAX = -1.0
 STEP = 0.1  # Passo fisso della griglia, per sigma e ampiezza.
 NUM_FILES = 10
-SEED = 4  # None per una nuova estrazione casuale a ogni esecuzione.
+SEED = 40  # None per una nuova estrazione casuale a ogni esecuzione.
 SHAPE = '-gaussian + -plane'
-MACRO_FILE_NAME = './macro/trenchB_16_16_60.3d'
+MACRO_FILE_NAME = './macro/trenchB_12_12_60.3d'
 
 # Directory madre sul computer che esegue AMDiS.
 # Il suo nome (qui P07) diventa anche il prefisso delle simulazioni.
 # Esempio di output: .../P07/P07_gaussian_S1.0_A2.0
-SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data3D/gaussian/P08'
+SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data3D/gaussian/P06'
 # ==========================================================
 
 
