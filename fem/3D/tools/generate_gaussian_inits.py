@@ -7,25 +7,25 @@ import random
 import re
 
 # ================= PARAMETRI DA MODIFICARE =================
-BASE_DIR = Path(__file__).resolve().parent
-TEMPLATE = BASE_DIR / 'gaussian_template_P0.7.dat'
+BASE_DIR = Path("/home/fiorello/mesoEvo/install_seq/init") 
+TEMPLATE = BASE_DIR / 'gaussian_template_P07.dat'
 INIT_DIR = BASE_DIR / 'init_gaussian'
 
-SIGMA_MIN = 0.5  # Esempio: modificare secondo l'intervallo desiderato.
-SIGMA_MAX = 1.5
+SIGMA_MIN = 0.15  # Esempio: modificare secondo l'intervallo desiderato.
+SIGMA_MAX = 0.3
 AMPLITUDE_MIN = -2.0
 AMPLITUDE_MAX = -1.0
 SIGMA_STEP = 0.01
 AMPLITUDE_STEP = 0.1
-NUM_FILES = 20
-SEED = 42  # None per una nuova estrazione casuale a ogni esecuzione.
-SHAPE = 'gaussian + -plane'
-MACRO_FILE_NAME = './macro/trenchB_7_7_120.3d'
+NUM_FILES = 10
+SEED = 452  # None per una nuova estrazione casuale a ogni esecuzione.
+SHAPE = '-gaussian + -plane'
+MACRO_FILE_NAME = './macro/trench_16_16_60.3d'
 
 # Directory madre sul computer che esegue AMDiS.
 # Il suo nome (qui P07) diventa anche il prefisso delle simulazioni.
 # Esempio di output: .../P07/P07_gaussian_S1.01_A2.0
-SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data_train3D/square/P07'
+SIMULATION_OUTPUT_BASE = '/scratch/fiorello/data3D/gaussian/P08'
 # ==========================================================
 
 
