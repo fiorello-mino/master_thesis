@@ -2,7 +2,7 @@ from pathlib import Path
 import random
 import csv
 
-
+random.seed(10)
 factor = 1.9
 N_FILES = 105
 
