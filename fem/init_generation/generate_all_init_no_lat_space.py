@@ -4,7 +4,7 @@ import csv
 
 
 factor = 1.9
-N_FILES = 20
+N_FILES = 105
 
 K_SPACING_MIN = 1.5
 K_SPACING_MAX = 8.0
@@ -258,7 +258,7 @@ def main():
     path = Path("init_template.dat")
     before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/test/pores_periodic0.5/")
+    out_dir = Path("/home/fiorello/init_files/dataset2D/pores_periodic0.5/")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out_dir / "summary.csv"
@@ -282,7 +282,7 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        for idx in range(0,20):
+        for idx in range(20,125):
             tag = f"{idx:03d}"
 
             new_phi_block, meta = generate_phi_block(
@@ -292,7 +292,7 @@ def main():
 
             new_text = before + new_phi_block + after
 
-            new_output_dir = f"/scratch/fiorello/data_test/pores_periodic0.5_vtu/{tag}"
+            new_output_dir = f"/scratch/fiorello/data2D/pores_periodic0.5_vtu/{tag}"
             new_text = replace_output_directory(new_text, new_output_dir)
 
             filename = f"{tag}.dat"
