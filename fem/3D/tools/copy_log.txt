@@ -1,8 +1,63 @@
 LOG COPIA FILE .dat e .3d
 ============================================================
 
-File .dat copiati: 199
-File .3d copiati: 200
+File .dat copiati: 0
+File .3d copiati: 56
 
-ERRORI (1):
-  MANCANTE .dat: /archive/roberto/poresAMDIS/square/iso_P10/iso2_R0.2_H2.0_P1.0/iso2_R0.2_H2.0_P1.0.dat
+ERRORI (56):
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H2.4_P0.6x0.7/isoRec_H2.4_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H2.8_P0.6x0.7/isoRec_H2.8_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H3.0_P0.6x0.7/isoRec_H3.0_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H2.6_P0.6x0.7/isoRec_H2.6_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H1.8_P0.6x0.7/isoRec_H1.8_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H1.6_P0.6x0.7/isoRec_H1.6_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H2.2_P0.6x0.7/isoRec_H2.2_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0607/isoRec_H2.0_P0.6x0.7/isoRec_H2.0_P0.6x0.7.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H3.0_P0.6x0.8/isoRec_H3.0_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H2.6_P0.6x0.8/isoRec_H2.6_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H2.2_P0.6x0.8/isoRec_H2.2_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H2.0_P0.6x0.8/isoRec_H2.0_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H2.4_P0.6x0.8/isoRec_H2.4_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H1.6_P0.6x0.8/isoRec_H1.6_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H2.8_P0.6x0.8/isoRec_H2.8_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0608/isoRec_H1.8_P0.6x0.8/isoRec_H1.8_P0.6x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H2.6_P0.6x0.9/isoRec_H2.6_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H2.2_P0.6x0.9/isoRec_H2.2_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H2.0_P0.6x0.9/isoRec_H2.0_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H1.6_P0.6x0.9/isoRec_H1.6_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H2.4_P0.6x0.9/isoRec_H2.4_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H2.8_P0.6x0.9/isoRec_H2.8_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H3.0_P0.6x0.9/isoRec_H3.0_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0609/isoRec_H1.8_P0.6x0.9/isoRec_H1.8_P0.6x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H2.6_P0.7x0.8/isoRec_H2.6_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H2.2_P0.7x0.8/isoRec_H2.2_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H3.0_P0.7x0.8/isoRec_H3.0_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H2.8_P0.7x0.8/isoRec_H2.8_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H1.8_P0.7x0.8/isoRec_H1.8_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H2.0_P0.7x0.8/isoRec_H2.0_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H1.6_P0.7x0.8/isoRec_H1.6_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0708/isoRec_H2.4_P0.7x0.8/isoRec_H2.4_P0.7x0.8.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H3.0_P0.7x0.9/isoRec_H3.0_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H1.8_P0.7x0.9/isoRec_H1.8_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H2.6_P0.7x0.9/isoRec_H2.6_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H2.8_P0.7x0.9/isoRec_H2.8_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H2.2_P0.7x0.9/isoRec_H2.2_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H1.6_P0.7x0.9/isoRec_H1.6_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H2.0_P0.7x0.9/isoRec_H2.0_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0709/isoRec_H2.4_P0.7x0.9/isoRec_H2.4_P0.7x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H2.4_P0.8x0.9/isoRec_H2.4_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H2.6_P0.8x0.9/isoRec_H2.6_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H2.2_P0.8x0.9/isoRec_H2.2_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H1.6_P0.8x0.9/isoRec_H1.6_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H2.8_P0.8x0.9/isoRec_H2.8_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H2.0_P0.8x0.9/isoRec_H2.0_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H3.0_P0.8x0.9/isoRec_H3.0_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0809/isoRec_H1.8_P0.8x0.9/isoRec_H1.8_P0.8x0.9.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H2.8_P0.9x1.0/isoRec_H2.8_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H1.8_P0.9x1.0/isoRec_H1.8_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H3.0_P0.9x1.0/isoRec_H3.0_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H2.2_P0.9x1.0/isoRec_H2.2_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H2.4_P0.9x1.0/isoRec_H2.4_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H2.0_P0.9x1.0/isoRec_H2.0_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H2.6_P0.9x1.0/isoRec_H2.6_P0.9x1.0.dat
+  MANCANTE .dat: /archive/roberto/poresAMDIS/rectPattern/isoRec_P0910/isoRec_H1.6_P0.9x1.0/isoRec_H1.6_P0.9x1.0.dat
