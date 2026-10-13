@@ -41,10 +41,10 @@ def convert_folder(vtu_dir, out_dir, field_name, nx=128, ny=128, method="linear"
 
 
 def main():
-    vtu_root = Path("/scratch/fiorello/data_test/pores_periodic0.5_vtu")
-    npy_root = Path("/scratch/fiorello/data_test/pores_periodic0.5_npy")
+    vtu_root = Path("/scratch/fiorello/data2D/pores_periodic0.5_var_depth_vtu")
+    npy_root = Path("/scratch/fiorello/data2D/pores_periodic0.5_var_depth_npy")
 
-    for idx in range(20):
+    for idx in range(40,125):
         tag = f"{idx:03d}"
 
         vtu_folder = vtu_root / tag
