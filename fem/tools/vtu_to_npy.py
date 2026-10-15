@@ -45,7 +45,7 @@ def main():
     vtu_root = Path("/scratch/fiorello/data2D/pores_periodic0.5_vtu")
     npy_root = Path("/scratch/fiorello/data2D/pores_periodic0.5_npy")
 
-    for idx in range(20,125):
+    for idx in range(0,20):
         tag = f"{idx:03d}"
 
         vtu_folder = vtu_root / tag

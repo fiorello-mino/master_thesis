@@ -3,8 +3,8 @@ import csv
 
 from pore_evolution_classifier import count_blue_domains
 
-INPUT_CSV = Path("/home/fiorello/init_files/test/pores_periodic_var_depth/summary.csv")
-VTU_ROOT = Path("/scratch/fiorello/data_test/pores_periodic_var_depth_vtu")
+INPUT_CSV = Path('../csv/pores_periodic0.5_var_depth.csv')
+VTU_ROOT = Path("/scratch/fiorello/data2D/pores_periodic0.5_var_depth_vtu")
 FINAL_VTU_NAME = "surf_20.0.vtu"
 
 
