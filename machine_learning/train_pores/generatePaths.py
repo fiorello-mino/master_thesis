@@ -7,7 +7,6 @@ N_TRAIN = 100
 SEQ_LEN = 50
 FORCE_ZERO_PROB = 0.1
 
-# Seed fisso per rendere riproducibili selezione e split.
 rng = random.Random(42)
 
 train_txt = Path("train_set.txt")
@@ -17,64 +16,101 @@ datasets = [
     {
         "name": "Folder 1",
         "base_dir": Path("/data/fiorello/dataset2D/dataset_pores_npy"),
-        "csv_path": Path("/home/fiorello/init_files/dataset_pores.csv"),
+        "csv_path": Path("dataset_pores.csv"),
         "include_all": False,
+        "bubble_column": "depth",
     },
     {
         "name": "Folder 2",
         "base_dir": Path("/data/fiorello/pores/dataset_pores_grid_npy"),
-        "csv_path": Path("/home/fiorello/master_thesis/fem/csv/grid_data.csv"),
+        "csv_path": Path("grid_data.csv"),
         "include_all": False,
+        "bubble_column": "n_bubbles",
     },
     {
         "name": "Folder 3",
         "base_dir": Path("/data/fiorello/dataset2D/pores_periodic0.5_npy"),
-        "csv_path": Path("/data/fiorello/dataset2D/csv/pores_periodic0.5.csv"),
+        "csv_path": Path("pores_periodic0.5.csv"),
         "include_all": True,
+        "bubble_column": "n_bubbles",
     },
     {
         "name": "Folder 4",
-        "base_dir": Path("/data/fiorello/dataset2D/pores_periodic0.5_var_depth_npy"),
-        "csv_path": Path("/data/fiorello/dataset2D/csv/pores_periodic0.5_var_depth.csv"),
+        "base_dir": Path(
+            "/data/fiorello/dataset2D/pores_periodic0.5_var_depth_npy"
+        ),
+        "csv_path": Path("pores_periodic0.5_var_depth.csv"),
         "include_all": True,
+        "bubble_column": "n_bubbles",
     },
 ]
 
 
-def read_cases(csv_path):
+def read_cases(csv_path, bubble_column):
     with csv_path.open("r", newline="") as f:
         rows = list(csv.DictReader(f))
 
+    # Associa ogni tag alla presenza o assenza di bolle.
     cases = {}
+
     for idx, row in enumerate(rows):
-        # Usa "tag" se presente; altrimenti usa l'indice della riga,
-        # come nel primo dataset dello script originale.
+        # Se manca "tag", usa l'indice della riga a partire da zero.
         tag = int(row["tag"]) if row.get("tag", "").strip() else idx
 
         if tag in cases:
             raise ValueError(f"{csv_path}: tag duplicato {tag}")
 
-        cases[tag] = int(row["n_bubbles"])
+        if bubble_column == "depth":
+            depth = row["depth"].strip().lower()
+
+            if depth not in {"deep", "shallow"}:
+                raise ValueError(
+                    f"{csv_path}, tag {tag}: depth non valido: {depth!r}"
+                )
+
+            has_bubbles = depth == "deep"
+
+        else:
+            n_bubbles = int(row["n_bubbles"])
+
+            if n_bubbles < 0:
+                raise ValueError(
+                    f"{csv_path}, tag {tag}: n_bubbles negativo."
+                )
+
+            has_bubbles = n_bubbles > 0
+
+        cases[tag] = has_bubbles
 
     return cases
 
 
-def select_cases(cases, include_all, name):
-    nonzero = [tag for tag, n in cases.items() if n > 0]
-    zero = [tag for tag, n in cases.items() if n == 0]
+def select_cases(cases, include_all, name, bubble_column):
+    nonzero = [tag for tag, has_bubbles in cases.items() if has_bubbles]
+    zero = [tag for tag, has_bubbles in cases.items() if not has_bubbles]
+
+    criterion = "deep" if bubble_column == "depth" else "n_bubbles > 0"
+
+    print(f"\n{name}")
+    print(
+        f"  CSV completo: {len(cases)} casi, "
+        f"{len(nonzero)} con {criterion}"
+    )
 
     if include_all:
         if len(cases) != N_CASES:
             raise ValueError(
                 f"{name}: attesi {N_CASES} casi, trovati {len(cases)}"
             )
+
         selected = list(cases)
+
     else:
         n_zero_needed = N_CASES - len(nonzero)
 
         if n_zero_needed < 0:
             raise ValueError(
-                f"{name}: ci sono {len(nonzero)} casi con bolle. "
+                f"{name}: ci sono {len(nonzero)} casi con {criterion}. "
                 f"Non possono essere inclusi tutti in {N_CASES} casi."
             )
 
@@ -87,13 +123,25 @@ def select_cases(cases, include_all, name):
         selected = nonzero + rng.sample(zero, n_zero_needed)
 
     print(
-        f"{name}: {len(selected)} casi selezionati, "
-        f"{sum(cases[tag] > 0 for tag in selected)} con n_bubbles > 0"
+        f"  Selezionati: {len(selected)} casi, "
+        f"{sum(cases[tag] for tag in selected)} con {criterion}"
     )
 
-    # Mescola prima di dividere train e valid.
     rng.shuffle(selected)
-    return selected[:N_TRAIN], selected[N_TRAIN:]
+
+    train_tags = selected[:N_TRAIN]
+    valid_tags = selected[N_TRAIN:]
+
+    print(
+        f"  Train: {len(train_tags)} casi, "
+        f"{sum(cases[tag] for tag in train_tags)} con {criterion}"
+    )
+    print(
+        f"  Valid: {len(valid_tags)} casi, "
+        f"{sum(cases[tag] for tag in valid_tags)} con {criterion}"
+    )
+
+    return train_tags, valid_tags
 
 
 def sequence_paths(folder, start_idx):
@@ -104,8 +152,6 @@ def sequence_paths(folder, start_idx):
 
 
 def available_starts(folder):
-    # Converte i tempi dei file in indici interi:
-    # surf_0.0.npy -> 0, surf_0.1.npy -> 1, ecc.
     frame_indices = set()
 
     for path in folder.glob("surf_*.npy"):
@@ -115,10 +161,10 @@ def available_starts(folder):
             continue
 
         idx = round(time * 10)
+
         if idx >= 0 and path.name == f"surf_{idx / 10:.1f}.npy":
             frame_indices.add(idx)
 
-    # Una partenza è valida soltanto se esistono tutti i 50 frame.
     return sorted(
         start
         for start in frame_indices
@@ -136,7 +182,8 @@ def make_sequences(tags, base_dir):
 
         if 0 not in starts:
             raise ValueError(
-                f"{folder}: manca la sequenza completa da 0.0 a 4.9."
+                f"{folder}: manca la sequenza completa "
+                f"da 0.0 a {(SEQ_LEN - 1) / 10:.1f}."
             )
 
         nonzero_starts = [start for start in starts if start > 0]
@@ -164,12 +211,16 @@ valid_lines = []
 total_start_zero = 0
 
 for dataset in datasets:
-    cases = read_cases(dataset["csv_path"])
+    cases = read_cases(
+        dataset["csv_path"],
+        dataset["bubble_column"],
+    )
 
     train_tags, valid_tags = select_cases(
         cases,
         dataset["include_all"],
         dataset["name"],
+        dataset["bubble_column"],
     )
 
     folder_train, train_zero = make_sequences(
@@ -183,10 +234,7 @@ for dataset in datasets:
     valid_lines.extend(folder_valid)
     total_start_zero += train_zero + valid_zero
 
-    print(
-        f"  Train: {len(folder_train)}, valid: {len(folder_valid)}, "
-        f"partenze da zero: {train_zero + valid_zero}"
-    )
+    print(f"  Sequenze con partenza da zero: {train_zero + valid_zero}")
 
 # Scrive i file solo dopo aver verificato tutti i dataset.
 train_txt.write_text("\n".join(train_lines) + "\n")
