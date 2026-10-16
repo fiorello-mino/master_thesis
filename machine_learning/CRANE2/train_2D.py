@@ -2,7 +2,7 @@
 
 Place beside CRANE2/src and run from the CRANE2 project directory.
 Arrays use (B,T,C,Nx,Ny), with x on axis -2 and y on axis -1.
---operator-bc controls only the physical loss/diagnostic operators.
+Loss/diagnostic operators use fixed PBC in x and homogeneous Neumann in y.
 The existing ConvGRU, its --padding and its update rule are preserved.
 --dx/--dy and --dt do not rescale the legacy model divergence update.
 --massW is a legacy parser option; the objective matches TrainingLoss3D
@@ -42,7 +42,8 @@ class TrainingLoss2D(nn.Module):
     """MSE + gradient matching + energy matching + soft bounds.
 
     Shape: (B, T, C, Nx, Ny); x = axis -2, y = axis -1.
-    BC apply to loss operators; model convolutions use --padding.
+    Fixed mixed BC: PBC in x, replicated Neumann ghost values in y.
+    Model convolutions use --padding.
     All terms are computed on every call, regardless of their weights.
     mu is a diagnostic in training and validation, excluded from the objective.
     """
@@ -54,7 +55,6 @@ class TrainingLoss2D(nn.Module):
         self.w_bounds = args.w_bounds
         self.epsilon = args.epsilon
         self.dx, self.dy = args.dx, args.dy
-        self.operator_bc = args.operator_bc
         self.bounds_peak_weight = 0.05
 
     def neighbors(self, phi):
@@ -62,13 +62,9 @@ class TrainingLoss2D(nn.Module):
             raise ValueError(f'Expected (B,T,C,Nx,Ny), got {tuple(phi.shape)}')
         xp = torch.roll(phi, -1, dims=-2)
         xm = torch.roll(phi, 1, dims=-2)
-        if self.operator_bc == 'pbc_xy':
-            yp = torch.roll(phi, -1, dims=-1)
-            ym = torch.roll(phi, 1, dims=-1)
-        else:
-            # Homogeneous Neumann, replicated boundary ghost values.
-            yp = torch.cat((phi[..., 1:], phi[..., -1:]), dim=-1)
-            ym = torch.cat((phi[..., :1], phi[..., :-1]), dim=-1)
+        # Homogeneous Neumann in y: replicate the boundary ghost values.
+        yp = torch.cat((phi[..., 1:], phi[..., -1:]), dim=-1)
+        ym = torch.cat((phi[..., :1], phi[..., :-1]), dim=-1)
         return xp, xm, yp, ym
 
     def gradient(self, phi):
@@ -159,9 +155,6 @@ def parse_training_args():
             if name not in cli._option_string_actions:
                 voxel_action.option_strings.append(name)
                 cli._option_string_actions[name] = voxel_action
-    add_if_missing('--operator-bc', dest='operator_bc',
-                   choices=['pbc_xy', 'pbc_x_neumann_y'], default='pbc_xy',
-                   help='BC for loss/diagnostic operators only; network uses --padding.')
     for flag, default in [('--dt', 0.005), ('--dx', 0.025), ('--dy', 0.025),
                           ('--epsilon', 0.1), ('--w_grad', 0.0),
                           ('--w_energy', 0.0), ('--w_bounds', 0.0), ('--w_mu', 0.0)]:
@@ -231,7 +224,7 @@ def save_2d_config(model, args, path):
         'architecture': 'ConvGRU',
         'update': 'legacy_centered_divergence' if model.div_mode else
                   ('conservative' if args.conservative else 'sigmoid'),
-        'operator_bc': args.operator_bc,
+        'operator_bc': 'pbc_x_neumann_y',
         'loss_spacing': [args.dx, args.dy], 'epsilon': args.epsilon,
         'dt': args.dt,  # metadata only; existing 2D model does not use dt/dx/dy.
         'hidden_units': args.hidden, 'input_channels': 1,
