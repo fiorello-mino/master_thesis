@@ -55,7 +55,6 @@ class TrainingLoss2D(nn.Module):
         self.w_bounds = args.w_bounds
         self.epsilon = args.epsilon
         self.dx, self.dy = args.dx, args.dy
-        self.bounds_peak_weight = 0.05
 
     def neighbors(self, phi):
         if phi.ndim != 5 or min(phi.shape[-2:]) < 1:
@@ -87,8 +86,7 @@ class TrainingLoss2D(nn.Module):
 
     def bounds_loss(self, pred):
         violation_sq = torch.relu(-pred).square() + torch.relu(pred - 1).square()
-        return (violation_sq.mean()
-                + self.bounds_peak_weight * violation_sq.amax(dim=(-2, -1)).mean())
+        return violation_sq.mean()
 
     def free_energy(self, phi):
         gx, gy = self.gradient(phi)
