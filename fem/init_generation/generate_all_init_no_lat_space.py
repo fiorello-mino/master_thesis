@@ -4,7 +4,7 @@ import csv
 
 random.seed(10001)
 factor = 1.9
-N_FILES = 20
+N_FILES = 50
 
 K_SPACING_MIN = 1.5
 K_SPACING_MAX = 8.0
@@ -261,9 +261,9 @@ def main():
     out_dir = Path("/home/fiorello/init_files/dataset2D/pores_periodic0.5/")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    csv_path = out_dir / "summary_first20.csv"
+    csv_path = out_dir / "summary.csv"
 
-    epsilon = 0.0130208 * 2
+    epsilon = 0.0130208 * factor
     width_max = 0.055 * factor
 
     fieldnames = [
@@ -282,7 +282,7 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        for idx in range(0,20):
+        for idx in range(0,125):
             tag = f"{idx:03d}"
 
             new_phi_block, meta = generate_phi_block(
