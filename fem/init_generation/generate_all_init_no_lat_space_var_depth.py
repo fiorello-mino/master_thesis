@@ -293,10 +293,10 @@ def main():
     path = Path("init_template.dat")
     before, _, after = get_phi_block(path)
 
-    out_dir = Path("/home/fiorello/init_files/dataset2D/pores_periodic0.5_var_depth")
+    out_dir = Path("/home/fiorello/init_files/dataset2D/pores_periodic0.5_var_depth_test")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    csv_path = out_dir / "summary_first40.csv"
+    csv_path = out_dir / "summary.csv"
 
     epsilon = 0.0130208 * 2
     width_max = 0.055 * factor
@@ -320,7 +320,7 @@ def main():
         writer = csv.DictWriter(fcsv, fieldnames=fieldnames)
         writer.writeheader()
 
-        for idx in range(0,40):
+        for idx in range(50):
             tag = f"{idx:03d}"
 
             new_phi_block, meta = generate_phi_block(
@@ -330,7 +330,7 @@ def main():
 
             new_text = before + new_phi_block + after
 
-            new_output_dir = f"/scratch/fiorello/data2D/pores_periodic0.5_var_depth_vtu/{tag}"
+            new_output_dir = f"/scratch/fiorello/data2D/pores_periodic0.5_var_depth_test_vtu/{tag}"
             new_text = replace_output_directory(new_text, new_output_dir)
 
             filename = f"{tag}.dat"
